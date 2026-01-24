@@ -37,7 +37,7 @@ prepare_protected_mode:
     mov cr0, eax
 
 ; THE LEAP OF FAITH (WEARING THE PROTECTION)
-    jmp GDT_SEGMENT_CODE_SELECTOR:PROTECTED_MODE_START
+    jmp GDT_SEGMENT_CODE_SELECTOR:protected_mode_start
 
 align 8
 GDT_START:
@@ -69,7 +69,7 @@ msg_stage_2 db OS_STATUS, ": booting...", CRLF, OS_STATUS, ": stage 1 completed.
 
 
 [BITS 32]
-PROTECTED_MODE_START:
+protected_mode_start:
     cld ; CLEARING DIRECTION FLAG
 
     cli ; DISABLING INTERRUPTS (GOIGN TO SET STACK SEGMENT)
