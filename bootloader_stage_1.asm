@@ -10,6 +10,28 @@
 [ORG 0x7C00]
 
 start:
+; We want to ensure CS=0, to change it (or keep it as is) we perform a far jump
+    jmp 0x0000:main
+
+
+main:
+; We need to zero some segment base pointers. We mostly want to avoid segmentation, and work with physical addresses
+    xor ax, ax
+
+; defining the stack to be before stage 1 code.
+; since it grows backwards, we can set it to 0x7C00
+    cli                 ; disable interrupts temporarily
+    mov ss, ax
+    mov sp, 0x7C00
+    mov bp, 0x7C00
+
+; Zero-ing some segment pointers
+    mov ds, ax
+    mov es, ax
+    mov gs, ax
+
+    sti                 ; re-enable interrupts
+; Going to stage 2
     jmp load_stage_2
 
 
@@ -19,7 +41,7 @@ load_stage_2:
     mov ah, 0x42
     int 0x13
     jc error            ; CF==1 means that an error has occurred.
-    jmp 0x1000          ; jump to the RAM address where we loaded the code
+    jmp 0x7E00          ; jump to the RAM address where we loaded the code
 
 error:
     jmp $               ; infinite loop. I use it to keep QEMU open
@@ -31,10 +53,10 @@ align 4                 ; Just to be safe, align on 4-byte boundary
 DAP:
     db 0x10             ; Packet Size, this tells the BIOS what version of DAP struct we're using
     db 0x00             ; Padding byte. Needs to be reset to 0 if ran in a loop
-    dw 0x4000           ; [2] Count: Number of sectors to read (1 sector)
+    dw 0x0040           ; Number of sectors to read
 
                         ; RAM address to write to is represented by (Segment * 16) + Offset
-    dw 0x1000           ; Offset
+    dw 0x7E00           ; Offset, directly after stage 1 which is at 0x7C00
     dw 0x0000           ; Segment
 
     dq 0x00000001       ; Disk sector to read from, each sector is 512 bytes.
