@@ -1,5 +1,4 @@
 [BITS 16]
-[ORG 0x7E00]
 
 %define CRLF 0x0D, 0x0A
 %define OS_STATUS "[sOS]"
@@ -87,9 +86,6 @@ PROTECTED_MODE_START:
     mov esp, 0x90000
     mov ebp, esp
 
-; PRINT OK
-    mov word [0xB8000], 0x0F4F   ; 'O' with attribute 0x0F
-    mov word [0xB8002], 0x0F4B   ; 'K'
-.HANG:
-    hlt
-    jmp .HANG
+; ENTER STAGE 3
+    extern bootloader_stage_3
+    call bootloader_stage_3
