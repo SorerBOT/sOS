@@ -8,7 +8,7 @@ __asm__(".code32\n");
 #include <stdarg.h>
 
 #define VGA_DRIVER_BUFFER_ADDRESS 0xB8000
-#define VGA_DRIVER_WHITE_ON_BLACK 0x05
+#define VGA_DRIVER_MAGENTA_ON_BLACK 0x05
 #define VGA_DRIVER_INITIAL_LINE 13
 #define VGA_DRIVER_WIDTH 80
 #define VGA_DRIVER_HEIGHT 25
@@ -69,7 +69,7 @@ static void print_string(const char* string, uint8_t color)
 
 void VGA_DRIVER_report(const char* message, VGA_Driver_report_status status)
 {
-    print_char('[', VGA_DRIVER_WHITE_ON_BLACK);
+    print_char('[', VGA_DRIVER_MAGENTA_ON_BLACK);
     if (status == VGA_DRIVER_SUCCESS)
     {
         print_string(" SUCCESS ", 0x02);
@@ -78,9 +78,9 @@ void VGA_DRIVER_report(const char* message, VGA_Driver_report_status status)
     {
         print_string(" FAILURE ", 0x04);
     }
-    print_string("] ", VGA_DRIVER_WHITE_ON_BLACK);
-    print_string(message, VGA_DRIVER_WHITE_ON_BLACK);
-    print_char('\n', VGA_DRIVER_WHITE_ON_BLACK);
+    print_string("] ", VGA_DRIVER_MAGENTA_ON_BLACK);
+    print_string(message, VGA_DRIVER_MAGENTA_ON_BLACK);
+    print_char('\n', VGA_DRIVER_MAGENTA_ON_BLACK);
 
 }
 void VGA_DRIVER_printf(const char* format, ...)
