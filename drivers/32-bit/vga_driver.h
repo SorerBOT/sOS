@@ -1,6 +1,7 @@
 __asm__(".code32\n");
 
 #ifndef VGA_DRIVER_H
+#define VGA_DRIVER_H
 
 #include <stdint.h>
 #include <stddef.h>
