@@ -36,7 +36,7 @@ static size_t line = VGA_DRIVER_INITIAL_LINE;
 static size_t offset = 0;
 
 static void print_char(char character, uint8_t color);
-static void print_int(int d);
+static void print_int(intmax_t d);
 static void print_string(const char* string, uint8_t color);
 
 static void print_char(char character, uint8_t color)
@@ -63,24 +63,24 @@ static void print_char(char character, uint8_t color)
 
 }
 
-static void print_int(int d)
+static void print_int(intmax_t d)
 {
     bool is_negative = d < 0;
-    char digits[11]; // int max is 10 digits and null terminator is another
-    digits[10] = '\0';
+    char digits[21]; // int max is 10 digits and null terminator is another
+    digits[20] = '\0';
 
-    size_t current_idx = 9;
-    while (d != 0)
+    size_t current_idx = 19;
+    do
     {
-        int current_digit = d % 10;
+        int8_t current_digit = d % 10;
         if (current_digit < 0)
         {
-            current_digit = - current_digit;
+            current_digit *= -1;
         }
         digits[current_idx] = VGA_DRIVER_CONVERT_DIGIT_TO_CHAR(current_digit);
         --current_idx;
         d /= 10;
-    }
+    } while (d != 0);
 
     if (is_negative)
     {
@@ -88,7 +88,7 @@ static void print_int(int d)
         --current_idx;
     }
 
-    ++current_idx; // we decrement it one too many times
+    ++current_idx; // we decremented it one too many times
     char* final_string = ((char*)digits) + current_idx;
     print_string(final_string, VGA_DRIVER_MAGENTA_ON_BLACK);
 }

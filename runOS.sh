@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e # makes the script quit on fail
+
 BIN="./bin/"
 STAGE_1="bootloader_stage_1"
 STAGE_2="bootloader_stage_2"
@@ -9,16 +11,22 @@ OS_IMG="os-img"
 STAGE_2_ORG="0x7E00"
 OS_IMAGE_SIZE_MAX=33280 # 32KiB + 512
 
+LIB="lib/"
+MATH_LIB="math"
+
 rm -rf $BIN
 mkdir $BIN
+mkdir $BIN$
 
 nasm -f bin "$STAGE_1.asm" -o "$BIN$STAGE_1.bin"
 nasm -f elf32 "$STAGE_2.asm" -o "$BIN$STAGE_2.o"
 x86_64-elf-gcc -ffreestanding -m32 -g -c "$STAGE_3.c" -o "$BIN$STAGE_3.o"
+x86_64-elf-gcc -ffreestanding -m32 -g -c "$STAGE_3.c" -o "$BIN$STAGE_3.o"
+x86_64-elf-gcc -ffreestanding -m32 -g -c "$LIB$MATH_LIB.c" -o "$BIN$MATH_LIB.o"
 
 # -Ttext 0x7E00: [ORG 0x7E00]
 # --oformat binary: output a raw flat file, not an executable
-x86_64-elf-ld -m elf_i386 -o "$BIN$STAGE_3.bin" -Ttext $STAGE_2_ORG "$BIN$STAGE_2.o" "$BIN$STAGE_3.o" --oformat binary
+x86_64-elf-ld -m elf_i386 --oformat binary -Ttext $STAGE_2_ORG -o "$BIN$STAGE_3.bin" "$BIN$STAGE_2.o" "$BIN$STAGE_3.o" "$BIN$MATH_LIB.o"
 dd if=/dev/zero of="$BIN$PADDING.bin" bs=1024 count=32
 
 # now stage 2 and 3 are combined
