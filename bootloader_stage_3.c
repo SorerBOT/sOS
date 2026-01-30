@@ -9,9 +9,6 @@ void bootloader_stage_3()
     VGA_DRIVER_report("[sOS]: successfully entered protected 32-bit mode.", VGA_DRIVER_SUCCESS);
     VGA_DRIVER_report("[sOS]: running stage 2...", VGA_DRIVER_SUCCESS);
     VGA_DRIVER_report("[sOS]: running stage 2...", VGA_DRIVER_FAILURE);
-    VGA_DRIVER_printf("%s, %d, %c\n", "HELLO THERE", -123, 'z');
-    VGA_DRIVER_printf("%s, %d, %c\n", "HELLO THERE", 0, 'z');
-    VGA_DRIVER_printf("%lld\n",1234567890123456789);
 
     // Hang forever
     while(1);
