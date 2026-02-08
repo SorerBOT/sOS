@@ -16,3 +16,4 @@ In greater detail, the bootloader already reaches 32-bit Protected Mode, but it 
 * GDT - the GDT, or Global Descriptor Table is a table that stores information about different segments, such as where in memory does the segment start, where does it end, who is allowed to interact with it and what are they allowed to do.
 * GDT Header - a small data structure which describes where in memory does the Global Descriptor Table reside, and how large it is.
 * GDTR - a register designated to store the address of the GDT Header.
+* Null Descriptor - the first entry of the GDT has to be the Null Descriptor which is practically just a quadword of 0s.
