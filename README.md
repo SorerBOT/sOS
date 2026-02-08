@@ -14,3 +14,5 @@ In greater detail, the bootloader already reaches 32-bit Protected Mode, but it 
 * A20 Line - older CPUs sometimes treated addresses above the 1MB limit as if they wrapped around to 0. Application developers would rely on this "feature", and that meant that as soon as the 1MB limit was increased, all the programs which relied on wrapping simply broke. To fight this, it was decided to make the "wrap around" optional and toggled on by default. By enabling the A20 gate, we simply tell the CPU: don't wrap around!
 * Fast A20 - it used to be quite complicated to enable the A20 gate, but nowadays there's a simple method called A20, which is almost as simple as flipping a bit, and this is the method I used.
 * GDT - the GDT, or Global Descriptor Table is a table that stores information about different segments, such as where in memory does the segment start, where does it end, who is allowed to interact with it and what are they allowed to do.
+* GDT Header - a small data structure which describes where in memory does the Global Descriptor Table reside, and how large it is.
+* GDTR - a register designated to store the address of the GDT Header.
