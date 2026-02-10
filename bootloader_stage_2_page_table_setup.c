@@ -61,7 +61,7 @@ typedef struct
     lm_pointer pdpts[PAGE_SIZE / sizeof(lm_pointer)];
 } PML4T_t;
 
-extern lm_pointer BASE_PAGE_TABLE_ADDRESS;
+extern dword BASE_PAGE_TABLE_ADDRESS;
 lm_pointer next_free_address = 0xDEADBEEF;
 lm_pointer next_physical_address = BASE_PHYSICAL_ADDRESS;
 
@@ -140,6 +140,7 @@ PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
 void page_table_setup()
 {
     VGA_DRIVER_report("stage 2 completed...", VGA_DRIVER_SUCCESS);
+    VGA_DRIVER_report("entered 32-bit protected mode...", VGA_DRIVER_SUCCESS);
     next_free_address_init();
 
     PML4T_t* pml4t = PML4T_init_identity_map(MEMORY_SIZE_TO_MAP);

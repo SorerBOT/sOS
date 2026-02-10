@@ -7,6 +7,7 @@ STAGE_1="bootloader_stage_1"
 STAGE_2="bootloader_stage_2"
 PAGE_TABLE_SETUP="bootloader_stage_2_page_table_setup"
 UPDATE_GDT="bootloader_stage_2_update_gdt"
+KERNEL="kernel"
 PADDING="padding"
 OS_IMG="os-img"
 STAGE_2_ORG=0x7E00
@@ -24,6 +25,7 @@ nasm -f elf32 "$STAGE_2.asm" -o "$BIN$STAGE_2.o"
 x86_64-elf-gcc -ffreestanding -m32 -g -c "$PAGE_TABLE_SETUP.c" -o "$BIN$PAGE_TABLE_SETUP.o"
 x86_64-elf-gcc -ffreestanding -m32 -g -c "$UPDATE_GDT.c" -o "$BIN$UPDATE_GDT.o"
 x86_64-elf-gcc -ffreestanding -m32 -g -c "$LIB$MATH_LIB.c" -o "$BIN$MATH_LIB.o"
+
 
 # -Ttext 0x7E00: [ORG 0x7E00]
 # --oformat binary: output a raw flat file, not an executable

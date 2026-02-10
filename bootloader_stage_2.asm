@@ -6,6 +6,7 @@ global BASE_PAGE_TABLE_ADDRESS
 
 extern page_table_setup
 extern update_gdt
+;extern kernel
 
 %define CRLF 0x0D, 0x0A
 %define OS_STATUS "[sOS]"
@@ -77,9 +78,15 @@ msg_stage_2 db OS_STATUS, ": booting...", CRLF, OS_STATUS, ": stage 1 completed.
 
 [BITS 32]
 
-BASE_PAGE_TABLE_ADDRESS:
-    dq 0x1000000
+%define LONG_MODE_MSR 0xC0000080
 
+BASE_PAGE_TABLE_ADDRESS:
+    dd 0x1000000
+
+
+; FOR THE TIME BEING, I DON'T CHECK WHETHER REAL MODE IS AVAILABLE.
+; I KNOW THAT IT IS ON MY HARDWARE, AND I CARE MUCH MORE ABOUT MAKING
+; SOMETHING COOL, THAN I DO CARE ABOUT COMPATIBILITY
 protected_mode_start:
     cld ; CLEARING DIRECTION FLAG
 
@@ -101,11 +108,33 @@ protected_mode_start:
     call page_table_setup
     call update_gdt
 
+; TELLING THE CPU WHERE THE PAGE TABLE IS
+    mov eax, [BASE_PAGE_TABLE_ADDRESS] 
+    mov cr3, eax
 
+; TELLING THE CPU THAT I WANNA USE PAE PAGING (ONLY TAKES EFFECT WHEN PAGING WOULD BE ENABLED)
+    mov eax, cr4
+    or eax, 1 << 5 ; THE PAE BIT IS THE SIXTH BIT
+    mov cr4, eax
+
+; TOGGLING LONG MODE PAGING
+    mov ecx, LONG_MODE_MSR
+    rdmsr
+
+    or eax, 1 << 8 ; LONG MODE PAGING BIT IS THE NINTH BIT
+    wrmsr
+
+; LONG MODE
+    mov eax, cr0
+    or eax, 1 << 31
+    mov cr0, eax
+
+; FAR JUMP, THE LEAP OF FAITH x2
+    jmp GDT_SEGMENT_CODE_SELECTOR:long_mode_start
+
+[BITS 64]
+long_mode_start:
     
-
-
-    jmp $
-
-    
-
+    hlt
+    jmp long_mode_start
+    ;call kernel
