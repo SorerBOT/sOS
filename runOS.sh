@@ -31,7 +31,7 @@ nasm -f bin "$STAGE_1.asm" -o "$BIN$STAGE_1.bin"
 
 # Compiling Stage 2
 echo "Compiling stage 2."
-CFLAGS_32_BIT="-ffreestanding -m32 -g -I./include"
+CFLAGS_32_BIT="-ffreestanding -m32 -g -I./include -I./drivers"
 nasm -f elf32 "$STAGE_2.asm" -o "$BIN$STAGE_2.o"
 x86_64-elf-gcc $CFLAGS_32_BIT -c "$PAGE_TABLE_SETUP.c" -o "$BIN$PAGE_TABLE_SETUP.o"
 x86_64-elf-gcc $CFLAGS_32_BIT -c "$UPDATE_GDT.c" -o "$BIN$UPDATE_GDT.o"
@@ -57,7 +57,7 @@ truncate -s $BOOTLOADER_SIZE_MAX "$BIN$OS_IMG.bin"
 
 # Compiling the kernel
 echo "Compiling the kernel."
-CFLAGS_64_BIT="-ffreestanding -mno-red-zone -m64 -g -I./include"
+CFLAGS_64_BIT="-ffreestanding -mno-red-zone -m64 -g -I./include -I./drivers"
 nasm -f elf64 "$KERNEL_START.asm" -o "$BIN$KERNEL_START.o"
 x86_64-elf-gcc $CFLAGS_64_BIT -c "$KERNEL.c" -o "$BIN/$KERNEL.o"
 x86_64-elf-gcc $CFLAGS_64_BIT -c "$LIB$MATH_LIB.c" -o "$BIN$MATH_LIB.o"

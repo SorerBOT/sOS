@@ -1,6 +1,6 @@
 #define VGA_DRIVER_INITIAL_LINE 19
 #define VGA_DRIVER_IMPLEMENTATION
-#include "../drivers/vga_driver.h"
+#include <vga_driver.h>
 
 void kernel()
 {

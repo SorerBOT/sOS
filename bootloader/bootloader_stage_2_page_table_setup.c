@@ -1,11 +1,11 @@
 __asm__(".code32\n");
 
 #include <stddef.h>
-#include "../include/types.h"
-#include "../include/string.h"
+#include <types.h>
+#include <string.h>
 
 #define VGA_DRIVER_IMPLEMENTATION
-#include "../drivers/vga_driver.h"
+#include <vga_driver.h>
 
 #define KiB (1024)
 #define PAGE_SIZE (4 * KiB)
