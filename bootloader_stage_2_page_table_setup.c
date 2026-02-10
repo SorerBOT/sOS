@@ -1,6 +1,7 @@
 __asm__(".code32\n");
 
 #include <stddef.h>
+#include "include/types.h"
 
 #define VGA_DRIVER_IMPLEMENTATION
 #include "drivers/32-bit/vga_driver.h"
@@ -19,8 +20,8 @@ __asm__(".code32\n");
 
 void* kmemset(void *address, int value_int, size_t len)
 {
-    unsigned char value = (unsigned char) value_int;
-    unsigned char* data = address;
+    byte value = (byte) value_int;
+    byte* data = address;
     for (size_t i = 0; i < len; ++i)
     {
         data[i] = value;
@@ -33,7 +34,7 @@ typedef uint64_t lm_pointer;
 
 typedef struct
 {
-    char data[PAGE_SIZE];
+    byte data[PAGE_SIZE];
 } Frame_t;
 
 typedef struct
@@ -112,9 +113,10 @@ void PDPT_init_identity_map(PDPT_t* pdpt, size_t pages_count)
 
 PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
 {
-    PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
-
     size_t pages_count = memory_size_to_map / PAGE_SIZE;
+    VGA_DRIVER_printf("Mapping %ld pages of memory...\n", pages_count);
+
+    PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
 
     size_t created_pdpt_count = 0;
     for (; pages_count > 0 && created_pdpt_count < 512; pages_count -= PAGES_IN_PDPT, ++created_pdpt_count)
@@ -127,16 +129,11 @@ PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
     return pml4t;
 }
 
-void bootloader_stage_3()
+void page_table_setup()
 {
-    VGA_DRIVER_report("[sOS]: stage 2 completed...", VGA_DRIVER_SUCCESS);
-    VGA_DRIVER_report("[sOS]: successfully entered protected 32-bit mode.", VGA_DRIVER_SUCCESS);
-
+    VGA_DRIVER_report("stage 2 completed...", VGA_DRIVER_SUCCESS);
 
     PML4T_t* pml4t = PML4T_init_identity_map(MEMORY_SIZE_TO_MAP);
 
-
-
-    // Hang forever
-    while(1);
+    VGA_DRIVER_report("successfully created the kernel's page table...", VGA_DRIVER_SUCCESS);
 }

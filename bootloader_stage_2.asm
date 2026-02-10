@@ -1,5 +1,11 @@
 [BITS 16]
 
+global start
+global GDT_HEADER
+
+extern page_table_setup
+extern update_gdt
+
 %define CRLF 0x0D, 0x0A
 %define OS_STATUS "[sOS]"
 %define GDT_BASE_ADDRESS
@@ -87,5 +93,6 @@ protected_mode_start:
     mov ebp, esp
 
 ; ENTER STAGE 3
-    extern bootloader_stage_3
-    call bootloader_stage_3
+    call page_table_setup
+    call update_gdt
+
