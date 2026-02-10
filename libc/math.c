@@ -1,6 +1,7 @@
 #include <limits.h>
 
-#include "../include/math.h"
+//#include "../include/math.h"
+#include <math.h>
 
 //===-- divdi3.c - Implement __divdi3 -------------------------------------===//
 //

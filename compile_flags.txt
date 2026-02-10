@@ -1,0 +1,7 @@
+-xc
+-std=c99
+-DVGA_DRIVER_IMPLEMENTATION
+-Iinclude
+-ffreestanding
+-mno-red-zone
+-m64
