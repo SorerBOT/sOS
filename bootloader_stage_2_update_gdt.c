@@ -63,6 +63,4 @@ void update_gdt()
     }
 
     VGA_DRIVER_report("Updated GDT table...", VGA_DRIVER_SUCCESS);
-
-    while (1); // hang
 }

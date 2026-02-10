@@ -2,6 +2,7 @@
 
 global start
 global GDT_HEADER
+global BASE_PAGE_TABLE_ADDRESS
 
 extern page_table_setup
 extern update_gdt
@@ -75,6 +76,10 @@ msg_stage_2 db OS_STATUS, ": booting...", CRLF, OS_STATUS, ": stage 1 completed.
 
 
 [BITS 32]
+
+BASE_PAGE_TABLE_ADDRESS:
+    dq 0x1000000
+
 protected_mode_start:
     cld ; CLEARING DIRECTION FLAG
 
@@ -92,7 +97,15 @@ protected_mode_start:
     mov esp, 0x90000
     mov ebp, esp
 
-; ENTER STAGE 3
+; PREPARE LONG MODE
     call page_table_setup
     call update_gdt
+
+
+    
+
+
+    jmp $
+
+    
 

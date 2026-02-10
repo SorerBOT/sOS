@@ -10,7 +10,6 @@ __asm__(".code32\n");
 #define PAGE_SIZE (4 * KiB)
 #define FLAGS 0b11
 
-#define BASE_PAGE_TABLE_ADDRESS 0x1000000
 #define MEMORY_SIZE_TO_MAP 0x40000000
 #define BASE_PHYSICAL_ADDRESS 0x000000
 
@@ -62,8 +61,14 @@ typedef struct
     lm_pointer pdpts[PAGE_SIZE / sizeof(lm_pointer)];
 } PML4T_t;
 
+extern lm_pointer BASE_PAGE_TABLE_ADDRESS;
+lm_pointer next_free_address = 0xDEADBEEF;
 lm_pointer next_physical_address = BASE_PHYSICAL_ADDRESS;
-lm_pointer next_free_address = BASE_PAGE_TABLE_ADDRESS;
+
+void next_free_address_init()
+{
+    next_free_address = BASE_PAGE_TABLE_ADDRESS;
+}
 
 lm_pointer get_next_free_address()
 {
@@ -80,7 +85,7 @@ lm_pointer get_next_physical_address()
     return temp;
 }
 
-void PT_init_identity_map(PT_t* pt, size_t pages_count)
+void PT_init_identity_map(PT_t* pt, int64_t pages_count)
 {
     size_t created_pages_count = 0;
     for (; pages_count > 0 && created_pages_count < 512; --pages_count, ++created_pages_count)
@@ -89,8 +94,11 @@ void PT_init_identity_map(PT_t* pt, size_t pages_count)
     }
 }
 
-void PDT_init_identity_map(PDT_t* pdt, size_t pages_count)
+void PDT_init_identity_map(PDT_t* pdt, int64_t pages_count)
 {
+    VGA_DRIVER_printf("Mapping pages. %ld pages remaining...\n", pages_count);
+
+
     size_t created_pt_count = 0;
     for (; pages_count > 0 && created_pt_count < 512; pages_count -= PAGES_IN_PT, ++created_pt_count)
     {
@@ -100,7 +108,7 @@ void PDT_init_identity_map(PDT_t* pdt, size_t pages_count)
     }
 }
 
-void PDPT_init_identity_map(PDPT_t* pdpt, size_t pages_count)
+void PDPT_init_identity_map(PDPT_t* pdpt, int64_t pages_count)
 {
     size_t created_pdt_count = 0;
     for (; pages_count > 0 && created_pdt_count < 512; pages_count -= PAGES_IN_PDT, ++created_pdt_count)
@@ -113,7 +121,7 @@ void PDPT_init_identity_map(PDPT_t* pdpt, size_t pages_count)
 
 PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
 {
-    size_t pages_count = memory_size_to_map / PAGE_SIZE;
+    int64_t pages_count = memory_size_to_map / PAGE_SIZE;
     VGA_DRIVER_printf("Mapping %ld pages of memory...\n", pages_count);
 
     PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
@@ -132,6 +140,7 @@ PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
 void page_table_setup()
 {
     VGA_DRIVER_report("stage 2 completed...", VGA_DRIVER_SUCCESS);
+    next_free_address_init();
 
     PML4T_t* pml4t = PML4T_init_identity_map(MEMORY_SIZE_TO_MAP);
 
