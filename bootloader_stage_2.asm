@@ -79,6 +79,7 @@ msg_stage_2 db OS_STATUS, ": booting...", CRLF, OS_STATUS, ": stage 1 completed.
 [BITS 32]
 
 %define LONG_MODE_MSR 0xC0000080
+%define KERNEL_ORG 0xBE00
 
 BASE_PAGE_TABLE_ADDRESS:
     dd 0x1000000
@@ -134,7 +135,7 @@ protected_mode_start:
 
 [BITS 64]
 long_mode_start:
-    
-    hlt
-    jmp long_mode_start
-    ;call kernel
+    cli ; DISABLING INTERRUPTS (GOIGN TO SET STACK SEGMENT)
+
+; LETTING THE KERNEL TAKE CONTROL
+    jmp KERNEL_ORG

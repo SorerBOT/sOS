@@ -45,7 +45,6 @@ extern GDT_header_t GDT_HEADER;
 
 void update_gdt()
 {
-    VGA_DRIVER_report("boop boop", VGA_DRIVER_SUCCESS);
     size_t descriptors_count = (GDT_HEADER.size + 1) / sizeof(GDT_descriptor_t);
     byte long_mode_flags = 0b10100000; // Granularity ON, Size Flags: OFF, Long mode Flag: ON, Reserved: OFF.
     for (size_t i = 0; i < descriptors_count; ++i)
@@ -62,5 +61,5 @@ void update_gdt()
         descriptor->limit_top_plus_flags = with_new_flags;
     }
 
-    VGA_DRIVER_report("Updated GDT table...", VGA_DRIVER_SUCCESS);
+    VGA_DRIVER_report("updated GDT table...", VGA_DRIVER_SUCCESS);
 }
