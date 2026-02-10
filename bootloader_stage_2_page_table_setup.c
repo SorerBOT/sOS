@@ -10,7 +10,7 @@ __asm__(".code32\n");
 #define FLAGS 0b11
 
 #define BASE_PAGE_TABLE_ADDRESS 0x1000000
-#define MEMORY_SIZE_TO_MAP 0x400000000
+#define MEMORY_SIZE_TO_MAP 0x40000000
 #define BASE_PHYSICAL_ADDRESS 0x000000
 
 #define PAGES_IN_PT 512
@@ -66,7 +66,7 @@ lm_pointer next_free_address = BASE_PAGE_TABLE_ADDRESS;
 
 lm_pointer get_next_free_address()
 {
-    kmemset((void*)next_free_address, 0, PAGE_SIZE);
+    kmemset((void*)(uint32_t)next_free_address, 0, PAGE_SIZE);
     lm_pointer temp = next_free_address;
     next_free_address += PAGE_SIZE;
     return temp;
@@ -94,7 +94,7 @@ void PDT_init_identity_map(PDT_t* pdt, size_t pages_count)
     for (; pages_count > 0 && created_pt_count < 512; pages_count -= PAGES_IN_PT, ++created_pt_count)
     {
         pdt->pts[created_pt_count] = get_next_free_address();
-        PT_init_identity_map((PT_t*)pdt->pts[created_pt_count], pages_count);
+        PT_init_identity_map((PT_t*)(uint32_t)pdt->pts[created_pt_count], pages_count);
         pdt->pts[created_pt_count] |= FLAGS;
     }
 }
@@ -105,14 +105,14 @@ void PDPT_init_identity_map(PDPT_t* pdpt, size_t pages_count)
     for (; pages_count > 0 && created_pdt_count < 512; pages_count -= PAGES_IN_PDT, ++created_pdt_count)
     {
         pdpt->pdts[created_pdt_count] = get_next_free_address();
-        PDT_init_identity_map((PDT_t*)pdpt->pdts[created_pdt_count], pages_count);
+        PDT_init_identity_map((PDT_t*)(uint32_t)pdpt->pdts[created_pdt_count], pages_count);
         pdpt->pdts[created_pdt_count] |= FLAGS;
     }
 }
 
 PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
 {
-    PML4T_t* pml4t = (PML4T_t*) get_next_free_address();
+    PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
 
     size_t pages_count = memory_size_to_map / PAGE_SIZE;
 
@@ -120,7 +120,7 @@ PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
     for (; pages_count > 0 && created_pdpt_count < 512; pages_count -= PAGES_IN_PDPT, ++created_pdpt_count)
     {
         pml4t->pdpts[created_pdpt_count] = get_next_free_address();
-        PDPT_init_identity_map((PDPT_t*)pml4t->pdpts[created_pdpt_count], pages_count);
+        PDPT_init_identity_map((PDPT_t*)(uint32_t)pml4t->pdpts[created_pdpt_count], pages_count);
         pml4t->pdpts[created_pdpt_count] |= FLAGS;
     }
 
