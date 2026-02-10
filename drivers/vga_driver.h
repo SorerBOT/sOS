@@ -48,9 +48,8 @@ static void print_char(char character, uint8_t color)
         return;
     }
     volatile uint8_t* buffer_address = (volatile uint8_t*) VGA_DRIVER_BUFFER_ADDRESS;
-    if (line >= VGA_DRIVER_HEIGHT && offset >= VGA_DRIVER_WIDTH)
+    if ((line == VGA_DRIVER_HEIGHT && offset >= VGA_DRIVER_WIDTH) || line > VGA_DRIVER_HEIGHT)
     {
-        // need to scroll
         return;
     }
     else

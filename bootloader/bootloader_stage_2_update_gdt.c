@@ -1,7 +1,7 @@
 #include <stddef.h>
 
-#include "include/types.h"
-#include "drivers/32-bit/vga_driver.h"
+#include "../include/types.h"
+#include "../drivers/vga_driver.h"
 
 #define STRIP_FLAGS(limit_top_plus_flags) (limit_top_plus_flags & 0b1111)
 #define APPEND_FLAGS(stripped, flags) (stripped | flags)

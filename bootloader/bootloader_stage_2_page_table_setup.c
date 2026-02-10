@@ -1,10 +1,11 @@
 __asm__(".code32\n");
 
 #include <stddef.h>
-#include "include/types.h"
+#include "../include/types.h"
+#include "../include/string.h"
 
 #define VGA_DRIVER_IMPLEMENTATION
-#include "drivers/32-bit/vga_driver.h"
+#include "../drivers/vga_driver.h"
 
 #define KiB (1024)
 #define PAGE_SIZE (4 * KiB)
@@ -16,18 +17,6 @@ __asm__(".code32\n");
 #define PAGES_IN_PT 512
 #define PAGES_IN_PDT (PAGES_IN_PT * 512)
 #define PAGES_IN_PDPT (PAGES_IN_PDT * 512)
-
-void* kmemset(void *address, int value_int, size_t len)
-{
-    byte value = (byte) value_int;
-    byte* data = address;
-    for (size_t i = 0; i < len; ++i)
-    {
-        data[i] = value;
-    }
-
-    return address;
-}
 
 typedef uint64_t lm_pointer;
 
@@ -72,7 +61,7 @@ void next_free_address_init()
 
 lm_pointer get_next_free_address()
 {
-    kmemset((void*)(uint32_t)next_free_address, 0, PAGE_SIZE);
+    memset((void*)(uint32_t)next_free_address, 0, PAGE_SIZE);
     lm_pointer temp = next_free_address;
     next_free_address += PAGE_SIZE;
     return temp;
