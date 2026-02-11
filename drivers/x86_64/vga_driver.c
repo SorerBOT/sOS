@@ -11,7 +11,7 @@
 #define VGA_DRIVER_BUFFER_ADDRESS 0xB8000
 #define VGA_DRIVER_WIDTH 80
 #define VGA_DRIVER_HEIGHT 25
-#define VGA_DRIVER_SCROLL_HEIGHT 40
+#define VGA_DRIVER_SHADOW_HEIGHT 40
 #define VGA_DRIVER_LINE_SIZE (2 * VGA_DRIVER_WIDTH)
 #define VGA_DRIVER_SIZE (VGA_DRIVER_LINE_SIZE * VGA_DRIVER_HEIGHT)
 #define VGA_DRIVER_MAGENTA_ON_BLACK 0x07
@@ -27,16 +27,16 @@
 
 static inline void carriage_return();
 static inline void line_feed();
-static inline void flush_scroll_buffer();
-static void move_cursor(size_t line, size_t offset);
-static void shift_scroll_buffer();
+static inline void flush_shadow_buffer();
+static void move_cursor(size_t shadow_line, size_t offset);
+static void shift_shadow_buffer();
 static void print_char(char character, uint8_t color);
 static void print_int(intmax_t d);
 static void print_string(const char* string, uint8_t color);
 
-static size_t line = 0;
+static size_t shadow_line = 0;
 static size_t offset = 0;
-static byte scroll_buffer[VGA_DRIVER_SCROLL_HEIGHT * VGA_DRIVER_LINE_SIZE] = { 0 };
+static byte shadow_buffer[VGA_DRIVER_SHADOW_HEIGHT * VGA_DRIVER_LINE_SIZE] = { 0 };
 volatile uint8_t* buffer_address = (volatile uint8_t*) VGA_DRIVER_BUFFER_ADDRESS;
 
 static inline void carriage_return()
@@ -45,39 +45,39 @@ static inline void carriage_return()
 }
 static inline void line_feed()
 {
-    ++line;
+    ++shadow_line;
 }
 
-static void shift_scroll_buffer()
+static void shift_shadow_buffer()
 {
     byte* restrict dst;
     byte* restrict src;
-    for (size_t i = 0; i < VGA_DRIVER_SCROLL_HEIGHT - 1; ++i)
+    for (size_t i = 0; i < VGA_DRIVER_SHADOW_HEIGHT - 1; ++i)
     {
-        dst = scroll_buffer + i * VGA_DRIVER_LINE_SIZE;
-        src = scroll_buffer + (i+1) * VGA_DRIVER_LINE_SIZE;
+        dst = shadow_buffer + i * VGA_DRIVER_LINE_SIZE;
+        src = shadow_buffer + (i+1) * VGA_DRIVER_LINE_SIZE;
         memcpy(dst, src, VGA_DRIVER_LINE_SIZE);
     }
 
     memset(src, 0, VGA_DRIVER_LINE_SIZE); // Sets the backgroup black, in the future I might want to write a word-memcpy, and use it to print ' ' in the default color. The current default is black, and \0 looks just like ' ' so I'm ignoring it
 }
 
-static inline void flush_scroll_buffer()
+static inline void flush_shadow_buffer()
 {
     size_t writable_lines_count = VGA_DRIVER_HEIGHT - VGA_DRIVER_BLANK_LINES;
-    size_t line_to_read_from = (line > writable_lines_count)
-        ? line - writable_lines_count
+    size_t line_to_read_from = (shadow_line > writable_lines_count)
+        ? shadow_line - writable_lines_count
         : 0;
 
-    byte* address_to_read_from = scroll_buffer + line_to_read_from * VGA_DRIVER_LINE_SIZE;
+    byte* address_to_read_from = shadow_buffer + line_to_read_from * VGA_DRIVER_LINE_SIZE;
     size_t len = VGA_DRIVER_SIZE - VGA_DRIVER_BLANK_LINES * VGA_DRIVER_LINE_SIZE;
     memcpy(buffer_address, address_to_read_from, len);
 }
 
-static void move_cursor(size_t line, size_t offset)
+static void move_cursor(size_t shadow_line, size_t offset)
 {
-    size_t cursor_line = line;
-    if (line > VGA_DRIVER_HEIGHT - VGA_DRIVER_BLANK_LINES)
+    size_t cursor_line = shadow_line;
+    if (shadow_line > VGA_DRIVER_HEIGHT - VGA_DRIVER_BLANK_LINES)
     {
         cursor_line = VGA_DRIVER_HEIGHT - VGA_DRIVER_BLANK_LINES;
     }
@@ -100,13 +100,13 @@ static void print_char(char character, uint8_t color)
         line_feed();
         carriage_return();
 
-        flush_scroll_buffer();
-        move_cursor(line, offset);
+        flush_shadow_buffer();
+        move_cursor(shadow_line, offset);
 
-        if (line >= VGA_DRIVER_SCROLL_HEIGHT)
+        if (shadow_line >= VGA_DRIVER_SHADOW_HEIGHT)
         {
-            shift_scroll_buffer();
-            line = VGA_DRIVER_SCROLL_HEIGHT - 1;
+            shift_shadow_buffer();
+            shadow_line = VGA_DRIVER_SHADOW_HEIGHT - 1;
         }
 
         return;
@@ -118,9 +118,9 @@ static void print_char(char character, uint8_t color)
         carriage_return();
     }
 
-    size_t index = 2 * VGA_DRIVER_GET_FLAT_INDEX(line, offset);
-    scroll_buffer[index] = (byte)character;
-    scroll_buffer[index + 1] = color;
+    size_t index = 2 * VGA_DRIVER_GET_FLAT_INDEX(shadow_line, offset);
+    shadow_buffer[index] = (byte)character;
+    shadow_buffer[index + 1] = color;
     ++offset;
 }
 
@@ -256,9 +256,9 @@ void VGA_DRIVER_printf(const char* format, ...)
 
 void VGA_DRIVER_init(const VGA_DRIVER_settings_t* settings)
 {
-    line = settings->initial_line;
+    shadow_line = settings->initial_line;
     if (settings->should_copy_vga_buffer)
     {
-        memcpy(scroll_buffer, buffer_address, VGA_DRIVER_SIZE);
+        memcpy(shadow_buffer, buffer_address, VGA_DRIVER_SIZE);
     }
 }
