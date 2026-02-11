@@ -172,7 +172,7 @@ static inline void print_string(const char* string)
     print_string_colored(string, VGA_DRIVER_GREY_ON_BLACK);
 }
 
-void VGA_DRIVER_report(const char* message, VGA_Driver_report_status status)
+void vga_driver_report(const char* message, vga_driver_report_status status)
 {
     VGA_DRIVER_PRINT_STRING("[");
     if (status == VGA_DRIVER_SUCCESS)
@@ -184,10 +184,10 @@ void VGA_DRIVER_report(const char* message, VGA_Driver_report_status status)
         print_string_colored(" FAILURE ", 0x04);
     }
 
-    VGA_DRIVER_printf("] %s\n", message);
+    vga_driver_printf("] %s\n", message);
 }
 
-void VGA_DRIVER_printf(const char* format, ...)
+void vga_driver_printf(const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -260,7 +260,7 @@ void VGA_DRIVER_printf(const char* format, ...)
     }
 }
 
-void VGA_DRIVER_clear()
+void vga_driver_clear()
 {
     word space_and_default_color = (VGA_DRIVER_GREY_ON_BLACK << 8) | ((byte) ' ');
     memset_word(shadow_buffer, space_and_default_color, VGA_DRIVER_SHADOW_SIZE);
@@ -270,7 +270,7 @@ void VGA_DRIVER_clear()
     move_cursor(shadow_line, offset);
 }
 
-void VGA_DRIVER_init(const VGA_DRIVER_settings_t* settings)
+void vga_driver_init(const vga_driver_settings_t* settings)
 {
     shadow_line = settings->initial_line;
     if (settings->should_copy_vga_buffer)

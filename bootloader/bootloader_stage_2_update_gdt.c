@@ -61,5 +61,5 @@ void update_gdt()
         descriptor->limit_top_plus_flags = with_new_flags;
     }
 
-    VGA_DRIVER_report("updated GDT table...", VGA_DRIVER_SUCCESS);
+    vga_driver_report("updated GDT table...", VGA_DRIVER_SUCCESS);
 }
