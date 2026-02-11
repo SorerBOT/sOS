@@ -3,21 +3,27 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
+#include <types.h>
+#include <string.h>
 #include <vga_driver.h>
 
 #define VGA_DRIVER_BUFFER_ADDRESS 0xB8000
-#define VGA_DRIVER_MAGENTA_ON_BLACK 0x07
 #define VGA_DRIVER_WIDTH 80
 #define VGA_DRIVER_HEIGHT 25
+#define VGA_DRIVER_ROW_SIZE (2 * VGA_DRIVER_WIDTH)
+#define VGA_DRIVER_SIZE (VGA_DRIVER_ROW_SIZE * VGA_DRIVER_HEIGHT)
+#define VGA_DRIVER_MAGENTA_ON_BLACK 0x07
 #define VGA_DRIVER_DIGITS_ASCII_OFFSET 48
 #define VGA_DRIVER_CONVERT_DIGIT_TO_CHAR(d) (((d) % 10) + VGA_DRIVER_DIGITS_ASCII_OFFSET)
-
-static size_t line = VGA_DRIVER_INITIAL_LINE;
-static size_t offset = 0;
 
 static void print_char(char character, uint8_t color);
 static void print_int(intmax_t d);
 static void print_string(const char* string, uint8_t color);
+
+static size_t line = 0;
+static size_t offset = 0;
+static byte scroll_buffer[VGA_DRIVER_SIZE];
+volatile uint8_t* buffer_address = (volatile uint8_t*) VGA_DRIVER_BUFFER_ADDRESS;
 
 static void print_char(char character, uint8_t color)
 {
@@ -27,19 +33,16 @@ static void print_char(char character, uint8_t color)
         offset = 0;
         return;
     }
-    volatile uint8_t* buffer_address = (volatile uint8_t*) VGA_DRIVER_BUFFER_ADDRESS;
-    if ((line == VGA_DRIVER_HEIGHT && offset >= VGA_DRIVER_WIDTH) || line > VGA_DRIVER_HEIGHT)
-    {
-        return;
-    }
-    else
-    {
-        size_t index = (line * VGA_DRIVER_WIDTH + offset) * 2;
-        buffer_address[index] = (uint8_t)character;
-        buffer_address[index + 1] = color;
-        ++offset;
-    }
 
+    size_t index = (line * VGA_DRIVER_WIDTH + offset) * 2;
+    scroll_buffer[index] = (byte)character;
+    scroll_buffer[index + 1] = color;
+    ++offset;
+
+    size_t line_to_read_from = (line > VGA_DRIVER_HEIGHT)
+        ? line - VGA_DRIVER_HEIGHT
+        : 0;
+    memcpy(buffer_address, scroll_buffer + line_to_read_from * VGA_DRIVER_ROW_SIZE, VGA_DRIVER_SIZE);
 }
 
 static void print_int(intmax_t d)
@@ -169,5 +172,14 @@ void VGA_DRIVER_printf(const char* format, ...)
             print_char(current, VGA_DRIVER_MAGENTA_ON_BLACK);
         }
         ++format;
+    }
+}
+
+void VGA_DRIVER_init(const VGA_DRIVER_settings_t* settings)
+{
+    line = settings->initial_line;
+    if (settings->should_copy_vga_buffer)
+    {
+        memcpy(scroll_buffer, buffer_address, VGA_DRIVER_SIZE);
     }
 }

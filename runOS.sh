@@ -19,6 +19,7 @@ OS_IMAGE_SIZE_MAX=33280 # 32KiB + 512
 LIB="libc/"
 MATH_LIB="math"
 MEMSET_LIB="memset"
+MEMCPY_LIB="memcpy"
 
 DRIVERS="drivers/"
 VGA_DRIVER="vga_driver"
@@ -34,16 +35,17 @@ nasm -f bin "$STAGE_1.asm" -o "$BIN$STAGE_1.bin"
 
 # Compiling Stage 2
 echo "Compiling stage 2."
-CFLAGS_32_BIT="-ffreestanding -m32 -g -Ilibc/include -Idrivers/include"
+CFLAGS_32_BIT="-std=c99 -ffreestanding -m32 -g -Ilibc/include -Idrivers/include"
 nasm -f elf32 "$STAGE_2.asm" -o "$BIN$STAGE_2.o"
 x86_64-elf-gcc $CFLAGS_32_BIT -c "$PAGE_TABLE_SETUP.c" -o "$BIN$PAGE_TABLE_SETUP.o"
 x86_64-elf-gcc $CFLAGS_32_BIT -c "$UPDATE_GDT.c" -o "$BIN$UPDATE_GDT.o"
 x86_64-elf-gcc $CFLAGS_32_BIT -c "$LIB$MATH_LIB.c" -o "$BIN$MATH_LIB.o"
 x86_64-elf-gcc $CFLAGS_32_BIT -c "$LIB$MEMSET_LIB.c" -o "$BIN$MEMSET_LIB.o"
+x86_64-elf-gcc $CFLAGS_32_BIT -c "$LIB$MEMCPY_LIB.c" -o "$BIN$MEMCPY_LIB.o"
 x86_64-elf-gcc $CFLAGS_32_BIT -c "$DRIVERS$VGA_DRIVER.c" -o "$DRIVERS$VGA_DRIVER.o"
 # -Ttext 0x7E00: [ORG 0x7E00]
 # --oformat binary: output a raw flat file, not an executable
-x86_64-elf-ld -m elf_i386 --oformat binary -Ttext $STAGE_2_ORG -o "$BIN$STAGE_2.bin" "$BIN$STAGE_2.o" "$BIN$PAGE_TABLE_SETUP.o" "$BIN$UPDATE_GDT.o" "$BIN$MEMSET_LIB.o" "$DRIVERS$VGA_DRIVER.o" "$BIN$MATH_LIB.o"
+x86_64-elf-ld -m elf_i386 --oformat binary -Ttext $STAGE_2_ORG -o "$BIN$STAGE_2.bin" "$BIN$STAGE_2.o" "$BIN$PAGE_TABLE_SETUP.o" "$BIN$UPDATE_GDT.o" "$BIN$MEMSET_LIB.o" "$BIN$MEMCPY_LIB.o" "$DRIVERS$VGA_DRIVER.o" "$BIN$MATH_LIB.o"
 
 # Allocating the first 16KiB + 512 bytes to the bootloader
 cat "$BIN$STAGE_1.bin" "$BIN$STAGE_2.bin" > "$BIN$OS_IMG.bin"
@@ -61,13 +63,14 @@ truncate -s $BOOTLOADER_SIZE_MAX "$BIN$OS_IMG.bin"
 
 # Compiling the kernel
 echo "Compiling the kernel."
-CFLAGS_64_BIT="-ffreestanding -mno-red-zone -m64 -g -Ilibc/include -Idrivers/include"
+CFLAGS_64_BIT="-std=c99 -ffreestanding -mno-red-zone -m64 -g -Ilibc/include -Idrivers/include"
 nasm -f elf64 "$KERNEL_START.asm" -o "$BIN$KERNEL_START.o"
 x86_64-elf-gcc $CFLAGS_64_BIT -c "$KERNEL.c" -o "$BIN/$KERNEL.o"
 x86_64-elf-gcc $CFLAGS_64_BIT -c "$LIB$MATH_LIB.c" -o "$BIN$MATH_LIB.o"
 x86_64-elf-gcc $CFLAGS_64_BIT -c "$LIB$MEMSET_LIB.c" -o "$BIN$MEMSET_LIB.o"
+x86_64-elf-gcc $CFLAGS_64_BIT -c "$LIB$MEMCPY_LIB.c" -o "$BIN$MEMCPY_LIB.o"
 x86_64-elf-gcc $CFLAGS_64_BIT -c "$DRIVERS$VGA_DRIVER.c" -o "$DRIVERS$VGA_DRIVER.o"
-x86_64-elf-ld -m elf_x86_64 --oformat binary -Ttext $KERNEL_ORG -o "$BIN/$KERNEL.bin" "$BIN/$KERNEL_START.o" "$BIN/$KERNEL.o" "$BIN$MEMSET_LIB.o" "$DRIVERS$VGA_DRIVER.o" "$BIN$MATH_LIB.o"
+x86_64-elf-ld -m elf_x86_64 --oformat binary -Ttext $KERNEL_ORG -o "$BIN/$KERNEL.bin" "$BIN/$KERNEL_START.o" "$BIN/$KERNEL.o" "$BIN$MEMSET_LIB.o" "$BIN$MEMCPY_LIB.o" "$DRIVERS$VGA_DRIVER.o" "$BIN$MATH_LIB.o"
 cat "$BIN/$KERNEL.bin" >> "$BIN$OS_IMG.bin"
 
 # checking the file size, should not exceed 512 + 32KiB because this is all we're loading into RAM

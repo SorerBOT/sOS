@@ -1,9 +1,9 @@
 #ifndef VGA_DRIVER_H
 #define VGA_DRIVER_H
 
-#ifndef VGA_DRIVER_INITIAL_LINE
-#define VGA_DRIVER_INITIAL_LINE 13
-#endif
+#include <types.h>
+#include <stddef.h>
+#include <stdbool.h>
 
 typedef enum
 {
@@ -11,9 +11,16 @@ typedef enum
     VGA_DRIVER_FAILURE
 } VGA_Driver_report_status;
 
+typedef struct
+{
+    size_t initial_line;
+    bool should_copy_vga_buffer;
+} VGA_DRIVER_settings_t;
+
 void VGA_DRIVER_report(const char* message, VGA_Driver_report_status status);
 void VGA_DRIVER_printf(const char* format, ...);
 void VGA_DRIVER_clear();
+void VGA_DRIVER_init(const VGA_DRIVER_settings_t* settings);
 
 
 #endif /* VGA_DRIVER_H */

@@ -1,10 +1,10 @@
 __asm__(".code32\n");
 
 #include <stddef.h>
+#include <stdbool.h>
 #include <types.h>
 #include <string.h>
 
-#define VGA_DRIVER_IMPLEMENTATION
 #include <vga_driver.h>
 
 #define KiB (1024)
@@ -128,6 +128,13 @@ PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
 
 void page_table_setup()
 {
+    VGA_DRIVER_settings_t settings =
+    {
+        .should_copy_vga_buffer = true,
+        .initial_line = 13
+    };
+    VGA_DRIVER_init(&settings);
+
     VGA_DRIVER_report("stage 2 completed...", VGA_DRIVER_SUCCESS);
     VGA_DRIVER_report("entered 32-bit protected mode...", VGA_DRIVER_SUCCESS);
     next_free_address_init();
