@@ -6,6 +6,7 @@
 #include <types.h>
 #include <string.h>
 #include <vga_driver.h>
+#include <io.h>
 
 #define VGA_DRIVER_BUFFER_ADDRESS 0xB8000
 #define VGA_DRIVER_WIDTH 80
@@ -16,6 +17,13 @@
 #define VGA_DRIVER_MAGENTA_ON_BLACK 0x07
 #define VGA_DRIVER_DIGITS_ASCII_OFFSET 48
 #define VGA_DRIVER_CONVERT_DIGIT_TO_CHAR(d) (((d) % 10) + VGA_DRIVER_DIGITS_ASCII_OFFSET)
+#define VGA_DRIVER_GET_FLAT_INDEX(line, offset) ((line) * VGA_DRIVER_WIDTH + (offset))
+#define VGA_DRIVER_BLANK_LINES 2
+
+#define VGA_DRIVER_PORT_COMMAND 0x3D4
+#define VGA_DRIVER_PORT_DATA 0x3D5
+#define VGA_DRIVER_COMMAND_SET_CURSOR_HIGH_BYTE 0x0E
+#define VGA_DRIVER_COMMAND_SET_CURSOR_LOW_BYTE 0x0F
 
 static inline void carriage_return();
 static inline void line_feed();
@@ -28,7 +36,7 @@ static void print_string(const char* string, uint8_t color);
 
 static size_t line = 0;
 static size_t offset = 0;
-static byte scroll_buffer[VGA_DRIVER_SCROLL_HEIGHT * VGA_DRIVER_LINE_SIZE];
+static byte scroll_buffer[VGA_DRIVER_SCROLL_HEIGHT * VGA_DRIVER_LINE_SIZE] = { 0 };
 volatile uint8_t* buffer_address = (volatile uint8_t*) VGA_DRIVER_BUFFER_ADDRESS;
 
 static inline void carriage_return()
@@ -56,15 +64,33 @@ static void shift_scroll_buffer()
 
 static inline void flush_scroll_buffer()
 {
-    size_t line_to_read_from = (line > VGA_DRIVER_HEIGHT)
-        ? line - VGA_DRIVER_HEIGHT
+    size_t writable_lines_count = VGA_DRIVER_HEIGHT - VGA_DRIVER_BLANK_LINES;
+    size_t line_to_read_from = (line > writable_lines_count)
+        ? line - writable_lines_count
         : 0;
-    memcpy(buffer_address, scroll_buffer + line_to_read_from * VGA_DRIVER_LINE_SIZE, VGA_DRIVER_SIZE);
+
+    byte* address_to_read_from = scroll_buffer + line_to_read_from * VGA_DRIVER_LINE_SIZE;
+    size_t len = VGA_DRIVER_SIZE - VGA_DRIVER_BLANK_LINES * VGA_DRIVER_LINE_SIZE;
+    memcpy(buffer_address, address_to_read_from, len);
 }
 
 static void move_cursor(size_t line, size_t offset)
 {
+    size_t cursor_line = line;
+    if (line > VGA_DRIVER_HEIGHT - VGA_DRIVER_BLANK_LINES)
+    {
+        cursor_line = VGA_DRIVER_HEIGHT - VGA_DRIVER_BLANK_LINES;
+    }
 
+    word index = (word) VGA_DRIVER_GET_FLAT_INDEX(cursor_line, offset);
+    byte index_low = (byte) (index & 0xFF);
+    byte index_high = (byte) (index >> 8);
+
+    outb(VGA_DRIVER_PORT_COMMAND, VGA_DRIVER_COMMAND_SET_CURSOR_HIGH_BYTE);
+    outb(VGA_DRIVER_PORT_DATA, index_high);
+
+    outb(VGA_DRIVER_PORT_COMMAND, VGA_DRIVER_COMMAND_SET_CURSOR_LOW_BYTE);
+    outb(VGA_DRIVER_PORT_DATA, index_low);
 }
 
 static void print_char(char character, uint8_t color)
@@ -73,7 +99,16 @@ static void print_char(char character, uint8_t color)
     {
         line_feed();
         carriage_return();
+
         flush_scroll_buffer();
+        move_cursor(line, offset);
+
+        if (line >= VGA_DRIVER_SCROLL_HEIGHT)
+        {
+            shift_scroll_buffer();
+            line = VGA_DRIVER_SCROLL_HEIGHT - 1;
+        }
+
         return;
     }
 
@@ -83,13 +118,7 @@ static void print_char(char character, uint8_t color)
         carriage_return();
     }
 
-    if (line >= VGA_DRIVER_SCROLL_HEIGHT)
-    {
-        shift_scroll_buffer();
-        line = VGA_DRIVER_SCROLL_HEIGHT - 1;
-    }
-
-    size_t index = (line * VGA_DRIVER_WIDTH + offset) * 2;
+    size_t index = 2 * VGA_DRIVER_GET_FLAT_INDEX(line, offset);
     scroll_buffer[index] = (byte)character;
     scroll_buffer[index + 1] = color;
     ++offset;

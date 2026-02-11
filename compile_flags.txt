@@ -1,8 +1,10 @@
 -xc
 -std=c99
 -DVGA_DRIVER_IMPLEMENTATION
--Ilibc/include
--Idrivers/x86_64/include
+--target=x86_64-elf
+-m64
 -ffreestanding
 -mno-red-zone
--m64
+-Ilibc/include
+-Iarch/x86_64/include
+-Idrivers/x86_64/include
