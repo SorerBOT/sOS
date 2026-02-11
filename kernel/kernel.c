@@ -11,54 +11,13 @@ void kernel()
 
     VGA_DRIVER_init(&settings);
     VGA_DRIVER_report("entered 64-bit long mode...", VGA_DRIVER_SUCCESS);
-    for (volatile size_t i = 0; i < 1000000000; ++i)
-    {
-    }
-    VGA_DRIVER_report("entered 64-bit long mode...", VGA_DRIVER_SUCCESS);
 
-    for (volatile size_t i = 0; i < 1000000000; ++i)
+    while (1)
     {
-    }
-    VGA_DRIVER_report("entered 64-bit long mode...", VGA_DRIVER_SUCCESS);
-    for (volatile size_t i = 0; i < 1000000000; ++i)
-    {
-    }
-    VGA_DRIVER_report("entered 64-bit long mode...", VGA_DRIVER_SUCCESS);
-    for (volatile size_t i = 0; i < 1000000000; ++i)
-    {
-    }
-    VGA_DRIVER_report("entered 64-bit long mode...", VGA_DRIVER_SUCCESS);
-    for (volatile size_t i = 0; i < 1000000000; ++i)
-    {
-    }
-    VGA_DRIVER_report("entered 64-bit long mode...", VGA_DRIVER_SUCCESS);
-    for (volatile size_t i = 0; i < 1000000000; ++i)
-    {
-    }
-    VGA_DRIVER_report("entered 64-bit long mode...", VGA_DRIVER_SUCCESS);
-    for (volatile size_t i = 0; i < 1000000000; ++i)
-    {
-    }
-    VGA_DRIVER_report("entered 64-bit long mode...", VGA_DRIVER_SUCCESS);
-    for (volatile size_t i = 0; i < 1000000000; ++i)
-    {
-    }
-    VGA_DRIVER_report("entered 64-bit long mode...", VGA_DRIVER_SUCCESS);
-    for (volatile size_t i = 0; i < 1000000000; ++i)
-    {
-    }
-    VGA_DRIVER_report("entered 64-bit long mode...", VGA_DRIVER_SUCCESS);
-    for (volatile size_t i = 0; i < 1000000000; ++i)
-    {
-    }
-    VGA_DRIVER_report("entered 64-bit long mode...", VGA_DRIVER_SUCCESS);
-    for (volatile size_t i = 0; i < 1000000000; ++i)
-    {
-    }
-    VGA_DRIVER_report("entered 64-bit long mode...", VGA_DRIVER_SUCCESS);
-    for (volatile size_t i = 0; i < 1000000000; ++i)
-    {
-    }
 
-    while (1);
+        VGA_DRIVER_report("testing VGA scrolling...", VGA_DRIVER_SUCCESS);
+        for (volatile size_t i = 0; i < 100000000; ++i)
+        {
+        }
+    }
 }

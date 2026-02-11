@@ -10,28 +10,67 @@
 #define VGA_DRIVER_BUFFER_ADDRESS 0xB8000
 #define VGA_DRIVER_WIDTH 80
 #define VGA_DRIVER_HEIGHT 25
-#define VGA_DRIVER_ROW_SIZE (2 * VGA_DRIVER_WIDTH)
-#define VGA_DRIVER_SIZE (VGA_DRIVER_ROW_SIZE * VGA_DRIVER_HEIGHT)
+#define VGA_DRIVER_SCROLL_HEIGHT 40
+#define VGA_DRIVER_LINE_SIZE (2 * VGA_DRIVER_WIDTH)
+#define VGA_DRIVER_SIZE (VGA_DRIVER_LINE_SIZE * VGA_DRIVER_HEIGHT)
 #define VGA_DRIVER_MAGENTA_ON_BLACK 0x07
 #define VGA_DRIVER_DIGITS_ASCII_OFFSET 48
 #define VGA_DRIVER_CONVERT_DIGIT_TO_CHAR(d) (((d) % 10) + VGA_DRIVER_DIGITS_ASCII_OFFSET)
 
+static inline void carriage_return();
+static inline void line_feed();
+static void shift_scroll_buffer();
 static void print_char(char character, uint8_t color);
 static void print_int(intmax_t d);
 static void print_string(const char* string, uint8_t color);
 
 static size_t line = 0;
 static size_t offset = 0;
-static byte scroll_buffer[VGA_DRIVER_SIZE];
+static byte scroll_buffer[VGA_DRIVER_SCROLL_HEIGHT * VGA_DRIVER_LINE_SIZE];
 volatile uint8_t* buffer_address = (volatile uint8_t*) VGA_DRIVER_BUFFER_ADDRESS;
+
+static inline void carriage_return()
+{
+    offset = 0;
+}
+static inline void line_feed()
+{
+    ++line;
+}
+
+static void shift_scroll_buffer()
+{
+    byte* restrict dst;
+    byte* restrict src;
+    for (size_t i = 0; i < VGA_DRIVER_SCROLL_HEIGHT - 1; ++i)
+    {
+        dst = scroll_buffer + i * VGA_DRIVER_LINE_SIZE;
+        src = scroll_buffer + (i+1) * VGA_DRIVER_LINE_SIZE;
+        memcpy(dst, src, VGA_DRIVER_LINE_SIZE);
+    }
+
+    memset(src, 0, VGA_DRIVER_LINE_SIZE); // Sets the backgroup black, in the future I might want to write a word-memcpy, and use it to print ' ' in the default color. The current default is black, and \0 looks just like ' ' so I'm ignoring it
+}
 
 static void print_char(char character, uint8_t color)
 {
     if (character == '\n')
     {
-        ++line;
-        offset = 0;
+        line_feed();
+        carriage_return();
         return;
+    }
+
+    if (offset >= VGA_DRIVER_WIDTH)
+    {
+        line_feed();
+        carriage_return();
+    }
+
+    if (line >= VGA_DRIVER_SCROLL_HEIGHT)
+    {
+        shift_scroll_buffer();
+        line = VGA_DRIVER_SCROLL_HEIGHT - 1;
     }
 
     size_t index = (line * VGA_DRIVER_WIDTH + offset) * 2;
@@ -42,7 +81,7 @@ static void print_char(char character, uint8_t color)
     size_t line_to_read_from = (line > VGA_DRIVER_HEIGHT)
         ? line - VGA_DRIVER_HEIGHT
         : 0;
-    memcpy(buffer_address, scroll_buffer + line_to_read_from * VGA_DRIVER_ROW_SIZE, VGA_DRIVER_SIZE);
+    memcpy(buffer_address, scroll_buffer + line_to_read_from * VGA_DRIVER_LINE_SIZE, VGA_DRIVER_SIZE);
 }
 
 static void print_int(intmax_t d)
