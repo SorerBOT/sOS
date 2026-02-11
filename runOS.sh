@@ -1,80 +1,138 @@
 #!/bin/bash
 
-set -e # makes the script quit on fail
-
-BIN="./bin/"
-STAGE_1="bootloader/bootloader_stage_1"
-STAGE_2="bootloader/bootloader_stage_2"
-PAGE_TABLE_SETUP="bootloader/bootloader_stage_2_page_table_setup"
-UPDATE_GDT="bootloader/bootloader_stage_2_update_gdt"
-KERNEL="kernel/kernel"
-KERNEL_START="kernel/kernel_start"
 OS_IMG="os-img"
-STAGE_2_ORG=0x7E00
-KERNEL_ORG=0xBE00 # 0x7E00 + 16KiB
-BOOTLOADER_SIZE_MAX=16896 # 16KiB + 512
 OS_IMAGE_SIZE_MAX=33280 # 32KiB + 512
 
+ARCH="x86_64"
+DRIVERS_DIR="drivers"
+ARCH_DIR="arch"
+LIBC_DIR="libc"
 
-LIB="libc/"
-MATH_LIB="math"
-MEMSET_LIB="memset"
-MEMCPY_LIB="memcpy"
+BIN_DIR="./bin"
+BIN_16_BIT_DIR="$BIN_DIR/16-bit"
+BIN_32_BIT_DIR="$BIN_DIR/32-bit"
+BIN_64_BIT_DIR="$BIN_DIR/64-bit"
 
-DRIVERS="drivers/"
-VGA_DRIVER="vga_driver"
+BOOTLOADER_DIR="bootloader"
+STAGE_1="$BOOTLOADER_DIR/bootloader_stage_1"
+STAGE_2="$BOOTLOADER_DIR/bootloader_stage_2"
+PAGE_TABLE_SETUP="$BOOTLOADER_DIR/bootloader_stage_2_page_table_setup"
+UPDATE_GDT="$BOOTLOADER_DIR/bootloader_stage_2_update_gdt"
+BOOTLOADER_SIZE_MAX=16896 # 16KiB + 512
 
-rm -rf $BIN
-mkdir $BIN
-mkdir "$BIN/bootloader"
-mkdir "$BIN/kernel"
+STAGE_2_ORG=0x7E00
+KERNEL_ORG=0xBE00 # 0x7E00 + 16KiB
 
-# Compiling Stage 1
-echo "Compiling stage 1."
-nasm -f bin "$STAGE_1.asm" -o "$BIN$STAGE_1.bin"
+KERNEL_DIR="kernel"
+KERNEL_START="$KERNEL_DIR/kernel_start"
+KERNEL="$KERNEL_DIR/kernel"
 
-# Compiling Stage 2
-echo "Compiling stage 2."
-CFLAGS_32_BIT="-std=c99 -ffreestanding -m32 -g -Ilibc/include -Idrivers/include"
-nasm -f elf32 "$STAGE_2.asm" -o "$BIN$STAGE_2.o"
-x86_64-elf-gcc $CFLAGS_32_BIT -c "$PAGE_TABLE_SETUP.c" -o "$BIN$PAGE_TABLE_SETUP.o"
-x86_64-elf-gcc $CFLAGS_32_BIT -c "$UPDATE_GDT.c" -o "$BIN$UPDATE_GDT.o"
-x86_64-elf-gcc $CFLAGS_32_BIT -c "$LIB$MATH_LIB.c" -o "$BIN$MATH_LIB.o"
-x86_64-elf-gcc $CFLAGS_32_BIT -c "$LIB$MEMSET_LIB.c" -o "$BIN$MEMSET_LIB.o"
-x86_64-elf-gcc $CFLAGS_32_BIT -c "$LIB$MEMCPY_LIB.c" -o "$BIN$MEMCPY_LIB.o"
-x86_64-elf-gcc $CFLAGS_32_BIT -c "$DRIVERS$VGA_DRIVER.c" -o "$DRIVERS$VGA_DRIVER.o"
-# -Ttext 0x7E00: [ORG 0x7E00]
-# --oformat binary: output a raw flat file, not an executable
-x86_64-elf-ld -m elf_i386 --oformat binary -Ttext $STAGE_2_ORG -o "$BIN$STAGE_2.bin" "$BIN$STAGE_2.o" "$BIN$PAGE_TABLE_SETUP.o" "$BIN$UPDATE_GDT.o" "$BIN$MEMSET_LIB.o" "$BIN$MEMCPY_LIB.o" "$DRIVERS$VGA_DRIVER.o" "$BIN$MATH_LIB.o"
+set -e # quits on fail
 
-# Allocating the first 16KiB + 512 bytes to the bootloader
-cat "$BIN$STAGE_1.bin" "$BIN$STAGE_2.bin" > "$BIN$OS_IMG.bin"
+echo "Cleaning up previous builds..."
+rm -rf $BIN_DIR
 
-BOOTLOADER_SIZE=$(wc -c < "$BIN$OS_IMG.bin")
+echo "Creating 16-bit BIN directories..."
+mkdir -p "$BIN_16_BIT_DIR/$BOOTLOADER_DIR"
+
+echo "Creating 32-bit BIN directories..."
+mkdir -p "$BIN_32_BIT_DIR/$BOOTLOADER_DIR"
+mkdir "$BIN_32_BIT_DIR/$LIBC_DIR"
+mkdir -p "$BIN_32_BIT_DIR/$DRIVERS_DIR/$ARCH"
+mkdir -p "$BIN_32_BIT_DIR/$ARCH_DIR/$ARCH"
+
+echo "Creating 64-bit BIN directories..."
+mkdir -p "$BIN_64_BIT_DIR/$KERNEL_DIR"
+mkdir "$BIN_64_BIT_DIR/$LIBC_DIR"
+mkdir -p "$BIN_64_BIT_DIR/$DRIVERS_DIR/$ARCH"
+mkdir -p "$BIN_64_BIT_DIR/$ARCH_DIR/$ARCH"
+
+
+
+echo "Compiling stage 1..."
+nasm -f bin "$STAGE_1.asm" -o "$BIN_16_BIT_DIR/$STAGE_1.bin"
+
+
+
+echo "Compiling stage 2..."
+CFLAGS_32_BIT="-std=c99 -ffreestanding -m32 -g -Ilibc/include -Idrivers/$ARCH/include -Iarch/$ARCH/include"
+nasm -f elf32 "$STAGE_2.asm" -o "$BIN_32_BIT_DIR/$STAGE_2.o"
+x86_64-elf-gcc $CFLAGS_32_BIT -c "$PAGE_TABLE_SETUP.c" -o "$BIN_32_BIT_DIR/$PAGE_TABLE_SETUP.o"
+x86_64-elf-gcc $CFLAGS_32_BIT -c "$UPDATE_GDT.c" -o "$BIN_32_BIT_DIR/$UPDATE_GDT.o"
+
+echo "Compiling 32-bit drivers..."
+for file in "$DRIVERS_DIR/$ARCH"/*.c; do
+    [ -e "$file" ] || continue
+    x86_64-elf-gcc $CFLAGS_32_BIT -c "$file" -o "$BIN_32_BIT_DIR/$(dirname "$file")/$(basename "$file" .c).o"
+done
+echo "Compiling 32-bit architecture specific code..."
+for file in "$ARCH_DIR/$ARCH"/*.c; do
+    [ -e "$file" ] || continue
+    x86_64-elf-gcc $CFLAGS_32_BIT -c "$file" -o "$BIN_32_BIT_DIR/$(dirname "$file")/$(basename "$file" .c).o"
+done
+echo "Compiling 32-bit libc..."
+for file in "$LIBC_DIR"/*.c; do
+    [ -e "$file" ] || continue
+    x86_64-elf-gcc $CFLAGS_32_BIT -c "$file" -o "$BIN_32_BIT_DIR/$(dirname "$file")/$(basename "$file" .c).o"
+done
+
+echo "Linking Stage 2..."
+OBJ_FILES_EXCEPT_ENTRY=$(find $BIN_32_BIT_DIR -type f -name "*.o" ! -name "$(basename "$BIN_32_BIT_DIR/$STAGE_2.o")")
+x86_64-elf-ld -m elf_i386 --oformat binary -Ttext $STAGE_2_ORG \
+    -o "$BIN_32_BIT_DIR/$STAGE_2.bin" \
+    "$BIN_32_BIT_DIR/$STAGE_2.o" $OBJ_FILES_EXCEPT_ENTRY
+echo "Successfully linked stage 2..."
+
+
+cat "$BIN_16_BIT_DIR/$STAGE_1.bin" "$BIN_32_BIT_DIR/$STAGE_2.bin" > "$BIN_DIR/$OS_IMG.bin"
+
+BOOTLOADER_SIZE=$(wc -c < "$BIN_DIR/$OS_IMG.bin")
 echo "Bootloader built successfully..."
 if (( BOOTLOADER_SIZE > BOOTLOADER_SIZE_MAX )); then
-    echo "Bootloader size: $OS_IMAGE_SIZE, exceeds allowed size of 16KiB + 512 bytes. It's time to make the BIOS load more code in stage 1...."
+    echo "Bootloader size: $BOOTLOADER_SIZE, exceeds allowed size of 16KiB + 512 bytes. It's time to make the BIOS load more code in stage 1..."
     exit 1
 else
-    echo "Bootloader size: $OS_IMAGE_SIZE is OK."
+    echo "Bootloader size: $BOOTLOADER_SIZE is OK."
 fi
 
-truncate -s $BOOTLOADER_SIZE_MAX "$BIN$OS_IMG.bin"
+echo "Padding bootloader binary (entire OS image)..."
+truncate -s $BOOTLOADER_SIZE_MAX "$BIN_DIR/$OS_IMG.bin"
 
-# Compiling the kernel
-echo "Compiling the kernel."
-CFLAGS_64_BIT="-std=c99 -ffreestanding -mno-red-zone -m64 -g -Ilibc/include -Idrivers/include"
-nasm -f elf64 "$KERNEL_START.asm" -o "$BIN$KERNEL_START.o"
-x86_64-elf-gcc $CFLAGS_64_BIT -c "$KERNEL.c" -o "$BIN/$KERNEL.o"
-x86_64-elf-gcc $CFLAGS_64_BIT -c "$LIB$MATH_LIB.c" -o "$BIN$MATH_LIB.o"
-x86_64-elf-gcc $CFLAGS_64_BIT -c "$LIB$MEMSET_LIB.c" -o "$BIN$MEMSET_LIB.o"
-x86_64-elf-gcc $CFLAGS_64_BIT -c "$LIB$MEMCPY_LIB.c" -o "$BIN$MEMCPY_LIB.o"
-x86_64-elf-gcc $CFLAGS_64_BIT -c "$DRIVERS$VGA_DRIVER.c" -o "$DRIVERS$VGA_DRIVER.o"
-x86_64-elf-ld -m elf_x86_64 --oformat binary -Ttext $KERNEL_ORG -o "$BIN/$KERNEL.bin" "$BIN/$KERNEL_START.o" "$BIN/$KERNEL.o" "$BIN$MEMSET_LIB.o" "$BIN$MEMCPY_LIB.o" "$DRIVERS$VGA_DRIVER.o" "$BIN$MATH_LIB.o"
-cat "$BIN/$KERNEL.bin" >> "$BIN$OS_IMG.bin"
 
-# checking the file size, should not exceed 512 + 32KiB because this is all we're loading into RAM
-OS_IMAGE_SIZE=$(wc -c < "$BIN$OS_IMG.bin")
+echo "Compiling the kernel..."
+CFLAGS_64_BIT="-std=c99 -ffreestanding -mno-red-zone -m64 -g -Ilibc/include -Idrivers/$ARCH/include -Iarch/$ARCH/include"
+nasm -f elf64 "$KERNEL_START.asm" -o "$BIN_64_BIT_DIR/$KERNEL_START.o"
+x86_64-elf-gcc $CFLAGS_64_BIT -c "$KERNEL.c" -o "$BIN_64_BIT_DIR/$KERNEL.o"
+
+echo "Compiling 64-bit drivers..."
+for file in "$DRIVERS_DIR/$ARCH"/*.c; do
+    [ -e "$file" ] || continue
+    x86_64-elf-gcc $CFLAGS_64_BIT -c "$file" -o "$BIN_64_BIT_DIR/$(dirname "$file")/$(basename "$file" .c).o"
+done
+echo "Compiling 64-bit architecture specific code..."
+for file in "$ARCH_DIR/$ARCH"/*.c; do
+    [ -e "$file" ] || continue
+    x86_64-elf-gcc $CFLAGS_64_BIT -c "$file" -o "$BIN_64_BIT_DIR/$(dirname "$file")/$(basename "$file" .c).o"
+done
+echo "Compiling 64-bit libc..."
+for file in "$LIBC_DIR"/*.c; do
+    [ -e "$file" ] || continue
+    x86_64-elf-gcc $CFLAGS_64_BIT -c "$file" -o "$BIN_64_BIT_DIR/$(dirname "$file")/$(basename "$file" .c).o"
+done
+
+echo "Linking kernel..."
+OBJ_FILES_EXCEPT_ENTRY=$(find $BIN_64_BIT_DIR -type f -name "*.o" ! -name "$(basename "$BIN_64_BIT_DIR/$KERNEL_START.o")")
+echo "Printing object files:"
+echo $OBJ_FILES_EXCEPT_ENTRY
+x86_64-elf-ld -m elf_x86_64 --oformat binary -Ttext $KERNEL_ORG \
+    -o "$BIN_64_BIT_DIR/$KERNEL.bin" \
+    "$BIN_64_BIT_DIR/$KERNEL_START.o" $OBJ_FILES_EXCEPT_ENTRY
+echo "Successfully linked kernel..."
+
+echo "Appending kernel to OS image..."
+cat "$BIN_64_BIT_DIR/$KERNEL.bin" >> "$BIN_DIR/$OS_IMG.bin"
+
+OS_IMAGE_SIZE=$(wc -c < "$BIN_DIR/$OS_IMG.bin")
 echo "OS built successfully..."
 if (( OS_IMAGE_SIZE > OS_IMAGE_SIZE_MAX )); then
     echo "OS size: $OS_IMAGE_SIZE, exceeds allowed size of 32KiB + 512 bytes. It's time to make the BIOS load more code in stage 1...."
@@ -83,6 +141,8 @@ else
     echo "OS size: $OS_IMAGE_SIZE is OK. Running the OS"
 fi
 
-truncate -s $OS_IMAGE_SIZE_MAX "$BIN$OS_IMG.bin"
+echo "Padding kernel binary (entire OS image)..."
+truncate -s $OS_IMAGE_SIZE_MAX "$BIN_DIR/$OS_IMG.bin"
 
-qemu-system-x86_64 -drive format=raw,file="$BIN$OS_IMG.bin" -display cocoa
+echo "Build complete. Running the OS!"
+qemu-system-x86_64 -drive format=raw,file="$BIN_DIR/$OS_IMG.bin" -display cocoa

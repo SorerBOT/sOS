@@ -20,6 +20,7 @@
 static inline void carriage_return();
 static inline void line_feed();
 static inline void flush_scroll_buffer();
+static void move_cursor(size_t line, size_t offset);
 static void shift_scroll_buffer();
 static void print_char(char character, uint8_t color);
 static void print_int(intmax_t d);
@@ -59,6 +60,11 @@ static inline void flush_scroll_buffer()
         ? line - VGA_DRIVER_HEIGHT
         : 0;
     memcpy(buffer_address, scroll_buffer + line_to_read_from * VGA_DRIVER_LINE_SIZE, VGA_DRIVER_SIZE);
+}
+
+static void move_cursor(size_t line, size_t offset)
+{
+
 }
 
 static void print_char(char character, uint8_t color)

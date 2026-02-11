@@ -2,7 +2,7 @@
 -std=c99
 -DVGA_DRIVER_IMPLEMENTATION
 -Ilibc/include
--Idrivers/include
+-Idrivers/x86_64/include
 -ffreestanding
 -mno-red-zone
 -m64
