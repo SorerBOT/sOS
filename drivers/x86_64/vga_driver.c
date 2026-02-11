@@ -14,6 +14,7 @@
 #define VGA_DRIVER_SHADOW_HEIGHT 40
 #define VGA_DRIVER_LINE_SIZE (2 * VGA_DRIVER_WIDTH)
 #define VGA_DRIVER_SIZE (VGA_DRIVER_LINE_SIZE * VGA_DRIVER_HEIGHT)
+#define VGA_DRIVER_SHADOW_SIZE (VGA_DRIVER_LINE_SIZE * VGA_DRIVER_SHADOW_HEIGHT)
 #define VGA_DRIVER_GREY_ON_BLACK 0x07
 #define VGA_DRIVER_DIGITS_ASCII_OFFSET 48
 #define VGA_DRIVER_CONVERT_DIGIT_TO_CHAR(d) (((d) % 10) + VGA_DRIVER_DIGITS_ASCII_OFFSET)
@@ -36,7 +37,7 @@ static void print_string(const char* string, uint8_t color);
 
 static size_t shadow_line = 0;
 static size_t offset = 0;
-static byte shadow_buffer[VGA_DRIVER_SHADOW_HEIGHT * VGA_DRIVER_LINE_SIZE] = { 0 };
+static byte shadow_buffer[VGA_DRIVER_SHADOW_SIZE] = { 0 };
 volatile uint8_t* buffer_address = (volatile uint8_t*) VGA_DRIVER_BUFFER_ADDRESS;
 
 static inline void carriage_return()
@@ -252,6 +253,13 @@ void VGA_DRIVER_printf(const char* format, ...)
         }
         ++format;
     }
+}
+
+void VGA_DRIVER_clear()
+{
+    memset(shadow_buffer, 0, VGA_DRIVER_SHADOW_SIZE);
+    shadow_line = 0;
+    offset = 0;
 }
 
 void VGA_DRIVER_init(const VGA_DRIVER_settings_t* settings)
