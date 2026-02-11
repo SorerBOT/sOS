@@ -20,6 +20,7 @@ typedef struct
 void VGA_DRIVER_report(const char* message, VGA_Driver_report_status status);
 void VGA_DRIVER_printf(const char* format, ...);
 void VGA_DRIVER_clear();
+void VGA_DRIVER_blue_screen(const char* message);
 void VGA_DRIVER_init(const VGA_DRIVER_settings_t* settings);
 
 

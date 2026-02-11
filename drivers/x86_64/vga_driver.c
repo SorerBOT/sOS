@@ -17,8 +17,6 @@
 #define VGA_DRIVER_SHADOW_SIZE (VGA_DRIVER_LINE_SIZE * VGA_DRIVER_SHADOW_HEIGHT)
 #define VGA_DRIVER_GREY_ON_BLACK 0x07
 #define VGA_DRIVER_DIGITS_ASCII_OFFSET 48
-#define VGA_DRIVER_CONVERT_DIGIT_TO_CHAR(d) (((d) % 10) + VGA_DRIVER_DIGITS_ASCII_OFFSET)
-#define VGA_DRIVER_GET_FLAT_INDEX(line, offset) ((line) * VGA_DRIVER_WIDTH + (offset))
 #define VGA_DRIVER_BLANK_LINES 2
 
 #define VGA_DRIVER_PORT_COMMAND 0x3D4
@@ -26,19 +24,24 @@
 #define VGA_DRIVER_COMMAND_SET_CURSOR_HIGH_BYTE 0x0E
 #define VGA_DRIVER_COMMAND_SET_CURSOR_LOW_BYTE 0x0F
 
+#define VGA_DRIVER_CONVERT_DIGIT_TO_CHAR(d) (((d) % 10) + VGA_DRIVER_DIGITS_ASCII_OFFSET)
+#define VGA_DRIVER_GET_FLAT_INDEX(line, offset) ((line) * VGA_DRIVER_WIDTH + (offset))
+#define VGA_DRIVER_PRINT_STRING(string) print_string_colored((string), VGA_DRIVER_GREY_ON_BLACK);
+
 static inline void carriage_return();
 static inline void line_feed();
-static inline void flush_shadow_buffer();
+static inline void shift_shadow_buffer();
+
+static void flush_shadow_buffer();
 static void move_cursor(size_t shadow_line, size_t offset);
-static void shift_shadow_buffer();
-static void print_char(char character, uint8_t color);
+static void print_char(char character, byte color);
 static void print_int(intmax_t d);
-static void print_string(const char* string, uint8_t color);
+static void print_string_colored(const char* string, byte color);
 
 static size_t shadow_line = 0;
 static size_t offset = 0;
 static byte shadow_buffer[VGA_DRIVER_SHADOW_SIZE] = { 0 };
-volatile uint8_t* buffer_address = (volatile uint8_t*) VGA_DRIVER_BUFFER_ADDRESS;
+static volatile uint8_t* buffer_address = (volatile uint8_t*) VGA_DRIVER_BUFFER_ADDRESS;
 
 static inline void carriage_return()
 {
@@ -94,7 +97,7 @@ static void move_cursor(size_t shadow_line, size_t offset)
     outb(VGA_DRIVER_PORT_DATA, index_low);
 }
 
-static void print_char(char character, uint8_t color)
+static void print_char(char character, byte color)
 {
     if (character == '\n')
     {
@@ -152,10 +155,10 @@ static void print_int(intmax_t d)
 
     ++current_idx; // we decremented it one too many times
     char* final_string = ((char*)digits) + current_idx;
-    print_string(final_string, VGA_DRIVER_GREY_ON_BLACK);
+    VGA_DRIVER_PRINT_STRING(final_string);
 }
 
-static void print_string(const char* string, uint8_t color)
+static void print_string_colored(const char* string, byte color)
 {
     while (*string != '\0')
     {
@@ -164,21 +167,24 @@ static void print_string(const char* string, uint8_t color)
     }
 }
 
+static inline void print_string(const char* string)
+{
+    print_string_colored(string, VGA_DRIVER_GREY_ON_BLACK);
+}
+
 void VGA_DRIVER_report(const char* message, VGA_Driver_report_status status)
 {
-    print_char('[', VGA_DRIVER_GREY_ON_BLACK);
+    VGA_DRIVER_PRINT_STRING("[");
     if (status == VGA_DRIVER_SUCCESS)
     {
-        print_string(" SUCCESS ", 0x02);
+        print_string_colored(" SUCCESS ", 0x02);
     }
     else if (status == VGA_DRIVER_FAILURE)
     {
-        print_string(" FAILURE ", 0x04);
+        print_string_colored(" FAILURE ", 0x04);
     }
-    print_string("] ", VGA_DRIVER_GREY_ON_BLACK);
-    print_string(message, VGA_DRIVER_GREY_ON_BLACK);
-    print_char('\n', VGA_DRIVER_GREY_ON_BLACK);
 
+    VGA_DRIVER_printf("] %s\n", message);
 }
 
 void VGA_DRIVER_printf(const char* format, ...)
@@ -212,14 +218,13 @@ void VGA_DRIVER_printf(const char* format, ...)
                     current = *format;
                     ++long_count;
                 }
-
             }
 
             switch (current)
             {
                 case 's':
                     s = va_arg(ap, char*);
-                    print_string(s, VGA_DRIVER_GREY_ON_BLACK);
+                    VGA_DRIVER_PRINT_STRING(s);
                     break;
                 case 'c':
                     c = (char)va_arg(ap, int);
