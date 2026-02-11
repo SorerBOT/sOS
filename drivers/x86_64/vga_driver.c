@@ -37,6 +37,8 @@ static void move_cursor(size_t shadow_line, size_t offset);
 static void print_char(char character, byte color);
 static void print_int(intmax_t d);
 static void print_string_colored(const char* string, byte color);
+static void printf_colored(byte color, const char* format, ...);
+static void vprintf_colored(byte color, const char* format, va_list ap);
 
 static size_t shadow_line = 0;
 static size_t offset = 0;
@@ -172,25 +174,8 @@ static inline void print_string(const char* string)
     print_string_colored(string, VGA_DRIVER_GREY_ON_BLACK);
 }
 
-void vga_driver_report(const char* message, vga_driver_report_status status)
+static void vprintf_colored(byte color, const char* format, va_list ap)
 {
-    VGA_DRIVER_PRINT_STRING("[");
-    if (status == VGA_DRIVER_SUCCESS)
-    {
-        print_string_colored(" SUCCESS ", 0x02);
-    }
-    else if (status == VGA_DRIVER_FAILURE)
-    {
-        print_string_colored(" FAILURE ", 0x04);
-    }
-
-    vga_driver_printf("] %s\n", message);
-}
-
-void vga_driver_printf(const char* format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
     char* s;
     char c;
     int d;
@@ -260,6 +245,40 @@ void vga_driver_printf(const char* format, ...)
     }
 }
 
+static void printf_colored(byte color, const char* format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+
+    vprintf_colored(color, format, ap);
+
+    va_end(ap);
+}
+
+void vga_driver_report(const char* message, vga_driver_report_status status)
+{
+    VGA_DRIVER_PRINT_STRING("[");
+    if (status == VGA_DRIVER_SUCCESS)
+    {
+        print_string_colored(" SUCCESS ", 0x02);
+    }
+    else if (status == VGA_DRIVER_FAILURE)
+    {
+        print_string_colored(" FAILURE ", 0x04);
+    }
+
+    vga_driver_printf("] %s\n", message);
+}
+
+void vga_driver_printf(const char* format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+
+    vprintf_colored(VGA_DRIVER_GREY_ON_BLACK, format, ap);
+
+    va_end(ap);
+}
 void vga_driver_clear()
 {
     word space_and_default_color = (VGA_DRIVER_GREY_ON_BLACK << 8) | ((byte) ' ');
