@@ -14,7 +14,7 @@
 #define VGA_DRIVER_SHADOW_HEIGHT 40
 #define VGA_DRIVER_LINE_SIZE (2 * VGA_DRIVER_WIDTH)
 #define VGA_DRIVER_SIZE (VGA_DRIVER_LINE_SIZE * VGA_DRIVER_HEIGHT)
-#define VGA_DRIVER_MAGENTA_ON_BLACK 0x07
+#define VGA_DRIVER_GREY_ON_BLACK 0x07
 #define VGA_DRIVER_DIGITS_ASCII_OFFSET 48
 #define VGA_DRIVER_CONVERT_DIGIT_TO_CHAR(d) (((d) % 10) + VGA_DRIVER_DIGITS_ASCII_OFFSET)
 #define VGA_DRIVER_GET_FLAT_INDEX(line, offset) ((line) * VGA_DRIVER_WIDTH + (offset))
@@ -151,7 +151,7 @@ static void print_int(intmax_t d)
 
     ++current_idx; // we decremented it one too many times
     char* final_string = ((char*)digits) + current_idx;
-    print_string(final_string, VGA_DRIVER_MAGENTA_ON_BLACK);
+    print_string(final_string, VGA_DRIVER_GREY_ON_BLACK);
 }
 
 static void print_string(const char* string, uint8_t color)
@@ -165,7 +165,7 @@ static void print_string(const char* string, uint8_t color)
 
 void VGA_DRIVER_report(const char* message, VGA_Driver_report_status status)
 {
-    print_char('[', VGA_DRIVER_MAGENTA_ON_BLACK);
+    print_char('[', VGA_DRIVER_GREY_ON_BLACK);
     if (status == VGA_DRIVER_SUCCESS)
     {
         print_string(" SUCCESS ", 0x02);
@@ -174,9 +174,9 @@ void VGA_DRIVER_report(const char* message, VGA_Driver_report_status status)
     {
         print_string(" FAILURE ", 0x04);
     }
-    print_string("] ", VGA_DRIVER_MAGENTA_ON_BLACK);
-    print_string(message, VGA_DRIVER_MAGENTA_ON_BLACK);
-    print_char('\n', VGA_DRIVER_MAGENTA_ON_BLACK);
+    print_string("] ", VGA_DRIVER_GREY_ON_BLACK);
+    print_string(message, VGA_DRIVER_GREY_ON_BLACK);
+    print_char('\n', VGA_DRIVER_GREY_ON_BLACK);
 
 }
 
@@ -218,11 +218,11 @@ void VGA_DRIVER_printf(const char* format, ...)
             {
                 case 's':
                     s = va_arg(ap, char*);
-                    print_string(s, VGA_DRIVER_MAGENTA_ON_BLACK);
+                    print_string(s, VGA_DRIVER_GREY_ON_BLACK);
                     break;
                 case 'c':
                     c = (char)va_arg(ap, int);
-                    print_char(c, VGA_DRIVER_MAGENTA_ON_BLACK);
+                    print_char(c, VGA_DRIVER_GREY_ON_BLACK);
                     break;
                 case 'd':
                     if (long_count == 0)
@@ -248,7 +248,7 @@ void VGA_DRIVER_printf(const char* format, ...)
         }
         else
         {
-            print_char(current, VGA_DRIVER_MAGENTA_ON_BLACK);
+            print_char(current, VGA_DRIVER_GREY_ON_BLACK);
         }
         ++format;
     }
