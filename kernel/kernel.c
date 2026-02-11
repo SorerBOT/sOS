@@ -18,7 +18,7 @@ void kernel()
 // TODO: add %lu to printf. This is a little messed up
         VGA_DRIVER_printf("testing VGA scrolling. Print number: %ld...\n", print_count);
         ++print_count;
-        if (print_count % 100 == 0)
+        if (print_count % 15 == 0)
         {
             VGA_DRIVER_clear();
         }

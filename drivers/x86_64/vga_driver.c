@@ -257,9 +257,12 @@ void VGA_DRIVER_printf(const char* format, ...)
 
 void VGA_DRIVER_clear()
 {
-    memset(shadow_buffer, 0, VGA_DRIVER_SHADOW_SIZE);
+    word space_and_default_color = (VGA_DRIVER_GREY_ON_BLACK << 8) | ((byte) ' ');
+    memset_word(shadow_buffer, space_and_default_color, VGA_DRIVER_SHADOW_SIZE);
     shadow_line = 0;
     offset = 0;
+    flush_shadow_buffer();
+    move_cursor(shadow_line, offset);
 }
 
 void VGA_DRIVER_init(const VGA_DRIVER_settings_t* settings)
