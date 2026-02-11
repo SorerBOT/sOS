@@ -19,6 +19,7 @@
 
 static inline void carriage_return();
 static inline void line_feed();
+static inline void flush_scroll_buffer();
 static void shift_scroll_buffer();
 static void print_char(char character, uint8_t color);
 static void print_int(intmax_t d);
@@ -52,12 +53,21 @@ static void shift_scroll_buffer()
     memset(src, 0, VGA_DRIVER_LINE_SIZE); // Sets the backgroup black, in the future I might want to write a word-memcpy, and use it to print ' ' in the default color. The current default is black, and \0 looks just like ' ' so I'm ignoring it
 }
 
+static inline void flush_scroll_buffer()
+{
+    size_t line_to_read_from = (line > VGA_DRIVER_HEIGHT)
+        ? line - VGA_DRIVER_HEIGHT
+        : 0;
+    memcpy(buffer_address, scroll_buffer + line_to_read_from * VGA_DRIVER_LINE_SIZE, VGA_DRIVER_SIZE);
+}
+
 static void print_char(char character, uint8_t color)
 {
     if (character == '\n')
     {
         line_feed();
         carriage_return();
+        flush_scroll_buffer();
         return;
     }
 
@@ -77,11 +87,6 @@ static void print_char(char character, uint8_t color)
     scroll_buffer[index] = (byte)character;
     scroll_buffer[index + 1] = color;
     ++offset;
-
-    size_t line_to_read_from = (line > VGA_DRIVER_HEIGHT)
-        ? line - VGA_DRIVER_HEIGHT
-        : 0;
-    memcpy(buffer_address, scroll_buffer + line_to_read_from * VGA_DRIVER_LINE_SIZE, VGA_DRIVER_SIZE);
 }
 
 static void print_int(intmax_t d)
