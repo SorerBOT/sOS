@@ -31,6 +31,7 @@
 #define VGA_DRIVER_COLOR_BLUE_SCREEN 0x1F
 #define VGA_DRIVER_COLOR_SUCCESS 0x02
 #define VGA_DRIVER_COLOR_FAILURE 0x04
+#define VGA_DRIVER_SPACE_AND_DEFAULT_COLOR ((word) ((VGA_DRIVER_COLOR_DEFAULT << 8) | ((byte) ' ')))
 
 static inline void carriage_return();
 static inline void line_feed();
@@ -71,13 +72,13 @@ static void shift_shadow_buffer()
         memcpy(dst, src, VGA_DRIVER_LINE_SIZE);
     }
 
-    memset(src, 0, VGA_DRIVER_LINE_SIZE); // Sets the backgroup black, in the future I might want to write a word-memcpy, and use it to print ' ' in the default color. The current default is black, and \0 looks just like ' ' so I'm ignoring it
+    word* last_line_word = (word*) src;
+    memset_word(last_line_word, VGA_DRIVER_SPACE_AND_DEFAULT_COLOR, VGA_DRIVER_LINE_SIZE);
 }
 
 static inline void init_shadow_buffer()
 {
-    word space_and_default_color = (VGA_DRIVER_COLOR_DEFAULT << 8) | ((byte) ' ');
-    memset_word(shadow_buffer, space_and_default_color, VGA_DRIVER_SHADOW_SIZE / 2);
+    memset_word(shadow_buffer, VGA_DRIVER_SPACE_AND_DEFAULT_COLOR, VGA_DRIVER_SHADOW_SIZE / 2);
 }
 
 
