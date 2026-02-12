@@ -6,7 +6,7 @@
 #include <types.h>
 #include <string.h>
 #include <vga_driver.h>
-#include <io.h>
+#include <cpu_io.h>
 
 #define VGA_DRIVER_BUFFER_ADDRESS 0xB8000
 #define VGA_DRIVER_WIDTH 80
@@ -97,11 +97,11 @@ static void move_cursor(size_t shadow_line, size_t offset)
     byte index_low = (byte) (index & 0xFF);
     byte index_high = (byte) (index >> 8);
 
-    outb(VGA_DRIVER_PORT_COMMAND, VGA_DRIVER_COMMAND_SET_CURSOR_HIGH_BYTE);
-    outb(VGA_DRIVER_PORT_DATA, index_high);
+    cpu_io_outb(VGA_DRIVER_PORT_COMMAND, VGA_DRIVER_COMMAND_SET_CURSOR_HIGH_BYTE);
+    cpu_io_outb(VGA_DRIVER_PORT_DATA, index_high);
 
-    outb(VGA_DRIVER_PORT_COMMAND, VGA_DRIVER_COMMAND_SET_CURSOR_LOW_BYTE);
-    outb(VGA_DRIVER_PORT_DATA, index_low);
+    cpu_io_outb(VGA_DRIVER_PORT_COMMAND, VGA_DRIVER_COMMAND_SET_CURSOR_LOW_BYTE);
+    cpu_io_outb(VGA_DRIVER_PORT_DATA, index_low);
 }
 
 static void print_char(byte color, char character)
