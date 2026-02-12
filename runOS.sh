@@ -27,6 +27,8 @@ KERNEL_DIR="kernel"
 KERNEL_START="$KERNEL_DIR/kernel_start"
 KERNEL="$KERNEL_DIR/kernel"
 
+INCLUDE_FLAGS="-Ilibc/include -Idrivers/$ARCH/include -Iarch/$ARCH/include -Iarch/common/include"
+
 set -e # quits on fail
 
 echo "Cleaning up previous builds..."
@@ -55,7 +57,7 @@ nasm -f bin "$STAGE_1.asm" -o "$BIN_16_BIT_DIR/$STAGE_1.bin"
 
 
 echo "Compiling stage 2..."
-CFLAGS_32_BIT="-std=c99 -ffreestanding -m32 -g -Ilibc/include -Idrivers/$ARCH/include -Iarch/$ARCH/include"
+CFLAGS_32_BIT="-std=c99 -ffreestanding -m32 -g $INCLUDE_FLAGS"
 nasm -f elf32 "$STAGE_2.asm" -o "$BIN_32_BIT_DIR/$STAGE_2.o"
 x86_64-elf-gcc $CFLAGS_32_BIT -c "$PAGE_TABLE_SETUP.c" -o "$BIN_32_BIT_DIR/$PAGE_TABLE_SETUP.o"
 x86_64-elf-gcc $CFLAGS_32_BIT -c "$UPDATE_GDT.c" -o "$BIN_32_BIT_DIR/$UPDATE_GDT.o"
@@ -100,7 +102,7 @@ truncate -s $BOOTLOADER_SIZE_MAX "$BIN_DIR/$OS_IMG.bin"
 
 
 echo "Compiling the kernel..."
-CFLAGS_64_BIT="-std=c99 -ffreestanding -mno-red-zone -m64 -g -Ilibc/include -Idrivers/$ARCH/include -Iarch/$ARCH/include"
+CFLAGS_64_BIT="-std=c99 -ffreestanding -mno-red-zone -m64 -g $INCLUDE_FLAGS"
 nasm -f elf64 "$KERNEL_START.asm" -o "$BIN_64_BIT_DIR/$KERNEL_START.o"
 x86_64-elf-gcc $CFLAGS_64_BIT -c "$KERNEL.c" -o "$BIN_64_BIT_DIR/$KERNEL.o"
 

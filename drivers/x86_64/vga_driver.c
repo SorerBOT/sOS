@@ -25,12 +25,7 @@
 
 #define VGA_DRIVER_CONVERT_DIGIT_TO_CHAR(d) (((d) % 10) + VGA_DRIVER_DIGITS_ASCII_OFFSET)
 #define VGA_DRIVER_GET_FLAT_INDEX(line, offset) ((line) * VGA_DRIVER_WIDTH + (offset))
-#define VGA_DRIVER_PRINTF(format, ...) printf_colored(VGA_DRIVER_COLOR_DEFAULT, (format), ##__VA_ARGS__)
 
-#define VGA_DRIVER_COLOR_DEFAULT 0x07
-#define VGA_DRIVER_COLOR_BLUE_SCREEN 0x1F
-#define VGA_DRIVER_COLOR_SUCCESS 0x02
-#define VGA_DRIVER_COLOR_FAILURE 0x04
 #define VGA_DRIVER_SPACE_AND_DEFAULT_COLOR ((word) ((VGA_DRIVER_COLOR_DEFAULT << 8) | ((byte) ' ')))
 
 static inline void carriage_return();
@@ -38,14 +33,10 @@ static inline void line_feed();
 static inline void shift_shadow_buffer();
 static inline void init_shadow_buffer();
 
-static void flush_shadow_buffer();
 static void move_cursor(size_t shadow_line, size_t offset);
 static void print_char(byte color, char character);
 static void print_int(byte color, intmax_t d);
 static void print_string_colored(byte color, const char* string);
-static void printf_colored(byte color, const char* format, ...);
-static void vprintf_colored(byte color, const char* format, va_list ap);
-static void clear_colored(byte new_background_color);
 
 static size_t shadow_line = 0;
 static size_t offset = 0;
@@ -82,7 +73,7 @@ static inline void init_shadow_buffer()
 }
 
 
-static void flush_shadow_buffer()
+void vga_driver_flush_shadow_buffer()
 {
     size_t writable_lines_count = VGA_DRIVER_HEIGHT - VGA_DRIVER_BLANK_LINES;
     size_t line_to_read_from = (shadow_line >= writable_lines_count)
@@ -120,7 +111,7 @@ static void print_char(byte color, char character)
         line_feed();
         carriage_return();
 
-        flush_shadow_buffer();
+        vga_driver_flush_shadow_buffer();
         move_cursor(shadow_line, offset);
 
         if (shadow_line >= VGA_DRIVER_SHADOW_HEIGHT)
@@ -183,7 +174,7 @@ static void print_string_colored(byte color, const char* string)
     }
 }
 
-static void vprintf_colored(byte color, const char* format, va_list ap)
+void vga_driver_vprintf_colored(byte color, const char* format, va_list ap)
 {
     char* s;
     char c;
@@ -254,66 +245,24 @@ static void vprintf_colored(byte color, const char* format, va_list ap)
     }
 }
 
-static void printf_colored(byte color, const char* format, ...)
+void vga_driver_printf_colored(byte color, const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
 
-    vprintf_colored(color, format, ap);
+    vga_driver_vprintf_colored(color, format, ap);
 
     va_end(ap);
 }
 
-static void clear_colored(byte new_background_color)
+void vga_driver_clear_colored(byte new_background_color)
 {
     word space_and_color = (new_background_color << 8) | ((byte) ' ');
     memset_word(shadow_buffer, space_and_color, VGA_DRIVER_SHADOW_SIZE / 2);
     shadow_line = 0;
     offset = 0;
-    flush_shadow_buffer();
+    vga_driver_flush_shadow_buffer();
     move_cursor(shadow_line, offset);
-}
-
-void vga_driver_report(const char* message, vga_driver_report_status status)
-{
-    VGA_DRIVER_PRINTF("[");
-    if (status == VGA_DRIVER_SUCCESS)
-    {
-        printf_colored(VGA_DRIVER_COLOR_SUCCESS, " SUCCESS ");
-    }
-    else if (status == VGA_DRIVER_FAILURE)
-    {
-        printf_colored(VGA_DRIVER_COLOR_FAILURE, " FAILURE ");
-    }
-
-    VGA_DRIVER_PRINTF("] %s\n", message);
-}
-
-void vga_driver_printf(const char* format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-
-    vprintf_colored(VGA_DRIVER_COLOR_DEFAULT, format, ap);
-
-    va_end(ap);
-}
-
-void vga_driver_clear()
-{
-    clear_colored(VGA_DRIVER_COLOR_DEFAULT);
-}
-
-void vga_driver_print_blue_screen(const char* format, ...)
-{
-    clear_colored(VGA_DRIVER_COLOR_BLUE_SCREEN);
-
-    va_list ap;
-    va_start(ap, format);
-
-    vprintf_colored(VGA_DRIVER_COLOR_BLUE_SCREEN, format, ap);
-
-    va_end(ap);
 }
 
 void vga_driver_init(const vga_driver_settings_t* settings)

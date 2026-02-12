@@ -7,4 +7,5 @@
 -mno-red-zone
 -Ilibc/include
 -Iarch/x86_64/include
+-Iarch/common/include
 -Idrivers/x86_64/include

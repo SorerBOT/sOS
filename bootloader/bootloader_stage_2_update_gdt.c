@@ -1,7 +1,6 @@
 #include <stddef.h>
-
 #include <types.h> 
-#include <vga_driver.h>
+#include <stdio.h>
 
 #define STRIP_FLAGS(limit_top_plus_flags) (limit_top_plus_flags & 0b1111)
 #define APPEND_FLAGS(stripped, flags) (stripped | flags)
@@ -61,5 +60,5 @@ void update_gdt()
         descriptor->limit_top_plus_flags = with_new_flags;
     }
 
-    vga_driver_report("updated GDT table...", VGA_DRIVER_SUCCESS);
+    report("updated GDT table...", STDIO_SUCCESS);
 }

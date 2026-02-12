@@ -5,7 +5,7 @@ __asm__(".code32\n");
 #include <types.h>
 #include <string.h>
 
-#include <vga_driver.h>
+#include <stdio.h>
 
 #define KiB (1024)
 #define PAGE_SIZE (4 * KiB)
@@ -85,7 +85,7 @@ void PT_init_identity_map(PT_t* pt, int64_t pages_count)
 
 void PDT_init_identity_map(PDT_t* pdt, int64_t pages_count)
 {
-    vga_driver_printf("Mapping pages. %ld pages remaining...\n", pages_count);
+    printf("Mapping pages. %ld pages remaining...\n", pages_count);
 
 
     size_t created_pt_count = 0;
@@ -111,7 +111,7 @@ void PDPT_init_identity_map(PDPT_t* pdpt, int64_t pages_count)
 PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
 {
     int64_t pages_count = memory_size_to_map / PAGE_SIZE;
-    vga_driver_printf("Mapping %ld pages of memory...\n", pages_count);
+    printf("Mapping %ld pages of memory...\n", pages_count);
 
     PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
 
@@ -128,18 +128,19 @@ PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
 
 void page_table_setup()
 {
-    vga_driver_settings_t settings =
+    stdio_init_settings_t settings =
     {
-        .should_copy_vga_buffer = true,
-        .initial_line = 13
+        .initial_line = 13,
+        .should_copy_existing_buffer = true
     };
-    vga_driver_init(&settings);
 
-    vga_driver_report("stage 2 completed...", VGA_DRIVER_SUCCESS);
-    vga_driver_report("entered 32-bit protected mode...", VGA_DRIVER_SUCCESS);
+    stdio_init(&settings);
+
+    report("stage 2 completed...", STDIO_SUCCESS);
+    report("entered 32-bit protected mode...", STDIO_SUCCESS);
     next_free_address_init();
 
     PML4T_t* pml4t = PML4T_init_identity_map(MEMORY_SIZE_TO_MAP);
 
-    vga_driver_report("successfully created the kernel's page table...", VGA_DRIVER_SUCCESS);
+    report("successfully created the kernel's page table...", STDIO_SUCCESS);
 }
