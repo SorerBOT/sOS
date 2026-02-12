@@ -1,7 +1,7 @@
 #include <vga_driver.h>
-#include <stdio.h>
+#include <console_io.h>
 
-void clear()
+void console_io_clear()
 {
     vga_driver_clear_colored(VGA_DRIVER_COLOR_DEFAULT);
 }

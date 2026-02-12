@@ -1,7 +1,7 @@
-#include <stdio.h>
+#include <console_io.h>
 #include <vga_driver.h>
 
-void flush()
+void console_io_flush()
 {
     vga_driver_flush_shadow_buffer();
 }

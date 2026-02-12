@@ -1,1 +1,0 @@
-void stdio_init(const stdio_init_settings_t* settings);

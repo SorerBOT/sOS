@@ -1,7 +1,7 @@
-#include <stdio.h>
+#include <console_io.h>
 #include <vga_driver.h>
 
-void stdio_init(const stdio_init_settings_t* settings)
+void console_io_init(const console_io_init_settings_t* settings)
 {
     vga_driver_settings_t vga_settings =
     {

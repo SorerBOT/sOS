@@ -1,8 +1,8 @@
-#include <stdio.h>
+#include <console_io.h>
 #include <vga_driver.h>
 #include <stdarg.h>
 
-void printf(const char * restrict format, ...)
+void console_io_printf(const char * restrict format, ...)
 {
     va_list ap;
     va_start(ap, format);
