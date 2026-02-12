@@ -25,5 +25,10 @@ void kernel()
         for (volatile size_t i = 0; i < 100000000; ++i)
         {
         }
+        if (print_count == 50)
+        {
+            vga_driver_print_blue_screen("You've been found guilty of printing useless stuff! %ld prints, are you crazy?\n", print_count);
+            while (1);
+        }
     }
 }

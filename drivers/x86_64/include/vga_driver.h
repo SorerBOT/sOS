@@ -20,7 +20,7 @@ typedef struct
 void vga_driver_report(const char* message, vga_driver_report_status status);
 void vga_driver_printf(const char* format, ...);
 void vga_driver_clear();
-void vga_driver_blue_screen(const char* message);
+void vga_driver_print_blue_screen(const char* format, ...);
 void vga_driver_init(const vga_driver_settings_t* settings);
 
 
