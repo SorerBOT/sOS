@@ -6,9 +6,9 @@
 #define VSNPRINTF_DIGITS_ASCII_OFFSET 48
 #define VSNPRINTF_CONVERT_DIGIT_TO_CHAR(d) (((d) % 10) + VSNPRINTF_DIGITS_ASCII_OFFSET)
 #define VSNPRINTF_CONVERT_CHAR_TO_DIGIT(c) ((c) - VSNPRINTF_DIGITS_ASCII_OFFSET)
+#define VSNPRINTF_IS_DIGIT(c) ( '0' <= (c) && (c) <= '9' )
 #define VSNPRINTF_NULL_STRINGIFIED "(null)"
 #define VSNPRINTF_UNKNOWN_STRINGIFIED "(unknown specifier)"
-
 
 typedef enum
 {
@@ -38,25 +38,24 @@ typedef struct
 {
     vsnprintf_modifier_length_t len;
     vsnprintf_modifier_conversion_t type;
-    size_t zero_padding;
     size_t min_width;
+    bool is_zero_padded;
     bool is_signed;
     bool is_valid_specifier;
 } vsnprintf_specifier_t;
 
-static const char* get_number_flag_value(const char* str, size_t* flag_value);
-static inline const char* get_zero_padding(const char* str, vsnprintf_specifier_t* specifier_data);
+static inline const char* get_number_flag_value(const char* str, size_t* flag_value);
+static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
 static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src);
 static int vsnprintf_print_int(char* restrict str, size_t size, intmax_t d);
 
-static const char* get_number_flag_value(const char* str, size_t* flag_value)
+static inline const char* get_number_flag_value(const char* str, size_t* flag_value)
 {
     size_t value = 0;
-    ++str;
-    for ( ; '0' <= *str && *str <= '9'; ++str )
+    for ( ; VSNPRINTF_IS_DIGIT(*str); ++str )
     {
         value *= 10;
         value += VSNPRINTF_CONVERT_CHAR_TO_DIGIT(*str);
@@ -66,15 +65,21 @@ static const char* get_number_flag_value(const char* str, size_t* flag_value)
     return str;
 }
 
-static inline const char* get_zero_padding(const char* str, vsnprintf_specifier_t* specifier_data)
+static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* specifier_data)
 {
-    if ( *str != '0' )
+    if ( !VSNPRINTF_IS_DIGIT(*str) )
     {
-        specifier_data->zero_padding = 0;
+        specifier_data->min_width = 0;
         return str;
     }
 
-    str = get_number_flag_value(str, &specifier_data->zero_padding);
+    if ( *str == '0' )
+    {
+        specifier_data->is_zero_padded = true;
+        ++str;
+    }
+
+    str = get_number_flag_value(str, &specifier_data->min_width);
 
     return str;
 }
@@ -174,7 +179,8 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
         return str;
     }
 
-    str = get_zero_padding(str, specifier_data);
+    str = get_min_width(str, specifier_data);
+    
 
     if ( *str == 'h' )
     {
