@@ -5,6 +5,7 @@
 
 #define VSNPRINTF_DIGITS_ASCII_OFFSET 48
 #define VSNPRINTF_CONVERT_DIGIT_TO_CHAR(d) (((d) % 10) + VSNPRINTF_DIGITS_ASCII_OFFSET)
+#define VSNPRINTF_CONVERT_CHAR_TO_DIGIT(c) ((c) - VSNPRINTF_DIGITS_ASCII_OFFSET)
 #define VSNPRINTF_NULL_STRINGIFIED "(null)"
 #define VSNPRINTF_UNKNOWN_STRINGIFIED "(unknown specifier)"
 
@@ -17,7 +18,7 @@ typedef enum
     VSNPRINTF_LEN_INT,
     VSNPRINTF_LEN_LONG,
     VSNPRINTF_LEN_LONG_LONG
-} vsnprintf_modifier_length_t;;
+} vsnprintf_modifier_length_t;
 
 typedef enum
 {
@@ -43,11 +44,40 @@ typedef struct
     bool is_valid_specifier;
 } vsnprintf_specifier_t;
 
-static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
-static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
+static const char* get_number_flag_value(const char* str, size_t* flag_value);
+static inline const char* get_zero_padding(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
+static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
+static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src);
 static int vsnprintf_print_int(char* restrict str, size_t size, intmax_t d);
+
+static const char* get_number_flag_value(const char* str, size_t* flag_value)
+{
+    size_t value = 0;
+    ++str;
+    for ( ; '0' <= *str && *str <= '9'; ++str )
+    {
+        value *= 10;
+        value += VSNPRINTF_CONVERT_CHAR_TO_DIGIT(*str);
+    }
+
+    *flag_value = value;
+    return str;
+}
+
+static inline const char* get_zero_padding(const char* str, vsnprintf_specifier_t* specifier_data)
+{
+    if ( *str != '0' )
+    {
+        specifier_data->zero_padding = 0;
+        return str;
+    }
+
+    str = get_number_flag_value(str, &specifier_data->zero_padding);
+
+    return str;
+}
 
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size)
 {
@@ -141,8 +171,10 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
     if ( *(++str) == '\0' )
     {
         specifier_data->is_valid_specifier = false;
-        return ++str;
+        return str;
     }
+
+    str = get_zero_padding(str, specifier_data);
 
     if ( *str == 'h' )
     {
