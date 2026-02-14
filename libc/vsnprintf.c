@@ -44,8 +44,8 @@ typedef struct
     bool is_valid_specifier;
 } vsnprintf_specifier_t;
 
-static inline void get_canonical_int(vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative);
-static inline int print_specifier_data(char* restrict dst, size_t size, vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
+static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative);
+static inline int print_specifier_data(char* restrict dst, size_t size, const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
 static inline const char* get_number_flag_value(const char* str, size_t* flag_value);
 static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
@@ -56,7 +56,7 @@ static int vsnprintf_print_int(char* restrict str, size_t size, uintmax_t d, boo
 static int vsnprintf_print_octal(char* restrict str, size_t size, uintmax_t d);
 static int vsnprintf_print_hex(char* restrict str, size_t size, uintmax_t d, bool is_uppercase);
 
-static inline void get_canonical_int(vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative)
+static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative)
 {
     char c;
     short s;
@@ -186,7 +186,7 @@ static inline void get_canonical_int(vsnprintf_specifier_t* specifier_data, va_l
     }
 }
 
-static inline int print_specifier_data(char* restrict dst, size_t size, vsnprintf_specifier_t* specifier_data, va_list* ap_ptr)
+static inline int print_specifier_data(char* restrict dst, size_t size, const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr)
 {
     if (specifier_data->type == VSNPRINTF_TYPE_UNKNOWN || specifier_data->len == VSNPRINTF_LEN_NONE)
     {
@@ -518,6 +518,9 @@ int vsnprintf(char* restrict str, size_t size, const char* restrict format, va_l
     char c;
     intmax_t d;
 
+    va_list ap_copy;
+    va_copy(ap_copy, ap);
+
     for (; *format != '\0'; ++format)
     {
         char current = *format;
@@ -535,42 +538,7 @@ int vsnprintf(char* restrict str, size_t size, const char* restrict format, va_l
         {
             vsnprintf_specifier_t specifier_data;
             format = get_format_specifier(format, &specifier_data);
-            switch (current)
-            {
-                case 's':
-                    s = va_arg(ap, char*);
-                    if (s == NULL)
-                    {
-                        s = VSNPRINTF_NULL_STRINGIFIED;
-                    }
-                    chars_generated += vsnprintf_print_string(address, remaining_size, s);
-                    break;
-                case 'c':
-                    c = (char)va_arg(ap, int);
-                    if (address != NULL)
-                    {
-                        *address = c;
-                    }
-                    ++chars_generated;
-                    break;
-                case 'd':
-                    if (long_count == 0)
-                    {
-                        d = va_arg(ap, int);
-                    }
-                    else if (long_count == 1)
-                    {
-                        d = va_arg(ap, long);
-                    }
-                    else if (long_count == 2)
-                    {
-                        d = va_arg(ap, long long);
-                    }
-
-                    chars_generated += vsnprintf_print_int(address, remaining_size, d);
-
-                    break;
-            }
+            chars_generated += print_specifier_data(address, remaining_size, &specifier_data, &ap_copy);
         }
         else
         {
