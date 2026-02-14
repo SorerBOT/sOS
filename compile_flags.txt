@@ -1,6 +1,6 @@
 -xc
 -std=c99
--DVGA_DRIVER_IMPLEMENTATION
+-DCUNIT_IMPLEMENTATION
 --target=x86_64-elf
 -m64
 -ffreestanding
@@ -9,3 +9,4 @@
 -Iarch/x86_64/include
 -Iarch/common/include
 -Idrivers/x86_64/include
+-Itests/libc/external
