@@ -10,6 +10,7 @@
 #define VSNPRINTF_NULL_STRINGIFIED "(null)"
 #define VSNPRINTF_UNKNOWN_STRINGIFIED "(unknown specifier)"
 #define VSNPRINTF_CANONICAL_INT_DEFAULT 0xDEADBEEF
+#define VSNPRINTF_UPPERCASE_ADDITION ('a' - 'A')
 
 typedef enum
 {
@@ -44,6 +45,7 @@ typedef struct
     bool is_valid_specifier;
 } vsnprintf_specifier_t;
 
+static inline uint16_t get_highest_contained_power(uintmax_t container, uint16_t exponentiated_number);
 static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative);
 static inline int print_specifier_data(char* restrict dst, size_t size, const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
 static inline const char* get_number_flag_value(const char* str, size_t* flag_value);
@@ -53,9 +55,18 @@ static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src);
 static int vsnprintf_print_int(char* restrict str, size_t size, uintmax_t d, bool is_negative);
-static int vsnprintf_print_octal(char* restrict str, size_t size, uintmax_t d);
-static int vsnprintf_print_hex(char* restrict str, size_t size, uintmax_t d, bool is_uppercase);
+static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uint16_t base, uintmax_t d, bool is_uppercase);
 
+static inline uint16_t get_highest_contained_power(uintmax_t container, uint16_t exponentiated_number)
+{
+    size_t current_power = 0;
+    uintmax_t current_number = (uintmax_t) exponentiated_number;
+
+    for (; current_number * exponentiated_number < container;
+            ++current_power, current_number *= exponentiated_number);
+
+    return current_power;
+}
 static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative)
 {
     char c;
@@ -226,13 +237,13 @@ static inline int print_specifier_data(char* restrict dst, size_t size, const vs
             return vsnprintf_print_int(dst, size, canonical_int, is_negative);
             break;
         case VSNPRINTF_TYPE_OCTAL:
-            return vsnprintf_print_octal(dst, size, canonical_int);
+            return vsnprintf_print_base_up_to_16(dst, size, canonical_int, 8, false);
             break;
         case VSNPRINTF_TYPE_HEX_UPPERCASE:
-            return vsnprintf_print_hex(dst, size, canonical_int, true);
+            return vsnprintf_print_base_up_to_16(dst, size, canonical_int, 16, true);
             break;
         case VSNPRINTF_TYPE_HEX_LOWERCASE:
-            return vsnprintf_print_hex(dst, size, canonical_int, false);
+            return vsnprintf_print_base_up_to_16(dst, size, canonical_int, 16, false);
             break;
         case VSNPRINTF_TYPE_STRING:
             return vsnprintf_print_string(dst, size, string_arg);
@@ -500,13 +511,60 @@ static int vsnprintf_print_int(char* restrict str, size_t size, uintmax_t d, boo
     return chars_generated;
 }
 
-static int vsnprintf_print_octal(char* restrict str, size_t size, uintmax_t d)
+// works for any base between 2 and 16 inclusive.
+static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uint16_t base, uintmax_t d, bool is_uppercase)
 {
-    return vsnprintf_print_int(str, size, d, false);
-}
-static int vsnprintf_print_hex(char* restrict str, size_t size, uintmax_t d, bool is_uppercase)
-{
-    return vsnprintf_print_int(str, size, d, false);
+    char buf[10]; // even in base 2, the largest number would be 64-bits
+
+    uint8_t ascii_addition = is_uppercase ? VSNPRINTF_UPPERCASE_ADDITION : 0;
+
+    uint32_t result = 0;
+    size_t chars_generated = 0;
+
+    uint16_t highest_power = get_highest_contained_power(d, base);
+    uintmax_t base_to_highest_power = 1;
+    for (size_t i = 0; i < highest_power; ++i)
+    {
+        base_to_highest_power *= base;
+    }
+
+    for (; base_to_highest_power > 0; ++chars_generated, base_to_highest_power /= base)
+    {
+        uint16_t quotient = d / base_to_highest_power;
+        if (quotient <= 9)
+        {
+            buf[chars_generated] = VSNPRINTF_CONVERT_DIGIT_TO_CHAR(quotient);
+        }
+        else
+        {
+            switch (quotient)
+            {
+                case 10:
+                    buf[chars_generated] = 'a' + ascii_addition;
+                    break;
+                case 11:
+                    buf[chars_generated] = 'b' + ascii_addition;
+                    break;
+                case 12:
+                    buf[chars_generated] = 'c' + ascii_addition;
+                    break;
+                case 13:
+                    buf[chars_generated] = 'd' + ascii_addition;
+                    break;
+                case 14:
+                    buf[chars_generated] = 'e' + ascii_addition;
+                    break;
+                case 15:
+                    buf[chars_generated] = 'f' + ascii_addition;
+                    break;
+            }
+        }
+
+        d = d % base_to_highest_power;
+    }
+
+    buf[chars_generated] = '\0';
+    return vsnprintf_print_string(str, size, buf);
 }
 
 int vsnprintf(char* restrict str, size_t size, const char* restrict format, va_list ap)

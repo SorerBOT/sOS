@@ -1,7 +1,7 @@
 #!/bin/bash
 
 OS_IMG="os-img"
-OS_IMAGE_SIZE_MAX=33280 # 32KiB + 512
+OS_IMAGE_SIZE_MAX=66560 # 33KiB + 32 KiB
 
 ARCH="x86_64"
 DRIVERS_DIR="drivers"
@@ -18,10 +18,10 @@ STAGE_1="$BOOTLOADER_DIR/bootloader_stage_1"
 STAGE_2="$BOOTLOADER_DIR/bootloader_stage_2"
 PAGE_TABLE_SETUP="$BOOTLOADER_DIR/bootloader_stage_2_page_table_setup"
 UPDATE_GDT="$BOOTLOADER_DIR/bootloader_stage_2_update_gdt"
-BOOTLOADER_SIZE_MAX=16896 # 16KiB + 512
+BOOTLOADER_SIZE_MAX=0x8400 # 32.5KiB + 512 bytes = 33 KiB
 
 STAGE_2_ORG=0x7E00
-KERNEL_ORG=0xBE00 # 0x7E00 + 16KiB
+KERNEL_ORG=0x10000 # 0x7E00 + 32.5KiB
 
 KERNEL_DIR="kernel"
 KERNEL_START="$KERNEL_DIR/kernel_start"

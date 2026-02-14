@@ -38,7 +38,7 @@ load_stage_2:
                         ; BIOS store the current boot driveID in dl. We need not set it ourselves.
     mov si, DAP
     mov ah, 0x42
-    int 0x13
+    int 0x13            ; First BIOS call to store stage 2 (16KiB) at 0x7E00.
     jc error            ; CF==1 means that an error has occurred.
     jmp 0x7E00          ; jump to the RAM address where we loaded the code
 
@@ -52,7 +52,7 @@ align 4                 ; Just to be safe, align on 4-byte boundary
 DAP:
     db 0x10             ; Packet Size, this tells the BIOS what version of DAP struct we're using
     db 0x00             ; Padding byte. Needs to be reset to 0 if ran in a loop
-    dw 0x0040           ; Number of sectors to read
+    dw 0x0020           ; Number of sectors to read
 
                         ; RAM address to write to is represented by (Segment * 16) + Offset
     dw 0x7E00           ; Offset, directly after stage 1 which is at 0x7C00

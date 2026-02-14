@@ -17,6 +17,30 @@ extern update_gdt
 start:
     xor ax, ax
     mov ds, ax
+align 4                 ; Just to be safe, align on 4-byte boundary
+DAP:
+    db 0x10             ; Packet Size, this tells the BIOS what version of DAP struct we're using
+    db 0x00             ; Padding byte. Needs to be reset to 0 if ran in a loop
+    dw 0x0040           ; Number of sectors to read
+
+                        ; RAM address to write to is represented by (Segment * 16) + Offset
+    dw 0x0000           ; Offset, directly after 16KiB
+    dw 0x1000           ; Segment this is exactly 16 KiB.
+
+    dq 0x00000042       ; Disk sector to read from, each sector is 512 bytes.
+                        ; the first one contains stage 1, the next 32 contian stage 2
+                        ; and afterwards its the kernel
+
+    mov si, DAP
+    mov ah, 0x42
+    int 0x13            ; First BIOS call to store stage 2 (16KiB) at 0x7E00.
+    jc error            ; CF==1 means that an error has occurred.
+    jmp stage_2_after_loading_kernel
+
+error:
+    jmp $               ; infinite loop. I use it to keep QEMU open
+
+stage_2_after_loading_kernel:
     mov si, msg_stage_2
 print_msg:
     mov al, [si]
@@ -79,7 +103,7 @@ msg_stage_2 db OS_STATUS, ": booting...", CRLF, OS_STATUS, ": stage 1 completed.
 [BITS 32]
 
 %define LONG_MODE_MSR 0xC0000080
-%define KERNEL_ORG 0xBE00
+%define KERNEL_ORG 0x10000
 
 BASE_PAGE_TABLE_ADDRESS:
     dd 0x1000000

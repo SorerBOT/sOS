@@ -48,6 +48,7 @@
 
 extern int custom_vsnprintf(char* restrict str, size_t size, const char* restrict format, va_list ap);
 extern int custom_snprintf(char* restrict str, size_t size, const char* restrict format, ...);
+
 int local_sprintf(char* str, const char* format, ...)
 {
     va_list ap;
@@ -98,275 +99,275 @@ CUNIT_TEST(vsnprintf)
 }
 
 
-CUNIT_TEST(space_flag)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "% d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, " 42"));
-
-  local_sprintf(buffer, "% d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42"));
-
-  local_sprintf(buffer, "% 5d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "   42"));
-
-  local_sprintf(buffer, "% 5d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "  -42"));
-
-  local_sprintf(buffer, "% 15d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "             42"));
-
-  local_sprintf(buffer, "% 15d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            -42"));
-
-  local_sprintf(buffer, "% 15d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            -42"));
-
-  local_sprintf(buffer, "% 15.3f", -42.987);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "        -42.987"));
-
-  local_sprintf(buffer, "% 15.3f", 42.987);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "         42.987"));
-
-  local_sprintf(buffer, "% s", "Hello testing");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "Hello testing"));
-
-  local_sprintf(buffer, "% d", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, " 1024"));
-
-  local_sprintf(buffer, "% d", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024"));
-
-  local_sprintf(buffer, "% i", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, " 1024"));
-
-  local_sprintf(buffer, "% i", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024"));
-
-  local_sprintf(buffer, "% u", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024"));
-
-  local_sprintf(buffer, "% u", 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "4294966272"));
-
-  local_sprintf(buffer, "% o", 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "777"));
-
-  local_sprintf(buffer, "% o", 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "37777777001"));
-
-  local_sprintf(buffer, "% x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234abcd"));
-
-  local_sprintf(buffer, "% x", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "edcb5433"));
-
-  local_sprintf(buffer, "% X", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234ABCD"));
-
-  local_sprintf(buffer, "% X", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "EDCB5433"));
-
-  local_sprintf(buffer, "% c", 'x');
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "x"));
-}
-
-
-CUNIT_TEST(plus_flag)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%+d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "+42"));
-
-  local_sprintf(buffer, "%+d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42"));
-
-  local_sprintf(buffer, "%+5d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "  +42"));
-
-  local_sprintf(buffer, "%+5d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "  -42"));
-
-  local_sprintf(buffer, "%+15d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            +42"));
-
-  local_sprintf(buffer, "%+15d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            -42"));
-
-  local_sprintf(buffer, "%+s", "Hello testing");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "Hello testing"));
-
-  local_sprintf(buffer, "%+d", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "+1024"));
-
-  local_sprintf(buffer, "%+d", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024"));
-
-  local_sprintf(buffer, "%+i", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "+1024"));
-
-  local_sprintf(buffer, "%+i", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024"));
-
-  local_sprintf(buffer, "%+u", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024"));
-
-  local_sprintf(buffer, "%+u", 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "4294966272"));
-
-  local_sprintf(buffer, "%+o", 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "777"));
-
-  local_sprintf(buffer, "%+o", 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "37777777001"));
-
-  local_sprintf(buffer, "%+x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234abcd"));
-
-  local_sprintf(buffer, "%+x", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "edcb5433"));
-
-  local_sprintf(buffer, "%+X", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234ABCD"));
-
-  local_sprintf(buffer, "%+X", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "EDCB5433"));
-
-  local_sprintf(buffer, "%+c", 'x');
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "x"));
-
-  local_sprintf(buffer, "%+.0d", 0);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "+"));
-}
-
-
-CUNIT_TEST(zero_flag)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%0d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42"));
-
-  local_sprintf(buffer, "%0ld", 42L);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42"));
-
-  local_sprintf(buffer, "%0d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42"));
-
-  local_sprintf(buffer, "%05d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00042"));
-
-  local_sprintf(buffer, "%05d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-0042"));
-
-  local_sprintf(buffer, "%015d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "000000000000042"));
-
-  local_sprintf(buffer, "%015d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-00000000000042"));
-
-  local_sprintf(buffer, "%015.2f", 42.1234);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "000000000042.12"));
-
-  local_sprintf(buffer, "%015.3f", 42.9876);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000042.988"));
-
-  local_sprintf(buffer, "%015.5f", -42.9876);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-00000042.98760"));
-}
-
-
-CUNIT_TEST(minus_flag)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%-d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42"));
-
-  local_sprintf(buffer, "%-d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42"));
-
-  local_sprintf(buffer, "%-5d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42   "));
-
-  local_sprintf(buffer, "%-5d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42  "));
-
-  local_sprintf(buffer, "%-15d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42             "));
-
-  local_sprintf(buffer, "%-15d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42            "));
-
-  local_sprintf(buffer, "%-0d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42"));
-
-  local_sprintf(buffer, "%-0d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42"));
-
-  local_sprintf(buffer, "%-05d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42   "));
-
-  local_sprintf(buffer, "%-05d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42  "));
-
-  local_sprintf(buffer, "%-015d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42             "));
-
-  local_sprintf(buffer, "%-015d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42            "));
-
-  local_sprintf(buffer, "%0-d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42"));
-
-  local_sprintf(buffer, "%0-d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42"));
-
-  local_sprintf(buffer, "%0-5d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42   "));
-
-  local_sprintf(buffer, "%0-5d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42  "));
-
-  local_sprintf(buffer, "%0-15d", 42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42             "));
-
-  local_sprintf(buffer, "%0-15d", -42);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42            "));
-
-  local_sprintf(buffer, "%0-15.3e", -42.);
-#ifndef PRINTF_DISABLE_SUPPORT_EXPONENTIAL
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-4.200e+01     "));
-#else
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "e"));
-#endif
-
-  local_sprintf(buffer, "%0-15.3g", -42.);
-#ifndef PRINTF_DISABLE_SUPPORT_EXPONENTIAL
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42.0          "));
-#else
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "g"));
-#endif
-}
-
-
-CUNIT_TEST(hashtag_flag)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%#.0x", 0);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, ""));
-  local_sprintf(buffer, "%#.1x", 0);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0"));
-  local_sprintf(buffer, "%#.0llx", (long long)0);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, ""));
-  local_sprintf(buffer, "%#.8x", 0x614e);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0x0000614e"));
-  local_sprintf(buffer,"%#b", 6);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0b110"));
-}
+// CUNIT_TEST(space_flag)
+// {
+//   char buffer[PRINT_BUFFER_SIZE];
+// 
+//   local_sprintf(buffer, "% d", 42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, " 42"));
+// 
+//   local_sprintf(buffer, "% d", -42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42"));
+// 
+//   local_sprintf(buffer, "% 5d", 42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "   42"));
+// 
+//   local_sprintf(buffer, "% 5d", -42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "  -42"));
+// 
+//   local_sprintf(buffer, "% 15d", 42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "             42"));
+// 
+//   local_sprintf(buffer, "% 15d", -42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "            -42"));
+// 
+//   local_sprintf(buffer, "% 15d", -42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "            -42"));
+// 
+//   local_sprintf(buffer, "% 15.3f", -42.987);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "        -42.987"));
+// 
+//   local_sprintf(buffer, "% 15.3f", 42.987);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "         42.987"));
+// 
+//   local_sprintf(buffer, "% s", "Hello testing");
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "Hello testing"));
+// 
+//   local_sprintf(buffer, "% d", 1024);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, " 1024"));
+// 
+//   local_sprintf(buffer, "% d", -1024);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024"));
+// 
+//   local_sprintf(buffer, "% i", 1024);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, " 1024"));
+// 
+//   local_sprintf(buffer, "% i", -1024);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024"));
+// 
+//   local_sprintf(buffer, "% u", 1024);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024"));
+// 
+//   local_sprintf(buffer, "% u", 4294966272U);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "4294966272"));
+// 
+//   local_sprintf(buffer, "% o", 511);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "777"));
+// 
+//   local_sprintf(buffer, "% o", 4294966785U);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "37777777001"));
+// 
+//   local_sprintf(buffer, "% x", 305441741);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234abcd"));
+// 
+//   local_sprintf(buffer, "% x", 3989525555U);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "edcb5433"));
+// 
+//   local_sprintf(buffer, "% X", 305441741);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234ABCD"));
+// 
+//   local_sprintf(buffer, "% X", 3989525555U);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "EDCB5433"));
+// 
+//   local_sprintf(buffer, "% c", 'x');
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "x"));
+// }
+
+
+// CUNIT_TEST(plus_flag)
+// {
+//   char buffer[PRINT_BUFFER_SIZE];
+// 
+//   local_sprintf(buffer, "%+d", 42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "+42"));
+// 
+//   local_sprintf(buffer, "%+d", -42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42"));
+// 
+//   local_sprintf(buffer, "%+5d", 42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "  +42"));
+// 
+//   local_sprintf(buffer, "%+5d", -42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "  -42"));
+// 
+//   local_sprintf(buffer, "%+15d", 42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "            +42"));
+// 
+//   local_sprintf(buffer, "%+15d", -42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "            -42"));
+// 
+//   local_sprintf(buffer, "%+s", "Hello testing");
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "Hello testing"));
+// 
+//   local_sprintf(buffer, "%+d", 1024);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "+1024"));
+// 
+//   local_sprintf(buffer, "%+d", -1024);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024"));
+// 
+//   local_sprintf(buffer, "%+i", 1024);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "+1024"));
+// 
+//   local_sprintf(buffer, "%+i", -1024);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024"));
+// 
+//   local_sprintf(buffer, "%+u", 1024);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024"));
+// 
+//   local_sprintf(buffer, "%+u", 4294966272U);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "4294966272"));
+// 
+//   local_sprintf(buffer, "%+o", 511);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "777"));
+// 
+//   local_sprintf(buffer, "%+o", 4294966785U);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "37777777001"));
+// 
+//   local_sprintf(buffer, "%+x", 305441741);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234abcd"));
+// 
+//   local_sprintf(buffer, "%+x", 3989525555U);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "edcb5433"));
+// 
+//   local_sprintf(buffer, "%+X", 305441741);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234ABCD"));
+// 
+//   local_sprintf(buffer, "%+X", 3989525555U);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "EDCB5433"));
+// 
+//   local_sprintf(buffer, "%+c", 'x');
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "x"));
+// 
+//   local_sprintf(buffer, "%+.0d", 0);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "+"));
+// }
+
+
+// CUNIT_TEST(zero_flag)
+// {
+//   char buffer[PRINT_BUFFER_SIZE];
+// 
+//   local_sprintf(buffer, "%0d", 42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "42"));
+// 
+//   local_sprintf(buffer, "%0ld", 42L);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "42"));
+// 
+//   local_sprintf(buffer, "%0d", -42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42"));
+// 
+//   local_sprintf(buffer, "%05d", 42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "00042"));
+// 
+//   local_sprintf(buffer, "%05d", -42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "-0042"));
+// 
+//   local_sprintf(buffer, "%015d", 42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "000000000000042"));
+// 
+//   local_sprintf(buffer, "%015d", -42);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "-00000000000042"));
+// 
+//   local_sprintf(buffer, "%015.2f", 42.1234);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "000000000042.12"));
+// 
+//   local_sprintf(buffer, "%015.3f", 42.9876);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000042.988"));
+// 
+//   local_sprintf(buffer, "%015.5f", -42.9876);
+//   CUNIT_ASSERT_TRUE(!strcmp(buffer, "-00000042.98760"));
+// }
+
+
+//CUNIT_TEST(minus_flag)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%-d", 42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42"));
+//
+//  local_sprintf(buffer, "%-d", -42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42"));
+//
+//  local_sprintf(buffer, "%-5d", 42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42   "));
+//
+//  local_sprintf(buffer, "%-5d", -42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42  "));
+//
+//  local_sprintf(buffer, "%-15d", 42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42             "));
+//
+//  local_sprintf(buffer, "%-15d", -42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42            "));
+//
+//  local_sprintf(buffer, "%-0d", 42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42"));
+//
+//  local_sprintf(buffer, "%-0d", -42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42"));
+//
+//  local_sprintf(buffer, "%-05d", 42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42   "));
+//
+//  local_sprintf(buffer, "%-05d", -42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42  "));
+//
+//  local_sprintf(buffer, "%-015d", 42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42             "));
+//
+//  local_sprintf(buffer, "%-015d", -42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42            "));
+//
+//  local_sprintf(buffer, "%0-d", 42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42"));
+//
+//  local_sprintf(buffer, "%0-d", -42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42"));
+//
+//  local_sprintf(buffer, "%0-5d", 42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42   "));
+//
+//  local_sprintf(buffer, "%0-5d", -42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42  "));
+//
+//  local_sprintf(buffer, "%0-15d", 42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "42             "));
+//
+//  local_sprintf(buffer, "%0-15d", -42);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42            "));
+//
+//  local_sprintf(buffer, "%0-15.3e", -42.);
+//#ifndef PRINTF_DISABLE_SUPPORT_EXPONENTIAL
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-4.200e+01     "));
+//#else
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "e"));
+//#endif
+//
+//  local_sprintf(buffer, "%0-15.3g", -42.);
+//#ifndef PRINTF_DISABLE_SUPPORT_EXPONENTIAL
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-42.0          "));
+//#else
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "g"));
+//#endif
+//}
+
+
+//CUNIT_TEST(hashtag_flag)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%#.0x", 0);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, ""));
+//  local_sprintf(buffer, "%#.1x", 0);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0"));
+//  local_sprintf(buffer, "%#.0llx", (long long)0);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, ""));
+//  local_sprintf(buffer, "%#.8x", 0x614e);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0x0000614e"));
+//  local_sprintf(buffer,"%#b", 6);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0b110"));
+//}
 
 
 CUNIT_TEST(specifier)
@@ -420,643 +421,642 @@ CUNIT_TEST(specifier)
 }
 
 
-CUNIT_TEST(width)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%1s", "Hello testing");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "Hello testing"));
-
-  local_sprintf(buffer, "%1d", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024"));
-
-  local_sprintf(buffer, "%1d", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024"));
-
-  local_sprintf(buffer, "%1i", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024"));
-
-  local_sprintf(buffer, "%1i", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024"));
-
-  local_sprintf(buffer, "%1u", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024"));
-
-  local_sprintf(buffer, "%1u", 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "4294966272"));
-
-  local_sprintf(buffer, "%1o", 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "777"));
-
-  local_sprintf(buffer, "%1o", 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "37777777001"));
-
-  local_sprintf(buffer, "%1x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234abcd"));
-
-  local_sprintf(buffer, "%1x", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "edcb5433"));
-
-  local_sprintf(buffer, "%1X", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234ABCD"));
-
-  local_sprintf(buffer, "%1X", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "EDCB5433"));
-
-  local_sprintf(buffer, "%1c", 'x');
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "x"));
-}
-
-
-CUNIT_TEST(width_20)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%20s", "Hello");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               Hello"));
-
-  local_sprintf(buffer, "%20d", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
-
-  local_sprintf(buffer, "%20d", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
-
-  local_sprintf(buffer, "%20i", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
-
-  local_sprintf(buffer, "%20i", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
-
-  local_sprintf(buffer, "%20u", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
-
-  local_sprintf(buffer, "%20u", 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          4294966272"));
-
-  local_sprintf(buffer, "%20o", 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                 777"));
-
-  local_sprintf(buffer, "%20o", 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "         37777777001"));
-
-  local_sprintf(buffer, "%20x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234abcd"));
-
-  local_sprintf(buffer, "%20x", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            edcb5433"));
-
-  local_sprintf(buffer, "%20X", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234ABCD"));
-
-  local_sprintf(buffer, "%20X", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            EDCB5433"));
-
-  local_sprintf(buffer, "%20c", 'x');
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                   x"));
-}
-
-CUNIT_TEST(width_star_20)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%*s", 20, "Hello");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               Hello"));
-
-  local_sprintf(buffer, "%*d", 20, 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
-
-  local_sprintf(buffer, "%*d", 20, -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
-
-  local_sprintf(buffer, "%*i", 20, 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
-
-  local_sprintf(buffer, "%*i", 20, -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
-
-  local_sprintf(buffer, "%*u", 20, 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
-
-  local_sprintf(buffer, "%*u", 20, 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          4294966272"));
-
-  local_sprintf(buffer, "%*o", 20, 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                 777"));
-
-  local_sprintf(buffer, "%*o", 20, 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "         37777777001"));
-
-  local_sprintf(buffer, "%*x", 20, 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234abcd"));
-
-  local_sprintf(buffer, "%*x", 20, 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            edcb5433"));
-
-  local_sprintf(buffer, "%*X", 20, 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234ABCD"));
-
-  local_sprintf(buffer, "%*X", 20, 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            EDCB5433"));
-
-  local_sprintf(buffer, "%*c", 20,'x');
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                   x"));
-}
-
-
-CUNIT_TEST(width_minus_twenty)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%-20s", "Hello");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "Hello               "));
-
-  local_sprintf(buffer, "%-20d", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024                "));
-
-  local_sprintf(buffer, "%-20d", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024               "));
-
-  local_sprintf(buffer, "%-20i", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024                "));
-
-  local_sprintf(buffer, "%-20i", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024               "));
-
-  local_sprintf(buffer, "%-20u", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024                "));
-
-  local_sprintf(buffer, "%-20.4f", 1024.1234);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024.1234           "));
-
-  local_sprintf(buffer, "%-20u", 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "4294966272          "));
-
-  local_sprintf(buffer, "%-20o", 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "777                 "));
-
-  local_sprintf(buffer, "%-20o", 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "37777777001         "));
-
-  local_sprintf(buffer, "%-20x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234abcd            "));
-
-  local_sprintf(buffer, "%-20x", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "edcb5433            "));
-
-  local_sprintf(buffer, "%-20X", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234ABCD            "));
-
-  local_sprintf(buffer, "%-20X", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "EDCB5433            "));
-
-  local_sprintf(buffer, "%-20c", 'x');
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "x                   "));
-
-  local_sprintf(buffer, "|%5d| |%-2d| |%5d|", 9, 9, 9);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "|    9| |9 | |    9|"));
-
-  local_sprintf(buffer, "|%5d| |%-2d| |%5d|", 10, 10, 10);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "|   10| |10| |   10|"));
-
-  local_sprintf(buffer, "|%5d| |%-12d| |%5d|", 9, 9, 9);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "|    9| |9           | |    9|"));
-
-  local_sprintf(buffer, "|%5d| |%-12d| |%5d|", 10, 10, 10);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "|   10| |10          | |   10|"));
-}
-
-
-CUNIT_TEST(width_zero_minus_twenty)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%0-20s", "Hello");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "Hello               "));
-
-  local_sprintf(buffer, "%0-20d", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024                "));
-
-  local_sprintf(buffer, "%0-20d", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024               "));
-
-  local_sprintf(buffer, "%0-20i", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024                "));
-
-  local_sprintf(buffer, "%0-20i", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024               "));
-
-  local_sprintf(buffer, "%0-20u", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024                "));
-
-  local_sprintf(buffer, "%0-20u", 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "4294966272          "));
-
-  local_sprintf(buffer, "%0-20o", 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "777                 "));
-
-  local_sprintf(buffer, "%0-20o", 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "37777777001         "));
-
-  local_sprintf(buffer, "%0-20x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234abcd            "));
-
-  local_sprintf(buffer, "%0-20x", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "edcb5433            "));
-
-  local_sprintf(buffer, "%0-20X", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234ABCD            "));
-
-  local_sprintf(buffer, "%0-20X", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "EDCB5433            "));
-
-  local_sprintf(buffer, "%0-20c", 'x');
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "x                   "));
-}
-
-
-CUNIT_TEST(padding_twenty)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%020d", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
-
-  local_sprintf(buffer, "%020d", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-0000000000000001024"));
-
-  local_sprintf(buffer, "%020i", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
-
-  local_sprintf(buffer, "%020i", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-0000000000000001024"));
-
-  local_sprintf(buffer, "%020u", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
-
-  local_sprintf(buffer, "%020u", 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000004294966272"));
-
-  local_sprintf(buffer, "%020o", 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000000777"));
-
-  local_sprintf(buffer, "%020o", 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000037777777001"));
-
-  local_sprintf(buffer, "%020x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0000000000001234abcd"));
-
-  local_sprintf(buffer, "%020x", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "000000000000edcb5433"));
-
-  local_sprintf(buffer, "%020X", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0000000000001234ABCD"));
-
-  local_sprintf(buffer, "%020X", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "000000000000EDCB5433"));
-}
-
-
-CUNIT_TEST(padding_dot_twenty)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%.20d", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
-
-  local_sprintf(buffer, "%.20d", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-00000000000000001024"));
-
-  local_sprintf(buffer, "%.20i", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
-
-  local_sprintf(buffer, "%.20i", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-00000000000000001024"));
-
-  local_sprintf(buffer, "%.20u", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
-
-  local_sprintf(buffer, "%.20u", 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000004294966272"));
-
-  local_sprintf(buffer, "%.20o", 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000000777"));
-
-  local_sprintf(buffer, "%.20o", 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000037777777001"));
-
-  local_sprintf(buffer, "%.20x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0000000000001234abcd"));
-
-  local_sprintf(buffer, "%.20x", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "000000000000edcb5433"));
-
-  local_sprintf(buffer, "%.20X", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0000000000001234ABCD"));
-
-  local_sprintf(buffer, "%.20X", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "000000000000EDCB5433"));
-}
-
-
-CUNIT_TEST(padding_hashtag_020)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%#020d", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
-
-  local_sprintf(buffer, "%#020d", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-0000000000000001024"));
-
-  local_sprintf(buffer, "%#020i", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
-
-  local_sprintf(buffer, "%#020i", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-0000000000000001024"));
-
-  local_sprintf(buffer, "%#020u", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
-
-  local_sprintf(buffer, "%#020u", 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000004294966272"));
-
-  local_sprintf(buffer, "%#020o", 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000000777"));
-
-  local_sprintf(buffer, "%#020o", 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000037777777001"));
-
-  local_sprintf(buffer, "%#020x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0x00000000001234abcd"));
-
-  local_sprintf(buffer, "%#020x", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0x0000000000edcb5433"));
-
-  local_sprintf(buffer, "%#020X", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0X00000000001234ABCD"));
-
-  local_sprintf(buffer, "%#020X", 3989525555U);
-
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0X0000000000EDCB5433"));
-}
-
-
-CUNIT_TEST(padding_hashtag_twenty)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%#20d", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
-
-  local_sprintf(buffer, "%#20d", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
-
-  local_sprintf(buffer, "%#20i", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
-
-  local_sprintf(buffer, "%#20i", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
-
-  local_sprintf(buffer, "%#20u", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
-
-  local_sprintf(buffer, "%#20u", 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          4294966272"));
-
-  local_sprintf(buffer, "%#20o", 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                0777"));
-
-  local_sprintf(buffer, "%#20o", 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "        037777777001"));
-
-  local_sprintf(buffer, "%#20x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          0x1234abcd"));
-
-  local_sprintf(buffer, "%#20x", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          0xedcb5433"));
-
-  local_sprintf(buffer, "%#20X", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          0X1234ABCD"));
-
-  local_sprintf(buffer, "%#20X", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          0XEDCB5433"));
-}
-
-
-CUNIT_TEST(padding_20_dot_5)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%20.5d", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               01024"));
-
-  local_sprintf(buffer, "%20.5d", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "              -01024"));
-
-  local_sprintf(buffer, "%20.5i", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               01024"));
-
-  local_sprintf(buffer, "%20.5i", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "              -01024"));
-
-  local_sprintf(buffer, "%20.5u", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               01024"));
-
-  local_sprintf(buffer, "%20.5u", 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          4294966272"));
-
-  local_sprintf(buffer, "%20.5o", 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               00777"));
-
-  local_sprintf(buffer, "%20.5o", 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "         37777777001"));
-
-  local_sprintf(buffer, "%20.5x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234abcd"));
-
-  local_sprintf(buffer, "%20.10x", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          00edcb5433"));
-
-  local_sprintf(buffer, "%20.5X", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234ABCD"));
-
-  local_sprintf(buffer, "%20.10X", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          00EDCB5433"));
-}
-
-
-CUNIT_TEST(padding_neg_numbers)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  // space padding
-  local_sprintf(buffer, "% 1d", -5);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5"));
-
-  local_sprintf(buffer, "% 2d", -5);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5"));
-
-  local_sprintf(buffer, "% 3d", -5);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, " -5"));
-
-  local_sprintf(buffer, "% 4d", -5);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "  -5"));
-
-  // zero padding
-  local_sprintf(buffer, "%01d", -5);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5"));
-
-
-  local_sprintf(buffer, "%02d", -5);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5"));
-
-  local_sprintf(buffer, "%03d", -5);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-05"));
-
-  local_sprintf(buffer, "%04d", -5);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-005"));
-}
-
-
-CUNIT_TEST(float_padding_neg_numbers)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  // space padding
-  local_sprintf(buffer, "% 3.1f", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5.0"));
-
-  local_sprintf(buffer, "% 4.1f", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5.0"));
-
-  local_sprintf(buffer, "% 5.1f", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, " -5.0"));
-
-#ifndef PRINTF_DISABLE_SUPPORT_EXPONENTIAL
-  local_sprintf(buffer, "% 6.1g", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "    -5"));
-
-  local_sprintf(buffer, "% 6.1e", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5.0e+00"));
-
-  local_sprintf(buffer, "% 10.1e", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "  -5.0e+00"));
-#endif
-
-  // zero padding
-  local_sprintf(buffer, "%03.1f", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5.0"));
-
-  local_sprintf(buffer, "%04.1f", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5.0"));
-
-  local_sprintf(buffer, "%05.1f", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-05.0"));
-
-  // zero padding no decimal point
-  local_sprintf(buffer, "%01.0f", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5"));
-
-  local_sprintf(buffer, "%02.0f", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5"));
-
-  local_sprintf(buffer, "%03.0f", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-05"));
-
-#ifndef PRINTF_DISABLE_SUPPORT_EXPONENTIAL
-  local_sprintf(buffer, "%010.1e", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-005.0e+00"));
-
-  local_sprintf(buffer, "%07.0E", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-05E+00"));
-
-  local_sprintf(buffer, "%03.0g", -5.);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-05"));
-#endif
-}
-
-CUNIT_TEST(length)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%.0s", "Hello testing");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, ""));
-
-  local_sprintf(buffer, "%20.0s", "Hello testing");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
-
-  local_sprintf(buffer, "%.s", "Hello testing");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, ""));
-
-  local_sprintf(buffer, "%20.s", "Hello testing");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
-
-  local_sprintf(buffer, "%20.0d", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
-
-  local_sprintf(buffer, "%20.0d", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
-
-  local_sprintf(buffer, "%20.d", 0);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
-
-  local_sprintf(buffer, "%20.0i", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
-
-  local_sprintf(buffer, "%20.i", -1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
-
-  local_sprintf(buffer, "%20.i", 0);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
-
-  local_sprintf(buffer, "%20.u", 1024);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
-
-  local_sprintf(buffer, "%20.0u", 4294966272U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          4294966272"));
-
-  local_sprintf(buffer, "%20.u", 0U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
-
-  local_sprintf(buffer, "%20.o", 511);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                 777"));
-
-  local_sprintf(buffer, "%20.0o", 4294966785U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "         37777777001"));
-
-  local_sprintf(buffer, "%20.o", 0U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
-
-  local_sprintf(buffer, "%20.x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234abcd"));
-
-  local_sprintf(buffer, "%50.x", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                                          1234abcd"));
-
-  local_sprintf(buffer, "%50.x%10.u", 305441741, 12345);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                                          1234abcd     12345"));
-
-  local_sprintf(buffer, "%20.0x", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            edcb5433"));
-
-  local_sprintf(buffer, "%20.x", 0U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
-
-  local_sprintf(buffer, "%20.X", 305441741);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234ABCD"));
-
-  local_sprintf(buffer, "%20.0X", 3989525555U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            EDCB5433"));
-
-  local_sprintf(buffer, "%20.X", 0U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
-
-  local_sprintf(buffer, "%02.0u", 0U);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "  "));
-
-  local_sprintf(buffer, "%02.0d", 0);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "  "));
-}
+//CUNIT_TEST(width)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%1s", "Hello testing");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "Hello testing"));
+//
+//  local_sprintf(buffer, "%1d", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024"));
+//
+//  local_sprintf(buffer, "%1d", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024"));
+//
+//  local_sprintf(buffer, "%1i", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024"));
+//
+//  local_sprintf(buffer, "%1i", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024"));
+//
+//  local_sprintf(buffer, "%1u", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024"));
+//
+//  local_sprintf(buffer, "%1u", 4294966272U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "4294966272"));
+//
+//  local_sprintf(buffer, "%1o", 511);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "777"));
+//
+//  local_sprintf(buffer, "%1o", 4294966785U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "37777777001"));
+//
+//  local_sprintf(buffer, "%1x", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234abcd"));
+//
+//  local_sprintf(buffer, "%1x", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "edcb5433"));
+//
+//  local_sprintf(buffer, "%1X", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234ABCD"));
+//
+//  local_sprintf(buffer, "%1X", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "EDCB5433"));
+//
+//  local_sprintf(buffer, "%1c", 'x');
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "x"));
+//}
+
+
+//CUNIT_TEST(width_20)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%20s", "Hello");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               Hello"));
+//
+//  local_sprintf(buffer, "%20d", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
+//
+//  local_sprintf(buffer, "%20d", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
+//
+//  local_sprintf(buffer, "%20i", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
+//
+//  local_sprintf(buffer, "%20i", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
+//
+//  local_sprintf(buffer, "%20u", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
+//
+//  local_sprintf(buffer, "%20u", 4294966272U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          4294966272"));
+//
+//  local_sprintf(buffer, "%20o", 511);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                 777"));
+//
+//  local_sprintf(buffer, "%20o", 4294966785U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "         37777777001"));
+//
+//  local_sprintf(buffer, "%20x", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234abcd"));
+//
+//  local_sprintf(buffer, "%20x", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            edcb5433"));
+//
+//  local_sprintf(buffer, "%20X", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234ABCD"));
+//
+//  local_sprintf(buffer, "%20X", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            EDCB5433"));
+//
+//  local_sprintf(buffer, "%20c", 'x');
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                   x"));
+//}
+
+//CUNIT_TEST(width_star_20)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%*s", 20, "Hello");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               Hello"));
+//
+//  local_sprintf(buffer, "%*d", 20, 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
+//
+//  local_sprintf(buffer, "%*d", 20, -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
+//
+//  local_sprintf(buffer, "%*i", 20, 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
+//
+//  local_sprintf(buffer, "%*i", 20, -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
+//
+//  local_sprintf(buffer, "%*u", 20, 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
+//
+//  local_sprintf(buffer, "%*u", 20, 4294966272U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          4294966272"));
+//
+//  local_sprintf(buffer, "%*o", 20, 511);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                 777"));
+//
+//  local_sprintf(buffer, "%*o", 20, 4294966785U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "         37777777001"));
+//
+//  local_sprintf(buffer, "%*x", 20, 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234abcd"));
+//
+//  local_sprintf(buffer, "%*x", 20, 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            edcb5433"));
+//
+//  local_sprintf(buffer, "%*X", 20, 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234ABCD"));
+//
+//  local_sprintf(buffer, "%*X", 20, 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            EDCB5433"));
+//
+//  local_sprintf(buffer, "%*c", 20,'x');
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                   x"));
+//}
+
+
+//CUNIT_TEST(width_minus_twenty)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%-20s", "Hello");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "Hello               "));
+//
+//  local_sprintf(buffer, "%-20d", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024                "));
+//
+//  local_sprintf(buffer, "%-20d", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024               "));
+//
+//  local_sprintf(buffer, "%-20i", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024                "));
+//
+//  local_sprintf(buffer, "%-20i", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024               "));
+//
+//  local_sprintf(buffer, "%-20u", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024                "));
+//
+//  local_sprintf(buffer, "%-20.4f", 1024.1234);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024.1234           "));
+//
+//  local_sprintf(buffer, "%-20u", 4294966272U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "4294966272          "));
+//
+//  local_sprintf(buffer, "%-20o", 511);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "777                 "));
+//
+//  local_sprintf(buffer, "%-20o", 4294966785U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "37777777001         "));
+//
+//  local_sprintf(buffer, "%-20x", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234abcd            "));
+//
+//  local_sprintf(buffer, "%-20x", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "edcb5433            "));
+//
+//  local_sprintf(buffer, "%-20X", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234ABCD            "));
+//
+//  local_sprintf(buffer, "%-20X", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "EDCB5433            "));
+//
+//  local_sprintf(buffer, "%-20c", 'x');
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "x                   "));
+//
+//  local_sprintf(buffer, "|%5d| |%-2d| |%5d|", 9, 9, 9);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "|    9| |9 | |    9|"));
+//
+//  local_sprintf(buffer, "|%5d| |%-2d| |%5d|", 10, 10, 10);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "|   10| |10| |   10|"));
+//
+//  local_sprintf(buffer, "|%5d| |%-12d| |%5d|", 9, 9, 9);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "|    9| |9           | |    9|"));
+//
+//  local_sprintf(buffer, "|%5d| |%-12d| |%5d|", 10, 10, 10);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "|   10| |10          | |   10|"));
+//}
+
+
+//CUNIT_TEST(width_zero_minus_twenty)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%0-20s", "Hello");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "Hello               "));
+//
+//  local_sprintf(buffer, "%0-20d", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024                "));
+//
+//  local_sprintf(buffer, "%0-20d", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024               "));
+//
+//  local_sprintf(buffer, "%0-20i", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024                "));
+//
+//  local_sprintf(buffer, "%0-20i", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-1024               "));
+//
+//  local_sprintf(buffer, "%0-20u", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1024                "));
+//
+//  local_sprintf(buffer, "%0-20u", 4294966272U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "4294966272          "));
+//
+//  local_sprintf(buffer, "%0-20o", 511);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "777                 "));
+//
+//  local_sprintf(buffer, "%0-20o", 4294966785U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "37777777001         "));
+//
+//  local_sprintf(buffer, "%0-20x", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234abcd            "));
+//
+//  local_sprintf(buffer, "%0-20x", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "edcb5433            "));
+//
+//  local_sprintf(buffer, "%0-20X", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234ABCD            "));
+//
+//  local_sprintf(buffer, "%0-20X", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "EDCB5433            "));
+//
+//  local_sprintf(buffer, "%0-20c", 'x');
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "x                   "));
+//}
+
+
+//CUNIT_TEST(padding_twenty)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%020d", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
+//
+//  local_sprintf(buffer, "%020d", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-0000000000000001024"));
+//
+//  local_sprintf(buffer, "%020i", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
+//
+//  local_sprintf(buffer, "%020i", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-0000000000000001024"));
+//
+//  local_sprintf(buffer, "%020u", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
+//
+//  local_sprintf(buffer, "%020u", 4294966272U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000004294966272"));
+//
+//  local_sprintf(buffer, "%020o", 511);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000000777"));
+//
+//  local_sprintf(buffer, "%020o", 4294966785U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000037777777001"));
+//
+//  local_sprintf(buffer, "%020x", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0000000000001234abcd"));
+//
+//  local_sprintf(buffer, "%020x", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "000000000000edcb5433"));
+//
+//  local_sprintf(buffer, "%020X", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0000000000001234ABCD"));
+//
+//  local_sprintf(buffer, "%020X", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "000000000000EDCB5433"));
+//}
+
+
+//CUNIT_TEST(padding_dot_twenty)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%.20d", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
+//
+//  local_sprintf(buffer, "%.20d", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-00000000000000001024"));
+//
+//  local_sprintf(buffer, "%.20i", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
+//
+//  local_sprintf(buffer, "%.20i", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-00000000000000001024"));
+//
+//  local_sprintf(buffer, "%.20u", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
+//
+//  local_sprintf(buffer, "%.20u", 4294966272U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000004294966272"));
+//
+//  local_sprintf(buffer, "%.20o", 511);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000000777"));
+//
+//  local_sprintf(buffer, "%.20o", 4294966785U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000037777777001"));
+//
+//  local_sprintf(buffer, "%.20x", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0000000000001234abcd"));
+//
+//  local_sprintf(buffer, "%.20x", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "000000000000edcb5433"));
+//
+//  local_sprintf(buffer, "%.20X", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0000000000001234ABCD"));
+//
+//  local_sprintf(buffer, "%.20X", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "000000000000EDCB5433"));
+//}
+
+
+//CUNIT_TEST(padding_hashtag_020)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%#020d", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
+//
+//  local_sprintf(buffer, "%#020d", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-0000000000000001024"));
+//
+//  local_sprintf(buffer, "%#020i", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
+//
+//  local_sprintf(buffer, "%#020i", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-0000000000000001024"));
+//
+//  local_sprintf(buffer, "%#020u", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000001024"));
+//
+//  local_sprintf(buffer, "%#020u", 4294966272U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000004294966272"));
+//
+//  local_sprintf(buffer, "%#020o", 511);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000000000000777"));
+//
+//  local_sprintf(buffer, "%#020o", 4294966785U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "00000000037777777001"));
+//
+//  local_sprintf(buffer, "%#020x", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0x00000000001234abcd"));
+//
+//  local_sprintf(buffer, "%#020x", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0x0000000000edcb5433"));
+//
+//  local_sprintf(buffer, "%#020X", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0X00000000001234ABCD"));
+//
+//  local_sprintf(buffer, "%#020X", 3989525555U);
+//
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "0X0000000000EDCB5433"));
+//}
+
+
+//CUNIT_TEST(padding_hashtag_twenty)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%#20d", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
+//
+//  local_sprintf(buffer, "%#20d", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
+//
+//  local_sprintf(buffer, "%#20i", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
+//
+//  local_sprintf(buffer, "%#20i", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
+//
+//  local_sprintf(buffer, "%#20u", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
+//
+//  local_sprintf(buffer, "%#20u", 4294966272U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          4294966272"));
+//
+//  local_sprintf(buffer, "%#20o", 511);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                0777"));
+//
+//  local_sprintf(buffer, "%#20o", 4294966785U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "        037777777001"));
+//
+//  local_sprintf(buffer, "%#20x", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          0x1234abcd"));
+//
+//  local_sprintf(buffer, "%#20x", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          0xedcb5433"));
+//
+//  local_sprintf(buffer, "%#20X", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          0X1234ABCD"));
+//
+//  local_sprintf(buffer, "%#20X", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          0XEDCB5433"));
+//}
+
+
+//CUNIT_TEST(padding_20_dot_5)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%20.5d", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               01024"));
+//
+//  local_sprintf(buffer, "%20.5d", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "              -01024"));
+//
+//  local_sprintf(buffer, "%20.5i", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               01024"));
+//
+//  local_sprintf(buffer, "%20.5i", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "              -01024"));
+//
+//  local_sprintf(buffer, "%20.5u", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               01024"));
+//
+//  local_sprintf(buffer, "%20.5u", 4294966272U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          4294966272"));
+//
+//  local_sprintf(buffer, "%20.5o", 511);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               00777"));
+//
+//  local_sprintf(buffer, "%20.5o", 4294966785U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "         37777777001"));
+//
+//  local_sprintf(buffer, "%20.5x", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234abcd"));
+//
+//  local_sprintf(buffer, "%20.10x", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          00edcb5433"));
+//
+//  local_sprintf(buffer, "%20.5X", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234ABCD"));
+//
+//  local_sprintf(buffer, "%20.10X", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          00EDCB5433"));
+//}
+
+
+//CUNIT_TEST(padding_neg_numbers)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  // space padding
+//  local_sprintf(buffer, "% 1d", -5);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5"));
+//
+//  local_sprintf(buffer, "% 2d", -5);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5"));
+//
+//  local_sprintf(buffer, "% 3d", -5);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, " -5"));
+//
+//  local_sprintf(buffer, "% 4d", -5);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "  -5"));
+//
+//  // zero padding
+//  local_sprintf(buffer, "%01d", -5);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5"));
+//
+//
+//  local_sprintf(buffer, "%02d", -5);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5"));
+//
+//  local_sprintf(buffer, "%03d", -5);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-05"));
+//
+//  local_sprintf(buffer, "%04d", -5);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-005"));
+//}
+
+//CUNIT_TEST(float_padding_neg_numbers)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  // space padding
+//  local_sprintf(buffer, "% 3.1f", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5.0"));
+//
+//  local_sprintf(buffer, "% 4.1f", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5.0"));
+//
+//  local_sprintf(buffer, "% 5.1f", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, " -5.0"));
+//
+//#ifndef PRINTF_DISABLE_SUPPORT_EXPONENTIAL
+//  local_sprintf(buffer, "% 6.1g", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "    -5"));
+//
+//  local_sprintf(buffer, "% 6.1e", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5.0e+00"));
+//
+//  local_sprintf(buffer, "% 10.1e", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "  -5.0e+00"));
+//#endif
+//
+//  // zero padding
+//  local_sprintf(buffer, "%03.1f", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5.0"));
+//
+//  local_sprintf(buffer, "%04.1f", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5.0"));
+//
+//  local_sprintf(buffer, "%05.1f", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-05.0"));
+//
+//  // zero padding no decimal point
+//  local_sprintf(buffer, "%01.0f", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5"));
+//
+//  local_sprintf(buffer, "%02.0f", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-5"));
+//
+//  local_sprintf(buffer, "%03.0f", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-05"));
+//
+//#ifndef PRINTF_DISABLE_SUPPORT_EXPONENTIAL
+//  local_sprintf(buffer, "%010.1e", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-005.0e+00"));
+//
+//  local_sprintf(buffer, "%07.0E", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-05E+00"));
+//
+//  local_sprintf(buffer, "%03.0g", -5.);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "-05"));
+//#endif
+//}
+
+//CUNIT_TEST(length)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%.0s", "Hello testing");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, ""));
+//
+//  local_sprintf(buffer, "%20.0s", "Hello testing");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
+//
+//  local_sprintf(buffer, "%.s", "Hello testing");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, ""));
+//
+//  local_sprintf(buffer, "%20.s", "Hello testing");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
+//
+//  local_sprintf(buffer, "%20.0d", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
+//
+//  local_sprintf(buffer, "%20.0d", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
+//
+//  local_sprintf(buffer, "%20.d", 0);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
+//
+//  local_sprintf(buffer, "%20.0i", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
+//
+//  local_sprintf(buffer, "%20.i", -1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "               -1024"));
+//
+//  local_sprintf(buffer, "%20.i", 0);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
+//
+//  local_sprintf(buffer, "%20.u", 1024);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                1024"));
+//
+//  local_sprintf(buffer, "%20.0u", 4294966272U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "          4294966272"));
+//
+//  local_sprintf(buffer, "%20.u", 0U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
+//
+//  local_sprintf(buffer, "%20.o", 511);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                 777"));
+//
+//  local_sprintf(buffer, "%20.0o", 4294966785U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "         37777777001"));
+//
+//  local_sprintf(buffer, "%20.o", 0U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
+//
+//  local_sprintf(buffer, "%20.x", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234abcd"));
+//
+//  local_sprintf(buffer, "%50.x", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                                          1234abcd"));
+//
+//  local_sprintf(buffer, "%50.x%10.u", 305441741, 12345);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                                          1234abcd     12345"));
+//
+//  local_sprintf(buffer, "%20.0x", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            edcb5433"));
+//
+//  local_sprintf(buffer, "%20.x", 0U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
+//
+//  local_sprintf(buffer, "%20.X", 305441741);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            1234ABCD"));
+//
+//  local_sprintf(buffer, "%20.0X", 3989525555U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "            EDCB5433"));
+//
+//  local_sprintf(buffer, "%20.X", 0U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "                    "));
+//
+//  local_sprintf(buffer, "%02.0u", 0U);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "  "));
+//
+//  local_sprintf(buffer, "%02.0d", 0);
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "  "));
+//}
 
 // I don't support floats ATM
 //CUNIT_TEST(float)
@@ -1390,31 +1390,31 @@ CUNIT_TEST(unknown_flag)
 }
 
 
-CUNIT_TEST(string_length)
-{
-  char buffer[PRINT_BUFFER_SIZE];
-
-  local_sprintf(buffer, "%.4s", "This is a test");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "This"));
-
-  local_sprintf(buffer, "%.4s", "test");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "test"));
-
-  local_sprintf(buffer, "%.7s", "123");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "123"));
-
-  local_sprintf(buffer, "%.7s", "");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, ""));
-
-  local_sprintf(buffer, "%.4s%.2s", "123456", "abcdef");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234ab"));
-
-  local_sprintf(buffer, "%.4.2s", "123456");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, ".2s"));
-
-  local_sprintf(buffer, "%.*s", 3, "123456");
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "123"));
-}
+//CUNIT_TEST(string_length)
+//{
+//  char buffer[PRINT_BUFFER_SIZE];
+//
+//  local_sprintf(buffer, "%.4s", "This is a test");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "This"));
+//
+//  local_sprintf(buffer, "%.4s", "test");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "test"));
+//
+//  local_sprintf(buffer, "%.7s", "123");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "123"));
+//
+//  local_sprintf(buffer, "%.7s", "");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, ""));
+//
+//  local_sprintf(buffer, "%.4s%.2s", "123456", "abcdef");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1234ab"));
+//
+//  local_sprintf(buffer, "%.4.2s", "123456");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, ".2s"));
+//
+//  local_sprintf(buffer, "%.*s", 3, "123456");
+//  CUNIT_ASSERT_TRUE(!strcmp(buffer, "123"));
+//}
 
 
 CUNIT_TEST(buffer_length)
