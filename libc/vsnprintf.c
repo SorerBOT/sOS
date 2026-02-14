@@ -366,6 +366,9 @@ static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_
 
 /*
  * Call this as soon as %-sign is encountered in the format string.
+ * RETURN VALUE: returns the last address that is a part of the specifier
+ * this function is only called by vsnprintf, and it makes sense because
+ * of how the vsnprintf print-loop works.
  */
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data)
 {
@@ -375,7 +378,7 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
     if ( *(++str) == '\0' )
     {
         specifier_data->is_valid_specifier = false;
-        return str;
+        return str - 1;
     }
 
     str = get_min_width(str, specifier_data);
@@ -436,14 +439,14 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
     {
         specifier_data->len = VSNPRINTF_LEN_CHAR;
         specifier_data->type = VSNPRINTF_TYPE_CHAR;
-        return ++str;
+        return str;
     }
 
     if ( *str == 's' )
     {
         specifier_data->len = get_modifier_length_arch_dependent(sizeof(void*));
         specifier_data->type = VSNPRINTF_TYPE_STRING;
-        return ++str;
+        return str;
     }
 
     if ( *str == 'p' )
@@ -453,7 +456,7 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
 
     get_modifier_conversion(str, specifier_data);
 
-    return ++str;
+    return str;
 }
 
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src)
@@ -537,7 +540,7 @@ int vsnprintf(char* restrict str, size_t size, const char* restrict format, va_l
         if (current == '%')
         {
             vsnprintf_specifier_t specifier_data;
-            format = get_format_specifier(format, &specifier_data);
+            format = get_format_specifier(format, &specifier_data); // format now points to the last char in the specifier (we increment it again in the for loop)
             chars_generated += print_specifier_data(address, remaining_size, &specifier_data, &ap_copy);
         }
         else
