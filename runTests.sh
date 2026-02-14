@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# this is pretty awful. I'll write a better version once I have more tests
+
 BIN_DIR="./bin"
 BIN_TESTS_DIR="$BIN_DIR/tests"
 
@@ -17,7 +19,6 @@ echo "Compiling the tests..."
 gcc -std=c99 -c ./tests/libc/vsnprintf_tests.c -o "$BIN_TESTS_DIR/vsnprintf_tests.o" \
     -I./tests/libc/external/ \
     -fno-builtin-sprintf
-    
 
 echo "Linking..."
 gcc "$BIN_TESTS_DIR/$(dirname "$file")/$(basename "$file" .c).o" "$BIN_TESTS_DIR/vsnprintf_tests.o" -o "$BIN_TESTS_DIR/vsnprintf_tests"
