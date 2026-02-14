@@ -45,7 +45,7 @@ typedef struct
     bool is_valid_specifier;
 } vsnprintf_specifier_t;
 
-static inline uint16_t get_highest_contained_power(uintmax_t container, uint16_t exponentiated_number);
+static inline uint16_t get_highest_contained_power(uintmax_t container, uintmax_t exponentiated_number);
 static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative);
 static inline int print_specifier_data(char* restrict dst, size_t size, const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
 static inline const char* get_number_flag_value(const char* str, size_t* flag_value);
@@ -55,18 +55,17 @@ static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src);
 static int vsnprintf_print_int(char* restrict str, size_t size, uintmax_t d, bool is_negative);
-static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uint16_t base, uintmax_t d, bool is_uppercase);
+static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintmax_t base, uintmax_t d, bool is_uppercase, bool is_negative);
 
-static inline uint16_t get_highest_contained_power(uintmax_t container, uint16_t exponentiated_number)
+static inline uint16_t get_highest_contained_power(uintmax_t container, uintmax_t exponentiated_number)
 {
     size_t current_power = 0;
-    uintmax_t current_number = (uintmax_t) exponentiated_number;
 
-    for (; current_number * exponentiated_number < container;
-            ++current_power, current_number *= exponentiated_number);
+    for (; container / exponentiated_number >= 1; ++current_power, container /= exponentiated_number);
 
     return current_power;
 }
+
 static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative)
 {
     char c;
@@ -234,16 +233,16 @@ static inline int print_specifier_data(char* restrict dst, size_t size, const vs
     switch (type)
     {
         case VSNPRINTF_TYPE_DECIMAL:
-            return vsnprintf_print_int(dst, size, canonical_int, is_negative);
+            return vsnprintf_print_base_up_to_16(dst, size, 10, canonical_int, false, is_negative);
             break;
         case VSNPRINTF_TYPE_OCTAL:
-            return vsnprintf_print_base_up_to_16(dst, size, canonical_int, 8, false);
+            return vsnprintf_print_base_up_to_16(dst, size, 8, canonical_int, false, false);
             break;
         case VSNPRINTF_TYPE_HEX_UPPERCASE:
-            return vsnprintf_print_base_up_to_16(dst, size, canonical_int, 16, true);
+            return vsnprintf_print_base_up_to_16(dst, size, 16, canonical_int, true, false);
             break;
         case VSNPRINTF_TYPE_HEX_LOWERCASE:
-            return vsnprintf_print_base_up_to_16(dst, size, canonical_int, 16, false);
+            return vsnprintf_print_base_up_to_16(dst, size, 16, canonical_int, false, false);
             break;
         case VSNPRINTF_TYPE_STRING:
             return vsnprintf_print_string(dst, size, string_arg);
@@ -512,14 +511,18 @@ static int vsnprintf_print_int(char* restrict str, size_t size, uintmax_t d, boo
 }
 
 // works for any base between 2 and 16 inclusive.
-static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uint16_t base, uintmax_t d, bool is_uppercase)
+static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintmax_t base, uintmax_t d, bool is_uppercase, bool is_negative)
 {
-    char buf[10]; // even in base 2, the largest number would be 64-bits
+    char buf[67]; // even in base 2, the largest number would be 64-bits, then we have a null terminator and a - (minus) sign
 
-    uint8_t ascii_addition = is_uppercase ? VSNPRINTF_UPPERCASE_ADDITION : 0;
-
-    uint32_t result = 0;
+    uint8_t ascii_addition = is_uppercase ? 0 : VSNPRINTF_UPPERCASE_ADDITION;
     size_t chars_generated = 0;
+
+    if (is_negative)
+    {
+        buf[0] = '-';
+        ++chars_generated;
+    }
 
     uint16_t highest_power = get_highest_contained_power(d, base);
     uintmax_t base_to_highest_power = 1;
@@ -527,6 +530,7 @@ static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uint16
     {
         base_to_highest_power *= base;
     }
+
 
     for (; base_to_highest_power > 0; ++chars_generated, base_to_highest_power /= base)
     {
@@ -540,22 +544,22 @@ static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uint16
             switch (quotient)
             {
                 case 10:
-                    buf[chars_generated] = 'a' + ascii_addition;
+                    buf[chars_generated] = 'A' + ascii_addition;
                     break;
                 case 11:
-                    buf[chars_generated] = 'b' + ascii_addition;
+                    buf[chars_generated] = 'B' + ascii_addition;
                     break;
                 case 12:
-                    buf[chars_generated] = 'c' + ascii_addition;
+                    buf[chars_generated] = 'C' + ascii_addition;
                     break;
                 case 13:
-                    buf[chars_generated] = 'd' + ascii_addition;
+                    buf[chars_generated] = 'D' + ascii_addition;
                     break;
                 case 14:
-                    buf[chars_generated] = 'e' + ascii_addition;
+                    buf[chars_generated] = 'E' + ascii_addition;
                     break;
                 case 15:
-                    buf[chars_generated] = 'f' + ascii_addition;
+                    buf[chars_generated] = 'F' + ascii_addition;
                     break;
             }
         }

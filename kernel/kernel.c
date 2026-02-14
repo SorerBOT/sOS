@@ -12,9 +12,7 @@ void kernel()
     console_io_init(&settings);
     console_io_report("entered 64-bit long mode...", CONSOLE_IO_SUCCESS);
 
-    //console_io_printf("%llx\n", 3735928559);
-
-    //while(1);
+    console_io_printf("%llx\n", 3735928559);
 
     size_t print_count = 0;
 
