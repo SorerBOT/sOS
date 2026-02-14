@@ -227,3 +227,37 @@ uint64_t __udivmoddi4(uint64_t a, uint64_t b, uint64_t *rem) {
     *rem = r.all;
   return q.all;
 }
+
+//===-- udivdi3.c - Implement __udivdi3 -----------------------------------===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+//
+// This file implements __udivdi3 for the compiler_rt library.
+//
+//===----------------------------------------------------------------------===//
+
+uint64_t __udivdi3(uint64_t a, uint64_t b) {
+  return __udivmoddi4(a, b, 0);
+}
+
+//===-- umoddi3.c - Implement __umoddi3 -----------------------------------===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+//
+// This file implements __umoddi3 for the compiler_rt library.
+//
+//===----------------------------------------------------------------------===//
+
+uint64_t __umoddi3(uint64_t a, uint64_t b) {
+  uint64_t r;
+  __udivmoddi4(a, b, &r);
+  return r;
+}

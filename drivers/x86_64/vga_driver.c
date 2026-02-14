@@ -9,9 +9,6 @@
 #include <cpu_io.h>
 
 #define VGA_DRIVER_BUFFER_ADDRESS 0xB8000
-#define VGA_DRIVER_WIDTH 80
-#define VGA_DRIVER_HEIGHT 25
-#define VGA_DRIVER_SHADOW_HEIGHT 40
 #define VGA_DRIVER_LINE_SIZE (2 * VGA_DRIVER_WIDTH)
 #define VGA_DRIVER_SIZE (VGA_DRIVER_LINE_SIZE * VGA_DRIVER_HEIGHT)
 #define VGA_DRIVER_SHADOW_SIZE (VGA_DRIVER_LINE_SIZE * VGA_DRIVER_SHADOW_HEIGHT)
@@ -36,7 +33,6 @@ static inline void init_shadow_buffer();
 static void move_cursor(size_t shadow_line, size_t offset);
 static void print_char(byte color, char character);
 static void print_int(byte color, intmax_t d);
-static void print_string_colored(byte color, const char* string);
 
 static size_t shadow_line = 0;
 static size_t offset = 0;
@@ -135,124 +131,13 @@ static void print_char(byte color, char character)
     ++offset;
 }
 
-static void print_int(byte color, intmax_t d)
-{
-    bool is_negative = d < 0;
-    char digits[21]; // int max is 10 digits and null terminator is another
-    digits[20] = '\0';
-
-    size_t current_idx = 19;
-    do
-    {
-        int8_t current_digit = d % 10;
-        if (current_digit < 0)
-        {
-            current_digit *= -1;
-        }
-        digits[current_idx] = VGA_DRIVER_CONVERT_DIGIT_TO_CHAR(current_digit);
-        --current_idx;
-        d /= 10;
-    } while (d != 0);
-
-    if (is_negative)
-    {
-        digits[current_idx] = '-';
-        --current_idx;
-    }
-
-    ++current_idx; // we decremented it one too many times
-    char* final_string = ((char*)digits) + current_idx;
-    print_string_colored(color, final_string);
-}
-
-static void print_string_colored(byte color, const char* string)
+void vga_driver_print_string_colored(byte color, const char* string)
 {
     while (*string != '\0')
     {
         print_char(color, *string);
         ++string;
     }
-}
-
-void vga_driver_vprintf_colored(byte color, const char* format, va_list ap)
-{
-    char* s;
-    char c;
-    int d;
-    long d_long;
-    long long d_long_long;
-
-    while (*format)
-    {
-        char current = *format;
-        uint8_t long_count = 0;
-
-        if (current == '%')
-        {
-            ++format;
-            current = *format;
-
-            if (current == 'l')
-            {
-                ++long_count;
-                ++format;
-                current = *format;
-                if (current == 'l')
-                {
-                    ++format;
-                    current = *format;
-                    ++long_count;
-                }
-            }
-
-            switch (current)
-            {
-                case 's':
-                    s = va_arg(ap, char*);
-                    print_string_colored(color, s);
-                    break;
-                case 'c':
-                    c = (char)va_arg(ap, int);
-                    print_char(color, c);
-                    break;
-                case 'd':
-                    if (long_count == 0)
-                    {
-                        d = va_arg(ap, int);
-                        print_int(color, d);
-                        break;
-                    }
-                    else if (long_count == 1)
-                    {
-                        d_long = va_arg(ap, long);
-                        print_int(color, d_long);
-                        break;
-                    }
-                    else if (long_count == 2)
-                    {
-                        d_long_long = va_arg(ap, long long);
-                        print_int(color, d_long_long);
-                        break;
-                    }
-
-            }
-        }
-        else
-        {
-            print_char(color, current);
-        }
-        ++format;
-    }
-}
-
-void vga_driver_printf_colored(byte color, const char* format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-
-    vga_driver_vprintf_colored(color, format, ap);
-
-    va_end(ap);
 }
 
 void vga_driver_clear_colored(byte new_background_color)
