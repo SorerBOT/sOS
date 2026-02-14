@@ -513,17 +513,12 @@ int vsnprintf(char* restrict str, size_t size, const char* restrict format, va_l
 {
     size_t chars_generated = 0;
 
-    char* s;
-    char c;
-    intmax_t d;
-
     va_list ap_copy;
     va_copy(ap_copy, ap);
 
     for (; *format != '\0'; ++format)
     {
         char current = *format;
-        uint8_t long_count = 0;
 
         size_t remaining_size = (chars_generated + 1 < size)
             ? size - 1 - chars_generated

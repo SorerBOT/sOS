@@ -32,7 +32,6 @@ static inline void init_shadow_buffer();
 
 static void move_cursor(size_t shadow_line, size_t offset);
 static void print_char(byte color, char character);
-static void print_int(byte color, intmax_t d);
 
 static size_t shadow_line = 0;
 static size_t offset = 0;
