@@ -475,17 +475,13 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
 
 static int vsnprintf_print_int(char* restrict str, size_t size, uintmax_t d, bool is_negative)
 {
-    char digits[21]; // int max is at most 20 digits and null terminator is another
-    digits[20] = '\0';
+    char digits[24]; // int max is at most 20 digits, sign is another and null terminator is another
+    digits[23] = '\0';
 
-    size_t current_idx = 19;
+    size_t current_idx = 22;
     do
     {
         int8_t current_digit = d % 10;
-        if (current_digit < 0)
-        {
-            current_digit *= -1;
-        }
         digits[current_idx] = VSNPRINTF_CONVERT_DIGIT_TO_CHAR(current_digit);
         --current_idx;
         d /= 10;
