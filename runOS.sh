@@ -147,4 +147,8 @@ echo "Padding kernel binary (entire OS image)..."
 truncate -s $OS_IMAGE_SIZE_MAX "$BIN_DIR/$OS_IMG.bin"
 
 echo "Build complete. Running the OS!"
-qemu-system-x86_64 -drive format=raw,file="$BIN_DIR/$OS_IMG.bin" -display cocoa
+qemu-system-x86_64 -drive format=raw,file="$BIN_DIR/$OS_IMG.bin" -display cocoa \
+    -d int,cpu_reset \
+    -D qemu.log \
+    -no-reboot \
+    -no-shutdown
