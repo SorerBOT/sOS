@@ -1249,8 +1249,11 @@ CUNIT_TEST(types)
   local_sprintf(buffer, "%li", 2147483647L);
   CUNIT_ASSERT_TRUE(!strcmp(buffer, "2147483647"));
 
+  local_sprintf(buffer, "%lli", 30);
+  CUNIT_ASSERT_STR_EQ(buffer, "30");
+
   local_sprintf(buffer, "%lli", 30LL);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "30"));
+  CUNIT_ASSERT_STR_EQ(buffer, "30");
 
   local_sprintf(buffer, "%lli", -9223372036854775807LL);
   CUNIT_ASSERT_TRUE(!strcmp(buffer, "-9223372036854775807"));
@@ -1286,7 +1289,7 @@ CUNIT_TEST(types)
   }
 
   local_sprintf(buffer, "%b", 60000);
-  CUNIT_ASSERT_TRUE(!strcmp(buffer, "1110101001100000"));
+  CUNIT_ASSERT_STR_EQ(buffer, "1110101001100000");
 
   local_sprintf(buffer, "%lb", 12345678L);
   CUNIT_ASSERT_TRUE(!strcmp(buffer, "101111000110000101001110"));
@@ -1347,11 +1350,13 @@ CUNIT_TEST(pointer)
   char buffer[PRINT_BUFFER_SIZE];
 
   local_sprintf(buffer, "%p", (void*)0x1234U);
-  if (sizeof(void*) == 4U) {
+  if (sizeof(void*) == 4U)
+  {
     CUNIT_ASSERT_TRUE(!strcmp(buffer, "00001234"));
   }
-  else {
-    CUNIT_ASSERT_TRUE(!strcmp(buffer, "0000000000001234"));
+  else
+  {
+    CUNIT_ASSERT_STR_EQ(buffer, "0000000000001234");
   }
 
   local_sprintf(buffer, "%p", (void*)0x12345678U);

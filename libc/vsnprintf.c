@@ -30,6 +30,7 @@ typedef enum
     VSNPRINTF_TYPE_HEX_LOWERCASE,
     VSNPRINTF_TYPE_HEX_UPPERCASE,
     VSNPRINTF_TYPE_OCTAL,
+    VSNPRINTF_TYPE_BINARY,
     VSNPRINTF_TYPE_CHAR,
     VSNPRINTF_TYPE_STRING,
     VSNPRINTF_TYPE_WRITE_COUNT
@@ -150,6 +151,8 @@ static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data
                     *is_negative = false;
                     *canonical_int = (uintmax_t) ll;
                 }
+                return;
+                break;
             case VSNPRINTF_LEN_NONE:
             default:
                 *is_negative = false;
@@ -207,7 +210,8 @@ static inline int print_specifier_data(char* restrict dst, size_t size, const vs
     uintmax_t canonical_int;
     bool is_negative;
     if (type == VSNPRINTF_TYPE_DECIMAL || type == VSNPRINTF_TYPE_OCTAL
-        || type == VSNPRINTF_TYPE_HEX_LOWERCASE || type == VSNPRINTF_TYPE_HEX_UPPERCASE)
+        || type == VSNPRINTF_TYPE_HEX_LOWERCASE || type == VSNPRINTF_TYPE_HEX_UPPERCASE
+        || type == VSNPRINTF_TYPE_BINARY)
     {
         get_canonical_int(specifier_data, ap_ptr, &canonical_int, &is_negative);
     }
@@ -237,6 +241,9 @@ static inline int print_specifier_data(char* restrict dst, size_t size, const vs
             break;
         case VSNPRINTF_TYPE_OCTAL:
             return vsnprintf_print_base_up_to_16(dst, size, 8, canonical_int, false, false);
+            break;
+        case VSNPRINTF_TYPE_BINARY:
+            return vsnprintf_print_base_up_to_16(dst, size, 2, canonical_int, false, false);
             break;
         case VSNPRINTF_TYPE_HEX_UPPERCASE:
             return vsnprintf_print_base_up_to_16(dst, size, 16, canonical_int, true, false);
@@ -357,6 +364,11 @@ static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_
             specifier_data->is_signed = false;
             return;
             break;
+        case 'b':
+            specifier_data->type = VSNPRINTF_TYPE_BINARY;
+            specifier_data->is_signed = false;
+            return;
+            break;
         case 'n':
             specifier_data->type = VSNPRINTF_TYPE_WRITE_COUNT;
             return;
@@ -439,7 +451,7 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
     }
     else if ( *str == 'd' || *str == 'x' || *str == 'X'
                 || *str == 'u' || *str == 'o' || *str == 'i'
-                || *str == 'n' )
+                || *str == 'n' || *str == 'b' )
     {
         specifier_data->len = VSNPRINTF_LEN_INT;
     }
@@ -479,33 +491,6 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
             str[chars_generated] = src[chars_generated];
         }
     }
-
-    return chars_generated;
-}
-
-static int vsnprintf_print_int(char* restrict str, size_t size, uintmax_t d, bool is_negative)
-{
-    char digits[24]; // int max is at most 20 digits, sign is another and null terminator is another
-    digits[23] = '\0';
-
-    size_t current_idx = 22;
-    do
-    {
-        int8_t current_digit = d % 10;
-        digits[current_idx] = VSNPRINTF_CONVERT_DIGIT_TO_CHAR(current_digit);
-        --current_idx;
-        d /= 10;
-    } while (d != 0);
-
-    if (is_negative)
-    {
-        digits[current_idx] = '-';
-        --current_idx;
-    }
-
-    ++current_idx; // we decremented it one too many times
-    char* final_string = ((char*)digits) + current_idx;
-    size_t chars_generated = vsnprintf_print_string(str, size, final_string);
 
     return chars_generated;
 }
