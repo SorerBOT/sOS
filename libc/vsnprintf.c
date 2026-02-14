@@ -9,6 +9,7 @@
 #define VSNPRINTF_IS_DIGIT(c) ( '0' <= (c) && (c) <= '9' )
 #define VSNPRINTF_NULL_STRINGIFIED "(null)"
 #define VSNPRINTF_UNKNOWN_STRINGIFIED "(unknown specifier)"
+#define VSNPRINTF_CANONICAL_INT_DEFAULT 0xDEADBEEF
 
 typedef enum
 {
@@ -30,7 +31,6 @@ typedef enum
     VSNPRINTF_TYPE_OCTAL,
     VSNPRINTF_TYPE_CHAR,
     VSNPRINTF_TYPE_STRING,
-    VSNPRINTF_TYPE_SIZE,
     VSNPRINTF_TYPE_WRITE_COUNT
 } vsnprintf_modifier_conversion_t;
 
@@ -44,13 +44,212 @@ typedef struct
     bool is_valid_specifier;
 } vsnprintf_specifier_t;
 
+static inline void get_canonical_int(vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative);
+static inline int print_specifier_data(char* restrict dst, size_t size, vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
 static inline const char* get_number_flag_value(const char* str, size_t* flag_value);
 static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
 static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src);
-static int vsnprintf_print_int(char* restrict str, size_t size, intmax_t d);
+static int vsnprintf_print_int(char* restrict str, size_t size, uintmax_t d, bool is_negative);
+static int vsnprintf_print_octal(char* restrict str, size_t size, uintmax_t d);
+static int vsnprintf_print_hex(char* restrict str, size_t size, uintmax_t d, bool is_uppercase);
+
+static inline void get_canonical_int(vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative)
+{
+    char c;
+    short s;
+    int i;
+    long l;
+    long long ll;
+
+    if (specifier_data->is_signed)
+    {
+        switch (specifier_data->len)
+        {
+            case VSNPRINTF_LEN_CHAR:
+                c = (char) va_arg(*ap_ptr, int);
+                if (c < 0)
+                {
+                    *is_negative = true;
+                    *canonical_int = (uintmax_t) -c;
+                }
+                else
+                {
+                    *is_negative = false;
+                    *canonical_int = (uintmax_t) c;
+                }
+                return;
+                break;
+
+            case VSNPRINTF_LEN_SHORT:
+                s = (short) va_arg(*ap_ptr, int);
+                if (s < 0)
+                {
+                    *is_negative = true;
+                    *canonical_int = (uintmax_t) -s;
+                }
+                else
+                {
+                    *is_negative = false;
+                    *canonical_int = s;
+                }
+                return;
+                break;
+
+            case VSNPRINTF_LEN_INT:
+                i = va_arg(*ap_ptr, int);
+                if (i < 0)
+                {
+                    *is_negative = true;
+                    *canonical_int = (uintmax_t) -i;
+                }
+                else
+                {
+                    *is_negative = false;
+                    *canonical_int = (uintmax_t) i;
+                }
+                return;
+                break;
+
+            case VSNPRINTF_LEN_LONG:
+                l = va_arg(*ap_ptr, long);
+                if (l < 0)
+                {
+                    *is_negative = true;
+                    *canonical_int = (uintmax_t) -l;
+                }
+                else
+                {
+                    *is_negative = false;
+                    *canonical_int = (uintmax_t) l;
+                }
+                return;
+                break;
+
+            case VSNPRINTF_LEN_LONG_LONG:
+                ll = va_arg(*ap_ptr, long long);
+                if (ll < 0)
+                {
+                    *is_negative = true;
+                    *canonical_int = (uintmax_t) -ll;
+                }
+                else
+                {
+                    *is_negative = false;
+                    *canonical_int = (uintmax_t) ll;
+                }
+            case VSNPRINTF_LEN_NONE:
+            default:
+                *is_negative = false;
+                *canonical_int = (uintmax_t) VSNPRINTF_CANONICAL_INT_DEFAULT;
+            return;
+            break;
+        }
+    }
+    else
+    {
+        *is_negative = false;
+        switch (specifier_data->len)
+        {
+            case VSNPRINTF_LEN_CHAR:
+                *canonical_int = (uintmax_t) (unsigned char) va_arg(*ap_ptr, unsigned int);
+                return;
+                break;
+
+            case VSNPRINTF_LEN_SHORT:
+                *canonical_int = (uintmax_t) (unsigned short) va_arg(*ap_ptr, unsigned int);
+                return;
+                break;
+
+            case VSNPRINTF_LEN_INT:
+                *canonical_int = (uintmax_t) va_arg(*ap_ptr, unsigned int);
+                return;
+                break;
+
+            case VSNPRINTF_LEN_LONG:
+                *canonical_int = (uintmax_t) va_arg(*ap_ptr, unsigned long);
+                return;
+                break;
+
+            case VSNPRINTF_LEN_LONG_LONG:
+                *canonical_int = (uintmax_t) va_arg(*ap_ptr, unsigned long long);
+                return;
+                break;
+            case VSNPRINTF_LEN_NONE:
+            default:
+                *canonical_int = (uintmax_t) VSNPRINTF_CANONICAL_INT_DEFAULT;
+            return;
+            break;
+        }
+    }
+}
+
+static inline int print_specifier_data(char* restrict dst, size_t size, vsnprintf_specifier_t* specifier_data, va_list* ap_ptr)
+{
+    if (specifier_data->type == VSNPRINTF_TYPE_UNKNOWN || specifier_data->len == VSNPRINTF_LEN_NONE)
+    {
+        return 0;
+    }
+
+    vsnprintf_modifier_conversion_t type = specifier_data->type;
+    uintmax_t canonical_int;
+    bool is_negative;
+    if (type == VSNPRINTF_TYPE_DECIMAL || type == VSNPRINTF_TYPE_OCTAL
+        || type == VSNPRINTF_TYPE_HEX_LOWERCASE || type == VSNPRINTF_TYPE_HEX_UPPERCASE)
+    {
+        get_canonical_int(specifier_data, ap_ptr, &canonical_int, &is_negative);
+    }
+
+    char* string_arg = NULL;
+    if (type == VSNPRINTF_TYPE_STRING)
+    {
+        string_arg = va_arg(*ap_ptr, char*);
+    }
+
+    char char_buf[2] = {0};
+    if (type == VSNPRINTF_TYPE_CHAR)
+    {
+        char_buf[0] = (char) va_arg(*ap_ptr, int);
+    }
+
+    char non_specifier_percent_sign_buf[2] = {0};
+    if (type == VSNPRINTF_TYPE_NON_SPECIFIER_PERCENT_SIGN)
+    {
+        non_specifier_percent_sign_buf[0] = '%';
+    }
+
+    switch (type)
+    {
+        case VSNPRINTF_TYPE_DECIMAL:
+            return vsnprintf_print_int(dst, size, canonical_int, is_negative);
+            break;
+        case VSNPRINTF_TYPE_OCTAL:
+            return vsnprintf_print_octal(dst, size, canonical_int);
+            break;
+        case VSNPRINTF_TYPE_HEX_UPPERCASE:
+            return vsnprintf_print_hex(dst, size, canonical_int, true);
+            break;
+        case VSNPRINTF_TYPE_HEX_LOWERCASE:
+            return vsnprintf_print_hex(dst, size, canonical_int, false);
+            break;
+        case VSNPRINTF_TYPE_STRING:
+            return vsnprintf_print_string(dst, size, string_arg);
+            break;
+        case VSNPRINTF_TYPE_CHAR:
+            return vsnprintf_print_string(dst, size, char_buf);
+            break;
+        case VSNPRINTF_TYPE_NON_SPECIFIER_PERCENT_SIGN:
+            return vsnprintf_print_string(dst, size, non_specifier_percent_sign_buf);
+            break;
+        case VSNPRINTF_TYPE_WRITE_COUNT:
+        case VSNPRINTF_TYPE_UNKNOWN:
+        default:
+            return 0;
+            break;
+    }
+}
 
 static inline const char* get_number_flag_value(const char* str, size_t* flag_value)
 {
@@ -271,10 +470,9 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
     return chars_generated;
 }
 
-static int vsnprintf_print_int(char* restrict str, size_t size, intmax_t d)
+static int vsnprintf_print_int(char* restrict str, size_t size, uintmax_t d, bool is_negative)
 {
-    bool is_negative = d < 0;
-    char digits[21]; // int max is 10 digits and null terminator is another
+    char digits[21]; // int max is at most 20 digits and null terminator is another
     digits[20] = '\0';
 
     size_t current_idx = 19;
@@ -303,6 +501,14 @@ static int vsnprintf_print_int(char* restrict str, size_t size, intmax_t d)
     return chars_generated;
 }
 
+static int vsnprintf_print_octal(char* restrict str, size_t size, uintmax_t d)
+{
+    return vsnprintf_print_int(str, size, d, false);
+}
+static int vsnprintf_print_hex(char* restrict str, size_t size, uintmax_t d, bool is_uppercase)
+{
+    return vsnprintf_print_int(str, size, d, false);
+}
 
 int vsnprintf(char* restrict str, size_t size, const char* restrict format, va_list ap)
 {
@@ -325,24 +531,10 @@ int vsnprintf(char* restrict str, size_t size, const char* restrict format, va_l
             ? str + chars_generated
             : NULL;
 
-        if (current == '%' && *(format + 1) != '\0')
+        if (current == '%')
         {
-            ++format;
-            current = *format;
-
-            if (current == 'l')
-            {
-                ++long_count;
-                ++format;
-                current = *format;
-                if (current == 'l')
-                {
-                    ++format;
-                    current = *format;
-                    ++long_count;
-                }
-            }
-
+            vsnprintf_specifier_t specifier_data;
+            format = get_format_specifier(format, &specifier_data);
             switch (current)
             {
                 case 's':
