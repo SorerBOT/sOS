@@ -200,7 +200,7 @@ static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data
 
 static inline int print_specifier_data(char* restrict dst, size_t size, const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr)
 {
-    if (specifier_data->type == VSNPRINTF_TYPE_UNKNOWN || specifier_data->len == VSNPRINTF_LEN_NONE)
+    if (specifier_data->type == VSNPRINTF_TYPE_UNKNOWN)
     {
         return 0;
     }
