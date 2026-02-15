@@ -557,6 +557,11 @@ static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintma
 
 int vsnprintf(char* restrict str, size_t size, const char* restrict format, va_list ap)
 {
+    if (str == NULL)
+    {
+        size = 0;
+    }
+
     size_t chars_generated = 0;
 
     va_list ap_copy;
