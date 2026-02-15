@@ -12,7 +12,8 @@
 #define VSNPRINTF_CANONICAL_INT_DEFAULT 0xDEADBEEF
 #define VSNPRINTF_UPPERCASE_ADDITION ('a' - 'A')
 
-#define VSNPRINTF_PREFIX_HEX "0x"
+#define VSNPRINTF_PREFIX_HEX_LOWERCASE "0x"
+#define VSNPRINTF_PREFIX_HEX_UPPERCASE "0x"
 #define VSNPRINTF_PREFIX_OCTAL "0o"
 #define VSNPRINTF_PREFIX_BINARY "0b"
 
@@ -362,18 +363,22 @@ static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_
         case 'p':
             specifier_data->type = VSNPRINTF_TYPE_HEX_UPPERCASE;
             specifier_data->is_signed = false;
-            specifier_data->prefix = VSNPRINTF_PREFIX_HEX;
+            specifier_data->is_zero_pad = true;
+            specifier_data->min_width = (specifier_data->len == VSNPRINTF_LEN_INT)
+                ? 8
+                : 16;
+            // specifier_data->prefix = VSNPRINTF_PREFIX_HEX_UPPERCASE; It is implementation dependent. Keeping as an option for now
             return;
         case 'X':
             specifier_data->type = VSNPRINTF_TYPE_HEX_UPPERCASE;
             specifier_data->is_signed = false;
-            // specifier_data->prefix = VSNPRINTF_PREFIX_HEX;  <---- only in alternative form (#)
+            // specifier_data->prefix = VSNPRINTF_PREFIX_HEX_UPPERCASE;  <---- only in alternative form (#)
             return;
             break;
         case 'x':
             specifier_data->type = VSNPRINTF_TYPE_HEX_LOWERCASE;
             specifier_data->is_signed = false;
-            // specifier_data->prefix = VSNPRINTF_PREFIX_HEX; <-------- only in alternative form
+            // specifier_data->prefix = VSNPRINTF_PREFIX_HEX_LOWERCASE; <-------- only in alternative form
             return;
             break;
         case 'o':
