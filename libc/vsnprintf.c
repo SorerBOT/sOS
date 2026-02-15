@@ -55,7 +55,6 @@ static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(siz
 static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src);
-static int vsnprintf_print_int(char* restrict str, size_t size, uintmax_t d, bool is_negative);
 static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintmax_t base, uintmax_t d, bool is_uppercase, bool is_negative);
 
 static inline uint16_t get_highest_contained_power(uintmax_t container, uintmax_t exponentiated_number)
