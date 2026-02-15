@@ -8,5 +8,7 @@ void* memset_word(void *address, int value_int, size_t len_in_words);
 void* memset(void *address, int value_int, size_t len_in_bytes);
 void* memcpy(void *restrict dst, const void *restrict src, size_t n);
 
+size_t strlen(const char *s);
+
 
 #endif /* STRING_H */

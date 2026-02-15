@@ -12,6 +12,10 @@
 #define VSNPRINTF_CANONICAL_INT_DEFAULT 0xDEADBEEF
 #define VSNPRINTF_UPPERCASE_ADDITION ('a' - 'A')
 
+#define VSNPRINTF_PREFIX_HEX "0x"
+#define VSNPRINTF_PREFIX_OCTAL "0o"
+#define VSNPRINTF_PREFIX_BINARY "0b"
+
 typedef enum
 {
     VSNPRINTF_LEN_NONE,
@@ -42,8 +46,9 @@ typedef struct
     vsnprintf_modifier_length_t len;
     vsnprintf_modifier_conversion_t type;
     size_t min_width;
+    const char* prefix;
     char unknown_specifier_char;
-    bool is_zero_padded;
+    bool is_zero_pad;
     bool is_signed;
     bool is_valid_specifier;
 } vsnprintf_specifier_t;
@@ -56,8 +61,8 @@ static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* 
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
 static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
-static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src);
-static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintmax_t base, uintmax_t d, bool is_uppercase, bool is_negative);
+static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src, const vsnprintf_specifier_t* specifier_data);
+static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintmax_t base, uintmax_t d, bool is_uppercase, bool is_negative, const vsnprintf_specifier_t* specifier_data);
 
 static inline uint16_t get_highest_contained_power(uintmax_t container, uintmax_t exponentiated_number)
 {
@@ -244,32 +249,32 @@ static inline int print_specifier_data(char* restrict dst, size_t size, const vs
     switch (type)
     {
         case VSNPRINTF_TYPE_DECIMAL:
-            return vsnprintf_print_base_up_to_16(dst, size, 10, canonical_int, false, is_negative);
+            return vsnprintf_print_base_up_to_16(dst, size, 10, canonical_int, false, is_negative, specifier_data);
             break;
         case VSNPRINTF_TYPE_OCTAL:
-            return vsnprintf_print_base_up_to_16(dst, size, 8, canonical_int, false, false);
+            return vsnprintf_print_base_up_to_16(dst, size, 8, canonical_int, false, false, specifier_data);
             break;
         case VSNPRINTF_TYPE_BINARY:
-            return vsnprintf_print_base_up_to_16(dst, size, 2, canonical_int, false, false);
+            return vsnprintf_print_base_up_to_16(dst, size, 2, canonical_int, false, false, specifier_data);
             break;
         case VSNPRINTF_TYPE_HEX_UPPERCASE:
-            return vsnprintf_print_base_up_to_16(dst, size, 16, canonical_int, true, false);
+            return vsnprintf_print_base_up_to_16(dst, size, 16, canonical_int, true, false, specifier_data);
             break;
         case VSNPRINTF_TYPE_HEX_LOWERCASE:
-            return vsnprintf_print_base_up_to_16(dst, size, 16, canonical_int, false, false);
+            return vsnprintf_print_base_up_to_16(dst, size, 16, canonical_int, false, false, specifier_data);
             break;
         case VSNPRINTF_TYPE_STRING:
-            return vsnprintf_print_string(dst, size, string_arg);
+            return vsnprintf_print_string(dst, size, string_arg, specifier_data);
             break;
         case VSNPRINTF_TYPE_CHAR:
-            return vsnprintf_print_string(dst, size, char_buf);
+            return vsnprintf_print_string(dst, size, char_buf, specifier_data);
             break;
         case VSNPRINTF_TYPE_NON_SPECIFIER_PERCENT_SIGN:
-            return vsnprintf_print_string(dst, size, non_specifier_percent_sign_buf);
+            return vsnprintf_print_string(dst, size, non_specifier_percent_sign_buf, specifier_data);
             break;
         case VSNPRINTF_TYPE_WRITE_COUNT:
         case VSNPRINTF_TYPE_UNKNOWN:
-            return vsnprintf_print_string(dst, size, unknown_char_buf);
+            return vsnprintf_print_string(dst, size, unknown_char_buf, specifier_data);
             break;
         default:
             return 0;
@@ -300,7 +305,7 @@ static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* 
 
     if ( *str == '0' )
     {
-        specifier_data->is_zero_padded = true;
+        specifier_data->is_zero_pad = true;
         ++str;
     }
 
@@ -357,25 +362,30 @@ static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_
         case 'p':
             specifier_data->type = VSNPRINTF_TYPE_HEX_UPPERCASE;
             specifier_data->is_signed = false;
+            specifier_data->prefix = VSNPRINTF_PREFIX_HEX;
             return;
         case 'X':
             specifier_data->type = VSNPRINTF_TYPE_HEX_UPPERCASE;
             specifier_data->is_signed = false;
+            // specifier_data->prefix = VSNPRINTF_PREFIX_HEX;  <---- only in alternative form (#)
             return;
             break;
         case 'x':
             specifier_data->type = VSNPRINTF_TYPE_HEX_LOWERCASE;
             specifier_data->is_signed = false;
+            // specifier_data->prefix = VSNPRINTF_PREFIX_HEX; <-------- only in alternative form
             return;
             break;
         case 'o':
             specifier_data->type = VSNPRINTF_TYPE_OCTAL;
             specifier_data->is_signed = false;
+            // specifier_data->prefix = VSNPRINTF_PREFIX_OCTAL; <-------- only in alternative form
             return;
             break;
         case 'b':
             specifier_data->type = VSNPRINTF_TYPE_BINARY;
             specifier_data->is_signed = false;
+            //specifier_data->prefix = VSNPRINTF_PREFIX_BINARY; <-------- only in alternative form
             return;
             break;
         case 'n':
@@ -493,14 +503,46 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
     return str;
 }
 
-static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src)
+static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src, const vsnprintf_specifier_t* specifier_data)
 {
+    size_t width = strlen(src);
     size_t chars_generated = 0;
-    for (; src[chars_generated] != '\0'; ++chars_generated)
+
+    size_t min_width = specifier_data->min_width;
+    bool is_zero_pad = specifier_data->is_zero_pad;
+    const char* prefix = specifier_data->prefix;
+
+    if (prefix != NULL)
+    {
+        for (size_t i = 0; prefix[i] != '\0'; ++chars_generated, ++i)
+        {
+            if (chars_generated < size && str != NULL)
+            {
+                str[chars_generated] = prefix[i];
+            }
+        }
+    }
+
+    if (width < min_width)
+    {
+        size_t padding_width = min_width - width;
+        char padding_char = is_zero_pad ? '0' : ' ';
+
+        for (size_t i = 0; i < padding_width; ++i, ++chars_generated)
+        {
+            if (chars_generated < size && str != NULL)
+            {
+                str[chars_generated] = padding_char;
+            }
+        }
+    }
+
+
+    for (size_t i = 0; src[i] != '\0'; ++chars_generated, ++i)
     {
         if (chars_generated < size && str != NULL)
         {
-            str[chars_generated] = src[chars_generated];
+            str[chars_generated] = src[i];
         }
     }
 
@@ -508,7 +550,7 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
 }
 
 // works for any base between 2 and 16 inclusive.
-static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintmax_t base, uintmax_t d, bool is_uppercase, bool is_negative)
+static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintmax_t base, uintmax_t d, bool is_uppercase, bool is_negative, const vsnprintf_specifier_t* specifier_data)
 {
     char buf[67]; // even in base 2, the largest number would be 64-bits, then we have a null terminator and a - (minus) sign
 
@@ -565,7 +607,7 @@ static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintma
     }
 
     buf[chars_generated] = '\0';
-    return vsnprintf_print_string(str, size, buf);
+    return vsnprintf_print_string(str, size, buf, specifier_data);
 }
 
 int vsnprintf(char* restrict str, size_t size, const char* restrict format, va_list ap)
