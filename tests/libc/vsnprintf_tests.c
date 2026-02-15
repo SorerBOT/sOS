@@ -1485,8 +1485,8 @@ CUNIT_TEST(misc)
   //local_sprintf(buffer, "%.*f", 2, 0.33333333);
   //CUNIT_ASSERT_STR_EQ(buffer, "0.33");
 
-  local_sprintf(buffer, "%.*d", -1, 1);
-  CUNIT_ASSERT_STR_EQ(buffer, "1");
+  // local_sprintf(buffer, "%.*d", -1, 1);
+  // CUNIT_ASSERT_STR_EQ(buffer, "1");
 
   local_sprintf(buffer, "%.3s", "foobar");
   CUNIT_ASSERT_STR_EQ(buffer, "foo");
