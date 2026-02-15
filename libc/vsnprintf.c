@@ -24,6 +24,7 @@ typedef enum
 
 typedef enum
 {
+    VSNPRINTF_TYPE_INVALID,
     VSNPRINTF_TYPE_NON_SPECIFIER_PERCENT_SIGN,
     VSNPRINTF_TYPE_UNKNOWN,
     VSNPRINTF_TYPE_DECIMAL,
@@ -41,6 +42,7 @@ typedef struct
     vsnprintf_modifier_length_t len;
     vsnprintf_modifier_conversion_t type;
     size_t min_width;
+    char unknown_specifier_char;
     bool is_zero_padded;
     bool is_signed;
     bool is_valid_specifier;
@@ -200,7 +202,7 @@ static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data
 
 static inline int print_specifier_data(char* restrict dst, size_t size, const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr)
 {
-    if (specifier_data->type == VSNPRINTF_TYPE_UNKNOWN)
+    if (specifier_data->type == VSNPRINTF_TYPE_INVALID)
     {
         return 0;
     }
@@ -233,6 +235,12 @@ static inline int print_specifier_data(char* restrict dst, size_t size, const vs
         non_specifier_percent_sign_buf[0] = '%';
     }
 
+    char unknown_char_buf[2] = {0};
+    if (type == VSNPRINTF_TYPE_UNKNOWN)
+    {
+        unknown_char_buf[0] = specifier_data->unknown_specifier_char;
+    }
+
     switch (type)
     {
         case VSNPRINTF_TYPE_DECIMAL:
@@ -261,6 +269,8 @@ static inline int print_specifier_data(char* restrict dst, size_t size, const vs
             break;
         case VSNPRINTF_TYPE_WRITE_COUNT:
         case VSNPRINTF_TYPE_UNKNOWN:
+            return vsnprintf_print_string(dst, size, unknown_char_buf);
+            break;
         default:
             return 0;
             break;
@@ -377,8 +387,11 @@ static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_
             return;
             break;
         case '\0':
+            specifier_data->type = VSNPRINTF_TYPE_INVALID;
+            return;
         default:
             specifier_data->type = VSNPRINTF_TYPE_UNKNOWN;
+            specifier_data->unknown_specifier_char = *str;
             return;
             break;
     }
