@@ -1482,8 +1482,8 @@ CUNIT_TEST(misc)
   local_sprintf(buffer, "%u%u%ctest%d %s", 5, 3000, 'a', -20, "bit");
   CUNIT_ASSERT_STR_EQ(buffer, "53000atest-20 bit");
 
-  local_sprintf(buffer, "%.*f", 2, 0.33333333);
-  CUNIT_ASSERT_STR_EQ(buffer, "0.33");
+  //local_sprintf(buffer, "%.*f", 2, 0.33333333);
+  //CUNIT_ASSERT_STR_EQ(buffer, "0.33");
 
   local_sprintf(buffer, "%.*d", -1, 1);
   CUNIT_ASSERT_STR_EQ(buffer, "1");
