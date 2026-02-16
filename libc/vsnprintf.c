@@ -76,11 +76,11 @@ static inline uint16_t get_highest_contained_power(uintmax_t container, uintmax_
 static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative);
 static inline int print_specifier_data(char* restrict dst, size_t size, const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
 static inline const char* get_flags_except_dot(const char* str, vsnprintf_specifier_t* specifier_data);
-static inline const char* get_dot_flag(const char* str, vsnprintf_specifier_t* specifier_data);
-static inline const char* get_flag_number_param(const char* str, size_t* param_ptr);
+static inline const char* get_dot_flag(const char* str, vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
+static inline const char* get_flag_number_param(const char* str, size_t* param_ptr, va_list* ap_ptr);
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
 static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
-static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
+static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
 static inline void print_char(char* restrict str, size_t size, size_t* chars_generated, char c);
 static inline void print_prefix(char* restrict str, size_t size, size_t* chars_generated, const char* prefix);
 static inline void print_padding(char* restrict str, size_t size, size_t* chars_generated, size_t total_width, size_t min_width, bool is_zero_pad);
@@ -336,19 +336,37 @@ static inline const char* get_flags_except_dot(const char* str, vsnprintf_specif
     }
 }
 
-static inline const char* get_dot_flag(const char* str, vsnprintf_specifier_t* specifier_data)
+static inline const char* get_dot_flag(const char* str, vsnprintf_specifier_t* specifier_data, va_list* ap_ptr)
 {
     if ( *str == '.' )
     {
         specifier_data->flags |= VSNPRINTF_FLAG_DOT;
-        return get_flag_number_param(++str, &specifier_data->dot_flag_param);
+        return get_flag_number_param(++str, &specifier_data->dot_flag_param, ap_ptr);
     }
 
     return str;
 }
 
-static inline const char* get_flag_number_param(const char* str, size_t* param_ptr)
+static inline const char* get_flag_number_param(const char* str, size_t* param_ptr, va_list* ap_ptr)
 {
+    if ( *str == '*' )
+    {
+        int32_t signed_value = va_arg(*ap_ptr, int);
+        if (signed_value < 0)
+        {
+            // I also need to apply right-pad
+            int64_t lsigned_value = signed_value;
+            *param_ptr = (size_t) (-lsigned_value);
+        }
+        else
+        {
+            *param_ptr = (size_t) signed_value;
+        }
+
+        return str + 1;
+    }
+
+
     if ( !VSNPRINTF_IS_DIGIT(*str) )
     {
         *param_ptr = 0;
@@ -483,7 +501,7 @@ static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_
  * this function is only called by vsnprintf, and it makes sense because
  * of how the vsnprintf print-loop works.
  */
-static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data)
+static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data, va_list* ap_ptr)
 {
     memset(specifier_data, 0, sizeof(*specifier_data));
     specifier_data->is_valid_specifier = true;
@@ -495,8 +513,8 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
     }
 
     str = get_flags_except_dot(str, specifier_data);
-    str = get_flag_number_param(str, &specifier_data->min_width);
-    str = get_dot_flag(str, specifier_data);
+    str = get_flag_number_param(str, &specifier_data->min_width, ap_ptr);
+    str = get_dot_flag(str, specifier_data, ap_ptr);
 
     if ( *str == 'h' )
     {
@@ -832,7 +850,7 @@ int vsnprintf(char* restrict str, size_t size, const char* restrict format, va_l
         if (current == '%')
         {
             vsnprintf_specifier_t specifier_data;
-            format = get_format_specifier(format, &specifier_data); // format now points to the last char in the specifier (we increment it again in the for loop)
+            format = get_format_specifier(format, &specifier_data, &ap_copy); // format now points to the last char in the specifier (we increment it again in the for loop)
             chars_generated += print_specifier_data(address, remaining_size, &specifier_data, &ap_copy);
         }
         else
