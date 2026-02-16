@@ -21,6 +21,7 @@
 #define VSNPRINTF_IS_ZERO_PAD(flags) (((flags) & VSNPRINTF_FLAG_ZERO_PAD) != 0)
 #define VSNPRINTF_IS_PAD_RIGHT(flags) (((flags) & VSNPRINTF_FLAG_PAD_RIGHT) != 0)
 #define VSNPRINTF_IS_SPACE(flags) (((flags) & VSNPRINTF_FLAG_SPACE) != 0)
+#define VSNPRINTF_IS_PLUS(flags) (((flags) & VSNPRINTF_FLAG_PLUS) != 0)
 
 typedef enum
 {
@@ -52,7 +53,8 @@ typedef enum
     VSNPRINTF_FLAG_ALTERNATE_FORM   = 1,
     VSNPRINTF_FLAG_ZERO_PAD         = 2,
     VSNPRINTF_FLAG_PAD_RIGHT        = 4,
-    VSNPRINTF_FLAG_SPACE            = 8
+    VSNPRINTF_FLAG_SPACE            = 8,
+    VSNPRINTF_FLAG_PLUS             = 16
 } vsnprintf_flags_t;
 
 typedef struct
@@ -336,6 +338,9 @@ static inline const char* get_flags(const char* str, vsnprintf_specifier_t* spec
             case ' ':
                 specifier_data->flags |= VSNPRINTF_FLAG_SPACE;
                 continue;
+            case '+':
+                specifier_data->flags |= VSNPRINTF_FLAG_PLUS;
+                continue;
             default:
                 return str;
         }
@@ -609,9 +614,27 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
 {
     size_t chars_generated = 0;
 
-    bool is_space_positive_signed = VSNPRINTF_IS_SPACE(specifier_data->flags);
+    bool is_space_or_plus = false;
+    char space_or_plus_char;
+
+    bool is_plus_positive_signed = VSNPRINTF_IS_PLUS(specifier_data->flags);
     bool is_positive_signed = specifier_data->is_signed && !is_negative;
-    bool is_space = is_space_positive_signed && is_positive_signed;
+    is_space_or_plus = is_plus_positive_signed && is_positive_signed;
+    if (is_space_or_plus)
+    {
+        space_or_plus_char = '+';
+    }
+    else
+    {
+        bool is_space_positive_signed = VSNPRINTF_IS_SPACE(specifier_data->flags);
+        bool is_positive_signed = specifier_data->is_signed && !is_negative;
+        is_space_or_plus = is_space_positive_signed && is_positive_signed;
+        if (is_space_or_plus)
+        {
+            space_or_plus_char = ' ';
+        }
+    }
+
 
     size_t min_width = specifier_data->min_width;
     bool is_pad_right = VSNPRINTF_IS_PAD_RIGHT(specifier_data->flags);
@@ -620,15 +643,10 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
     const char* prefix = specifier_data->prefix;
     size_t prefix_width = (prefix == NULL) ? 0 : strlen(prefix);
     size_t width = strlen(src);
-    size_t space_width = (is_space) ? 1 : 0;
+    size_t space_width = (is_space_or_plus) ? 1 : 0;
     size_t sign_width = (is_negative) ? 1 : 0;
     size_t width_including_sign_and_prefix = width + prefix_width + space_width + sign_width;
 
-
-    if (is_space)
-    {
-        print_char(str, size, &chars_generated, ' ');
-    }
 
     if (is_zero_pad)
     {
@@ -636,6 +654,11 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
         {
             print_char(str, size, &chars_generated, '-');
         }
+        if (is_space_or_plus)
+        {
+            print_char(str, size, &chars_generated, space_or_plus_char);
+        }
+
         if (should_print_prefix)
         {
             print_prefix(str, size, &chars_generated, prefix);
@@ -651,6 +674,10 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
         if (is_negative)
         {
             print_char(str, size, &chars_generated, '-');
+        }
+        if (is_space_or_plus)
+        {
+            print_char(str, size, &chars_generated, space_or_plus_char);
         }
         if (should_print_prefix)
         {
