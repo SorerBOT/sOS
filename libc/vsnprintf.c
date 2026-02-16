@@ -606,11 +606,13 @@ static inline void print_padding(char* restrict str, size_t size, size_t* chars_
 
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src, bool is_negative, bool should_print_prefix, const vsnprintf_specifier_t* specifier_data)
 {
-    size_t width = strlen(src);
     size_t chars_generated = 0;
 
     size_t min_width = specifier_data->min_width;
-    bool is_zero_pad = VSNPRINTF_IS_ZERO_PAD(specifier_data->flags);
+    bool is_pad_right = VSNPRINTF_IS_PAD_RIGHT(specifier_data->flags);
+    bool is_zero_pad = !is_pad_right && VSNPRINTF_IS_ZERO_PAD(specifier_data->flags);
+
+    size_t width = strlen(src);
     const char* prefix = specifier_data->prefix;
     size_t prefix_width = (prefix == NULL) ? 0 : strlen(prefix);
     size_t sign_width = (is_negative) ? 1 : 0;
@@ -627,7 +629,10 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
     }
     else
     {
-        print_padding(str, size, &chars_generated, width_including_sign_and_prefix, min_width, is_zero_pad);
+        if ( !is_pad_right )
+        {
+            print_padding(str, size, &chars_generated, width_including_sign_and_prefix, min_width, is_zero_pad);
+        }
         print_minus(str, size, &chars_generated, is_negative);
         if (should_print_prefix)
         {
@@ -641,6 +646,11 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
         {
             str[chars_generated] = src[i];
         }
+    }
+
+    if ( is_pad_right )
+    {
+        print_padding(str, size, &chars_generated, width_including_sign_and_prefix, min_width, is_zero_pad);
     }
 
     return chars_generated;

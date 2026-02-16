@@ -280,64 +280,65 @@ CUNIT_TEST(zero_flag)
 }
 
 
-//CUNIT_TEST(minus_flag)
-//{
-//  char buffer[PRINT_BUFFER_SIZE];
-//
-//  local_sprintf(buffer, "%-d", 42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "42");
-//
-//  local_sprintf(buffer, "%-d", -42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-42");
-//
-//  local_sprintf(buffer, "%-5d", 42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "42   ");
-//
-//  local_sprintf(buffer, "%-5d", -42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-42  ");
-//
-//  local_sprintf(buffer, "%-15d", 42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "42             ");
-//
-//  local_sprintf(buffer, "%-15d", -42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-42            ");
-//
-//  local_sprintf(buffer, "%-0d", 42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "42");
-//
-//  local_sprintf(buffer, "%-0d", -42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-42");
-//
-//  local_sprintf(buffer, "%-05d", 42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "42   ");
-//
-//  local_sprintf(buffer, "%-05d", -42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-42  ");
-//
-//  local_sprintf(buffer, "%-015d", 42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "42             ");
-//
-//  local_sprintf(buffer, "%-015d", -42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-42            ");
-//
-//  local_sprintf(buffer, "%0-d", 42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "42");
-//
-//  local_sprintf(buffer, "%0-d", -42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-42");
-//
-//  local_sprintf(buffer, "%0-5d", 42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "42   ");
-//
-//  local_sprintf(buffer, "%0-5d", -42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-42  ");
-//
-//  local_sprintf(buffer, "%0-15d", 42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "42             ");
-//
-//  local_sprintf(buffer, "%0-15d", -42);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-42            ");
-//
+CUNIT_TEST(minus_flag)
+{
+  char buffer[PRINT_BUFFER_SIZE];
+
+  local_sprintf(buffer, "%-d", 42);
+  CUNIT_ASSERT_STR_EQ(buffer, "42");
+
+  local_sprintf(buffer, "%-d", -42);
+  CUNIT_ASSERT_STR_EQ(buffer, "-42");
+
+  local_sprintf(buffer, "%-5d", 42);
+  CUNIT_ASSERT_STR_EQ(buffer, "42   ");
+
+  local_sprintf(buffer, "%-5d", -42);
+  CUNIT_ASSERT_STR_EQ(buffer, "-42  ");
+
+  local_sprintf(buffer, "%-15d", 42);
+  CUNIT_ASSERT_STR_EQ(buffer, "42             ");
+
+  local_sprintf(buffer, "%-15d", -42);
+  CUNIT_ASSERT_STR_EQ(buffer, "-42            ");
+
+  local_sprintf(buffer, "%-0d", 42);
+  CUNIT_ASSERT_STR_EQ(buffer, "42");
+
+  local_sprintf(buffer, "%-0d", -42);
+  CUNIT_ASSERT_STR_EQ(buffer, "-42");
+
+  local_sprintf(buffer, "%-05d", 42);
+  CUNIT_ASSERT_STR_EQ(buffer, "42   ");
+
+  local_sprintf(buffer, "%-05d", -42);
+  CUNIT_ASSERT_STR_EQ(buffer, "-42  ");
+
+  local_sprintf(buffer, "%-015d", 42);
+  CUNIT_ASSERT_STR_EQ(buffer, "42             ");
+
+  local_sprintf(buffer, "%-015d", -42);
+  CUNIT_ASSERT_STR_EQ(buffer, "-42            ");
+
+  local_sprintf(buffer, "%0-d", 42);
+  CUNIT_ASSERT_STR_EQ(buffer, "42");
+
+  local_sprintf(buffer, "%0-d", -42);
+  CUNIT_ASSERT_STR_EQ(buffer, "-42");
+
+  local_sprintf(buffer, "%0-5d", 42);
+  CUNIT_ASSERT_STR_EQ(buffer, "42   ");
+
+  local_sprintf(buffer, "%0-5d", -42);
+  CUNIT_ASSERT_STR_EQ(buffer, "-42  ");
+
+  local_sprintf(buffer, "%0-15d", 42);
+  CUNIT_ASSERT_STR_EQ(buffer, "42             ");
+
+  local_sprintf(buffer, "%0-15d", -42);
+  CUNIT_ASSERT_STR_EQ(buffer, "-42            ");
+
+// I did not implement these things
 //  local_sprintf(buffer, "%0-15.3e", -42.);
 //#ifndef PRINTF_DISABLE_SUPPORT_EXPONENTIAL
 //  CUNIT_ASSERT_STR_EQ(buffer, "-4.200e+01     ");
@@ -351,7 +352,7 @@ CUNIT_TEST(zero_flag)
 //#else
 //  CUNIT_ASSERT_STR_EQ(buffer, "g");
 //#endif
-//}
+}
 
 
 CUNIT_TEST(hashtag_flag)
