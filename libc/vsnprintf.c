@@ -75,14 +75,15 @@ typedef struct
 static inline uint16_t get_highest_contained_power(uintmax_t container, uintmax_t exponentiated_number);
 static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative);
 static inline int print_specifier_data(char* restrict dst, size_t size, const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
-static inline const char* get_flags(const char* str, vsnprintf_specifier_t* specifier_data);
+static inline const char* get_flags_except_dot(const char* str, vsnprintf_specifier_t* specifier_data);
+static inline const char* get_dot_flag(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_flag_number_param(const char* str, size_t* param_ptr);
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
 static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline void print_char(char* restrict str, size_t size, size_t* chars_generated, char c);
 static inline void print_prefix(char* restrict str, size_t size, size_t* chars_generated, const char* prefix);
-static inline void print_padding(char* restrict str, size_t size, size_t* chars_generated, size_t width_including_sign_and_prefix, size_t min_width, bool is_zero_pad);
+static inline void print_padding(char* restrict str, size_t size, size_t* chars_generated, size_t total_width, size_t min_width, bool is_zero_pad);
 static inline bool get_is_type_decimal(vsnprintf_modifier_conversion_t type);
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src, bool is_negative, bool should_print_prefix, const vsnprintf_specifier_t* specifier_data);
 static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintmax_t base, uintmax_t d, bool is_uppercase, bool is_negative, bool should_print_prefix, const vsnprintf_specifier_t* specifier_data);
@@ -308,7 +309,7 @@ static inline int print_specifier_data(char* restrict dst, size_t size, const vs
     }
 }
 
-static inline const char* get_flags(const char* str, vsnprintf_specifier_t* specifier_data)
+static inline const char* get_flags_except_dot(const char* str, vsnprintf_specifier_t* specifier_data)
 {
     for (; ; ++str)
     {
@@ -329,14 +330,21 @@ static inline const char* get_flags(const char* str, vsnprintf_specifier_t* spec
             case '+':
                 specifier_data->flags |= VSNPRINTF_FLAG_PLUS;
                 continue;
-            case '.':
-                specifier_data->flags |= VSNPRINTF_FLAG_DOT;
-                return get_flag_number_param(++str, &specifier_data->dot_flag_param);
-                continue;
             default:
                 return str;
         }
     }
+}
+
+static inline const char* get_dot_flag(const char* str, vsnprintf_specifier_t* specifier_data)
+{
+    if ( *str == '.' )
+    {
+        specifier_data->flags |= VSNPRINTF_FLAG_DOT;
+        return get_flag_number_param(++str, &specifier_data->dot_flag_param);
+    }
+
+    return str;
 }
 
 static inline const char* get_flag_number_param(const char* str, size_t* param_ptr)
@@ -486,9 +494,9 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
         return str - 1;
     }
 
-    str = get_flags(str, specifier_data);
+    str = get_flags_except_dot(str, specifier_data);
     str = get_flag_number_param(str, &specifier_data->min_width);
-    
+    str = get_dot_flag(str, specifier_data);
 
     if ( *str == 'h' )
     {
@@ -591,11 +599,11 @@ static inline void print_prefix(char* restrict str, size_t size, size_t* chars_g
     }
 }
 
-static inline void print_padding(char* restrict str, size_t size, size_t* chars_generated, size_t width_including_sign_and_prefix, size_t min_width, bool is_zero_pad)
+static inline void print_padding(char* restrict str, size_t size, size_t* chars_generated, size_t total_width, size_t min_width, bool is_zero_pad)
 {
-    if (width_including_sign_and_prefix < min_width)
+    if (total_width < min_width)
     {
-        size_t padding_width = min_width - width_including_sign_and_prefix;
+        size_t padding_width = min_width - total_width;
         char padding_char = is_zero_pad ? '0' : ' ';
 
         for (size_t i = 0; i < padding_width; ++i, ++(*chars_generated))
@@ -640,59 +648,10 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
         }
     }
 
+    size_t width = strlen(src);
 
     bool is_dot_flag = VSNPRINTF_IS_DOT(specifier_data->flags);
     size_t dot_flag_param = specifier_data->dot_flag_param;
-
-    size_t min_width = specifier_data->min_width;
-    bool is_pad_right = VSNPRINTF_IS_PAD_RIGHT(specifier_data->flags);
-    bool is_zero_pad = !is_pad_right && VSNPRINTF_IS_ZERO_PAD(specifier_data->flags);
-
-    const char* prefix = specifier_data->prefix;
-    size_t prefix_width = (prefix == NULL) ? 0 : strlen(prefix);
-    size_t width = strlen(src);
-    size_t space_width = (is_space_or_plus) ? 1 : 0;
-    size_t sign_width = (is_negative) ? 1 : 0;
-    size_t width_including_sign_and_prefix = width + prefix_width + space_width + sign_width;
-
-
-    if (is_zero_pad)
-    {
-        if (is_negative)
-        {
-            print_char(str, size, &chars_generated, '-');
-        }
-        if (is_space_or_plus)
-        {
-            print_char(str, size, &chars_generated, space_or_plus_char);
-        }
-
-        if (should_print_prefix)
-        {
-            print_prefix(str, size, &chars_generated, prefix);
-        }
-        print_padding(str, size, &chars_generated, width_including_sign_and_prefix, min_width, is_zero_pad);
-    }
-    else
-    {
-        if ( !is_pad_right )
-        {
-            print_padding(str, size, &chars_generated, width_including_sign_and_prefix, min_width, is_zero_pad);
-        }
-        if (is_negative)
-        {
-            print_char(str, size, &chars_generated, '-');
-        }
-        if (is_space_or_plus)
-        {
-            print_char(str, size, &chars_generated, space_or_plus_char);
-        }
-        if (should_print_prefix)
-        {
-            print_prefix(str, size, &chars_generated, prefix);
-        }
-    }
-
     size_t precision_max_string_len = width;
     size_t precision_min_number_digits = 0;
     bool should_print_data = true;
@@ -710,6 +669,59 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
         else if ( specifier_data->type == VSNPRINTF_TYPE_STRING )
         {
             precision_max_string_len = dot_flag_param;
+        }
+    }
+    size_t precision_padding_width = (width < precision_min_number_digits)
+        ? precision_min_number_digits - width
+        : 0;
+
+    size_t min_width = specifier_data->min_width;
+    bool is_pad_right = VSNPRINTF_IS_PAD_RIGHT(specifier_data->flags);
+    bool is_zero_pad = !is_pad_right && VSNPRINTF_IS_ZERO_PAD(specifier_data->flags);
+
+    const char* prefix = specifier_data->prefix;
+    size_t prefix_width = (prefix == NULL) ? 0 : strlen(prefix);
+    size_t space_width = (is_space_or_plus) ? 1 : 0;
+    size_t sign_width = (is_negative) ? 1 : 0;
+    size_t total_width = (width + prefix_width
+                            + space_width + sign_width
+                            + precision_padding_width);
+
+
+    if (is_zero_pad)
+    {
+        if (is_negative)
+        {
+            print_char(str, size, &chars_generated, '-');
+        }
+        if (is_space_or_plus)
+        {
+            print_char(str, size, &chars_generated, space_or_plus_char);
+        }
+
+        if (should_print_prefix)
+        {
+            print_prefix(str, size, &chars_generated, prefix);
+        }
+        print_padding(str, size, &chars_generated, total_width, min_width, is_zero_pad);
+    }
+    else
+    {
+        if ( !is_pad_right )
+        {
+            print_padding(str, size, &chars_generated, total_width, min_width, is_zero_pad);
+        }
+        if (is_negative)
+        {
+            print_char(str, size, &chars_generated, '-');
+        }
+        if (is_space_or_plus)
+        {
+            print_char(str, size, &chars_generated, space_or_plus_char);
+        }
+        if (should_print_prefix)
+        {
+            print_prefix(str, size, &chars_generated, prefix);
         }
     }
 
@@ -732,7 +744,7 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
 
     if ( is_pad_right )
     {
-        print_padding(str, size, &chars_generated, width_including_sign_and_prefix, min_width, is_zero_pad);
+        print_padding(str, size, &chars_generated, total_width, min_width, is_zero_pad);
     }
 
     return chars_generated;
