@@ -695,12 +695,17 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
 
     size_t precision_max_string_len = width;
     size_t precision_min_number_digits = 0;
+    bool should_print_data = true;
 
     if (is_dot_flag)
     {
         if ( get_is_type_decimal(specifier_data->type) )
         {
             precision_min_number_digits = dot_flag_param;
+            if ( precision_min_number_digits == 0 && width == 1 && src[0] == '0' )
+            {
+                should_print_data = false;
+            }
         }
         else if ( specifier_data->type == VSNPRINTF_TYPE_STRING )
         {
@@ -708,16 +713,20 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
         }
     }
 
-    for (size_t i = 0; width + i < precision_min_number_digits; ++i)
+    if (should_print_data)
     {
-        print_char(str, size, &chars_generated, '0');
-    }
 
-    for (size_t i = 0; src[i] != '\0' && i < precision_max_string_len; ++chars_generated, ++i)
-    {
-        if (chars_generated < size && str != NULL)
+        for (size_t i = 0; width + i < precision_min_number_digits; ++i)
         {
-            str[chars_generated] = src[i];
+            print_char(str, size, &chars_generated, '0');
+        }
+
+        for (size_t i = 0; src[i] != '\0' && i < precision_max_string_len; ++chars_generated, ++i)
+        {
+            if (chars_generated < size && str != NULL)
+            {
+                str[chars_generated] = src[i];
+            }
         }
     }
 

@@ -240,8 +240,8 @@ CUNIT_TEST(plus_flag)
   CUNIT_ASSERT_STR_EQ(buffer, "x");
 
   // I don't suport . yet
-  //local_sprintf(buffer, "%+.0d", 0);
-  //CUNIT_ASSERT_STR_EQ(buffer, "+");
+  local_sprintf(buffer, "%+.0d", 0);
+  CUNIT_ASSERT_STR_EQ(buffer, "+");
 }
 
 
