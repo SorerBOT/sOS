@@ -766,47 +766,47 @@ CUNIT_TEST(padding_twenty)
 //}
 
 
-//CUNIT_TEST(padding_hashtag_020)
-//{
-//  char buffer[PRINT_BUFFER_SIZE];
-//
-//  local_sprintf(buffer, "%#020d", 1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "00000000000000001024");
-//
-//  local_sprintf(buffer, "%#020d", -1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-0000000000000001024");
-//
-//  local_sprintf(buffer, "%#020i", 1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "00000000000000001024");
-//
-//  local_sprintf(buffer, "%#020i", -1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-0000000000000001024");
-//
-//  local_sprintf(buffer, "%#020u", 1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "00000000000000001024");
-//
-//  local_sprintf(buffer, "%#020u", 4294966272U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "00000000004294966272");
-//
-//  local_sprintf(buffer, "%#020o", 511);
-//  CUNIT_ASSERT_STR_EQ(buffer, "00000000000000000777");
-//
-//  local_sprintf(buffer, "%#020o", 4294966785U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "00000000037777777001");
-//
-//  local_sprintf(buffer, "%#020x", 305441741);
-//  CUNIT_ASSERT_STR_EQ(buffer, "0x00000000001234abcd");
-//
-//  local_sprintf(buffer, "%#020x", 3989525555U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "0x0000000000edcb5433");
-//
-//  local_sprintf(buffer, "%#020X", 305441741);
-//  CUNIT_ASSERT_STR_EQ(buffer, "0X00000000001234ABCD");
-//
-//  local_sprintf(buffer, "%#020X", 3989525555U);
-//
-//  CUNIT_ASSERT_STR_EQ(buffer, "0X0000000000EDCB5433");
-//}
+CUNIT_TEST(padding_hashtag_020)
+{
+  char buffer[PRINT_BUFFER_SIZE];
+
+  local_sprintf(buffer, "%#020d", 1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "00000000000000001024");
+
+  local_sprintf(buffer, "%#020d", -1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "-0000000000000001024");
+
+  local_sprintf(buffer, "%#020i", 1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "00000000000000001024");
+
+  local_sprintf(buffer, "%#020i", -1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "-0000000000000001024");
+
+  local_sprintf(buffer, "%#020u", 1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "00000000000000001024");
+
+  local_sprintf(buffer, "%#020u", 4294966272U);
+  CUNIT_ASSERT_STR_EQ(buffer, "00000000004294966272");
+
+  local_sprintf(buffer, "%#020o", 511);
+  CUNIT_ASSERT_STR_EQ(buffer, "00000000000000000777");
+
+  local_sprintf(buffer, "%#020o", 4294966785U);
+  CUNIT_ASSERT_STR_EQ(buffer, "00000000037777777001");
+
+  local_sprintf(buffer, "%#020x", 305441741);
+  CUNIT_ASSERT_STR_EQ(buffer, "0x00000000001234abcd");
+
+  local_sprintf(buffer, "%#020x", 3989525555U);
+  CUNIT_ASSERT_STR_EQ(buffer, "0x0000000000edcb5433");
+
+  local_sprintf(buffer, "%#020X", 305441741);
+  CUNIT_ASSERT_STR_EQ(buffer, "0X00000000001234ABCD");
+
+  local_sprintf(buffer, "%#020X", 3989525555U);
+
+  CUNIT_ASSERT_STR_EQ(buffer, "0X0000000000EDCB5433");
+}
 
 
 //CUNIT_TEST(padding_hashtag_twenty)
