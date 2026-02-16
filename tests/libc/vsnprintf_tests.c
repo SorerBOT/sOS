@@ -889,10 +889,10 @@ CUNIT_TEST(padding_twenty)
 //}
 
 
-//CUNIT_TEST(padding_neg_numbers)
-//{
-//  char buffer[PRINT_BUFFER_SIZE];
-//
+CUNIT_TEST(padding_neg_numbers)
+{
+  char buffer[PRINT_BUFFER_SIZE];
+
 //  // space padding
 //  local_sprintf(buffer, "% 1d", -5);
 //  CUNIT_ASSERT_STR_EQ(buffer, "-5");
@@ -906,20 +906,20 @@ CUNIT_TEST(padding_twenty)
 //  local_sprintf(buffer, "% 4d", -5);
 //  CUNIT_ASSERT_STR_EQ(buffer, "  -5");
 //
-//  // zero padding
-//  local_sprintf(buffer, "%01d", -5);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-5");
-//
-//
-//  local_sprintf(buffer, "%02d", -5);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-5");
-//
-//  local_sprintf(buffer, "%03d", -5);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-05");
-//
-//  local_sprintf(buffer, "%04d", -5);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-005");
-//}
+  // zero padding
+  local_sprintf(buffer, "%01d", -5);
+  CUNIT_ASSERT_STR_EQ(buffer, "-5");
+
+
+  local_sprintf(buffer, "%02d", -5);
+  CUNIT_ASSERT_STR_EQ(buffer, "-5");
+
+  local_sprintf(buffer, "%03d", -5);
+  CUNIT_ASSERT_STR_EQ(buffer, "-05");
+
+  local_sprintf(buffer, "%04d", -5);
+  CUNIT_ASSERT_STR_EQ(buffer, "-005");
+}
 
 //CUNIT_TEST(float_padding_neg_numbers)
 //{
