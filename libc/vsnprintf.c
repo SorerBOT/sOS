@@ -22,6 +22,7 @@
 #define VSNPRINTF_IS_PAD_RIGHT(flags) (((flags) & VSNPRINTF_FLAG_PAD_RIGHT) != 0)
 #define VSNPRINTF_IS_SPACE(flags) (((flags) & VSNPRINTF_FLAG_SPACE) != 0)
 #define VSNPRINTF_IS_PLUS(flags) (((flags) & VSNPRINTF_FLAG_PLUS) != 0)
+#define VSNPRINTF_IS_DOT(flags) (((flags) & VSNPRINTF_FLAG_DOT) != 0)
 
 typedef enum
 {
@@ -54,12 +55,14 @@ typedef enum
     VSNPRINTF_FLAG_ZERO_PAD         = 2,
     VSNPRINTF_FLAG_PAD_RIGHT        = 4,
     VSNPRINTF_FLAG_SPACE            = 8,
-    VSNPRINTF_FLAG_PLUS             = 16
+    VSNPRINTF_FLAG_PLUS             = 16,
+    VSNPRINTF_FLAG_DOT              = 32,
 } vsnprintf_flags_t;
 
 typedef struct
 {
     size_t min_width;
+    size_t dot_flag_param;
     const char* prefix;
     vsnprintf_modifier_length_t len;
     vsnprintf_modifier_conversion_t type;
@@ -72,15 +75,15 @@ typedef struct
 static inline uint16_t get_highest_contained_power(uintmax_t container, uintmax_t exponentiated_number);
 static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative);
 static inline int print_specifier_data(char* restrict dst, size_t size, const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
-static inline const char* get_number_flag_value(const char* str, size_t* flag_value);
 static inline const char* get_flags(const char* str, vsnprintf_specifier_t* specifier_data);
-static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* specifier_data);
+static inline const char* get_flag_number_param(const char* str, size_t* param_ptr);
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
 static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline void print_char(char* restrict str, size_t size, size_t* chars_generated, char c);
 static inline void print_prefix(char* restrict str, size_t size, size_t* chars_generated, const char* prefix);
 static inline void print_padding(char* restrict str, size_t size, size_t* chars_generated, size_t width_including_sign_and_prefix, size_t min_width, bool is_zero_pad);
+static inline bool get_is_type_decimal(vsnprintf_modifier_conversion_t type);
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src, bool is_negative, bool should_print_prefix, const vsnprintf_specifier_t* specifier_data);
 static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintmax_t base, uintmax_t d, bool is_uppercase, bool is_negative, bool should_print_prefix, const vsnprintf_specifier_t* specifier_data);
 
@@ -236,9 +239,7 @@ static inline int print_specifier_data(char* restrict dst, size_t size, const vs
     uintmax_t canonical_int;
     bool should_print_prefix = VSNPRINTF_IS_ALTERNATE_FORM(specifier_data->flags);
     bool is_negative;
-    if (type == VSNPRINTF_TYPE_DECIMAL || type == VSNPRINTF_TYPE_OCTAL
-        || type == VSNPRINTF_TYPE_HEX_LOWERCASE || type == VSNPRINTF_TYPE_HEX_UPPERCASE
-        || type == VSNPRINTF_TYPE_BINARY)
+    if (get_is_type_decimal(specifier_data->type))
     {
         get_canonical_int(specifier_data, ap_ptr, &canonical_int, &is_negative);
         if (canonical_int == 0)
@@ -307,19 +308,6 @@ static inline int print_specifier_data(char* restrict dst, size_t size, const vs
     }
 }
 
-static inline const char* get_number_flag_value(const char* str, size_t* flag_value)
-{
-    size_t value = 0;
-    for ( ; VSNPRINTF_IS_DIGIT(*str); ++str )
-    {
-        value *= 10;
-        value += VSNPRINTF_CONVERT_CHAR_TO_DIGIT(*str);
-    }
-
-    *flag_value = value;
-    return str;
-}
-
 static inline const char* get_flags(const char* str, vsnprintf_specifier_t* specifier_data)
 {
     for (; ; ++str)
@@ -341,21 +329,31 @@ static inline const char* get_flags(const char* str, vsnprintf_specifier_t* spec
             case '+':
                 specifier_data->flags |= VSNPRINTF_FLAG_PLUS;
                 continue;
+            case '.':
+                specifier_data->flags |= VSNPRINTF_FLAG_DOT;
+                return get_flag_number_param(++str, &specifier_data->dot_flag_param);
+                continue;
             default:
                 return str;
         }
     }
 }
 
-static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* specifier_data)
+static inline const char* get_flag_number_param(const char* str, size_t* param_ptr)
 {
     if ( !VSNPRINTF_IS_DIGIT(*str) )
     {
-        specifier_data->min_width = 0;
+        *param_ptr = 0;
         return str;
     }
 
-    str = get_number_flag_value(str, &specifier_data->min_width);
+    size_t value = 0;
+    for ( ; VSNPRINTF_IS_DIGIT(*str); ++str )
+    {
+        value *= 10;
+        value += VSNPRINTF_CONVERT_CHAR_TO_DIGIT(*str);
+    }
+    *param_ptr = value;
 
     return str;
 }
@@ -489,7 +487,7 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
     }
 
     str = get_flags(str, specifier_data);
-    str = get_min_width(str, specifier_data);
+    str = get_flag_number_param(str, &specifier_data->min_width);
     
 
     if ( *str == 'h' )
@@ -610,6 +608,13 @@ static inline void print_padding(char* restrict str, size_t size, size_t* chars_
     }
 }
 
+static inline bool get_is_type_decimal(vsnprintf_modifier_conversion_t type)
+{
+    return (type == VSNPRINTF_TYPE_DECIMAL || type == VSNPRINTF_TYPE_OCTAL
+        || type == VSNPRINTF_TYPE_HEX_LOWERCASE || type == VSNPRINTF_TYPE_HEX_UPPERCASE
+        || type == VSNPRINTF_TYPE_BINARY);
+}
+
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src, bool is_negative, bool should_print_prefix, const vsnprintf_specifier_t* specifier_data)
 {
     size_t chars_generated = 0;
@@ -635,6 +640,9 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
         }
     }
 
+
+    bool is_dot_flag = VSNPRINTF_IS_DOT(specifier_data->flags);
+    size_t dot_flag_param = specifier_data->dot_flag_param;
 
     size_t min_width = specifier_data->min_width;
     bool is_pad_right = VSNPRINTF_IS_PAD_RIGHT(specifier_data->flags);
@@ -685,7 +693,27 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
         }
     }
 
-    for (size_t i = 0; src[i] != '\0'; ++chars_generated, ++i)
+    size_t precision_max_string_len = width;
+    size_t precision_min_number_digits = 0;
+
+    if (is_dot_flag)
+    {
+        if ( get_is_type_decimal(specifier_data->type) )
+        {
+            precision_min_number_digits = dot_flag_param;
+        }
+        else if ( specifier_data->type == VSNPRINTF_TYPE_STRING )
+        {
+            precision_max_string_len = dot_flag_param;
+        }
+    }
+
+    for (size_t i = 0; width + i < precision_min_number_digits; ++i)
+    {
+        print_char(str, size, &chars_generated, '0');
+    }
+
+    for (size_t i = 0; src[i] != '\0' && i < precision_max_string_len; ++chars_generated, ++i)
     {
         if (chars_generated < size && str != NULL)
         {
