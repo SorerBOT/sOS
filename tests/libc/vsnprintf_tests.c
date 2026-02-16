@@ -368,6 +368,8 @@ CUNIT_TEST(zero_flag)
 //  CUNIT_ASSERT_STR_EQ(buffer, "0x0000614e");
 //  local_sprintf(buffer,"%#b", 6);
 //  CUNIT_ASSERT_STR_EQ(buffer, "0b110");
+//  local_sprintf(buffer,"%#b", 6); // need to test with minus + prefix although it really doesn't have any place
+//  CUNIT_ASSERT_STR_EQ(buffer, "0b110");
 //}
 
 

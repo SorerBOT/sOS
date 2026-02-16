@@ -63,8 +63,9 @@ static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* 
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
 static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
-static inline void print_minus(char* restrict str, size_t size, size_t* chars_generated);
+static inline void print_minus(char* restrict str, size_t size, size_t* chars_generated, bool is_negative);
 static inline void print_prefix(char* restrict str, size_t size, size_t* chars_generated, const char* prefix);
+static inline void print_padding(char* restrict str, size_t size, size_t* chars_generated, size_t width_including_sign_and_prefix, size_t min_width, bool is_zero_pad);
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src, bool is_negative, const vsnprintf_specifier_t* specifier_data);
 static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintmax_t base, uintmax_t d, bool is_uppercase, bool is_negative, const vsnprintf_specifier_t* specifier_data);
 
@@ -511,8 +512,13 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
     return str;
 }
 
-static inline void print_minus(char* restrict str, size_t size, size_t* chars_generated)
+static inline void print_minus(char* restrict str, size_t size, size_t* chars_generated, bool is_negative)
 {
+    if (!is_negative)
+    {
+        return;
+    }
+
     if (*chars_generated < size && str != NULL)
     {
         str[*chars_generated] = '-';
@@ -522,15 +528,32 @@ static inline void print_minus(char* restrict str, size_t size, size_t* chars_ge
 
 static inline void print_prefix(char* restrict str, size_t size, size_t* chars_generated, const char* prefix)
 {
-    size_t prefix_width = 0;
-    if (prefix != NULL)
+    if (prefix == NULL)
     {
-        prefix_width = strlen(prefix);
-        for (size_t i = 0; i < prefix_width; ++(*chars_generated), ++i)
+        return;
+    }
+
+    for (size_t i = 0; prefix[i] != '\0'; ++(*chars_generated), ++i)
+    {
+        if (*chars_generated < size && str != NULL)
+        {
+            str[*chars_generated] = prefix[i];
+        }
+    }
+}
+
+static inline void print_padding(char* restrict str, size_t size, size_t* chars_generated, size_t width_including_sign_and_prefix, size_t min_width, bool is_zero_pad)
+{
+    if (width_including_sign_and_prefix < min_width)
+    {
+        size_t padding_width = min_width - width_including_sign_and_prefix;
+        char padding_char = is_zero_pad ? '0' : ' ';
+
+        for (size_t i = 0; i < padding_width; ++i, ++(*chars_generated))
         {
             if (*chars_generated < size && str != NULL)
             {
-                str[*chars_generated] = prefix[i];
+                str[*chars_generated] = padding_char;
             }
         }
     }
@@ -544,37 +567,22 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
     size_t min_width = specifier_data->min_width;
     bool is_zero_pad = specifier_data->is_zero_pad;
     const char* prefix = specifier_data->prefix;
-
-    if (is_negative && is_zero_pad)
-    {
-        print_minus(str, size, &chars_generated);
-    }
-
-    size_t prefix_width = 0;
-    print_prefix(str, size, &chars_generated, prefix);
-
+    size_t prefix_width = (prefix == NULL) ? 0 : strlen(prefix);
     size_t sign_width = (is_negative) ? 1 : 0;
     size_t width_including_sign_and_prefix = width + prefix_width + sign_width;
-    if (width_including_sign_and_prefix < min_width)
+
+    if (is_zero_pad)
     {
-        size_t padding_width = min_width - width_including_sign_and_prefix;
-        char padding_char = is_zero_pad ? '0' : ' ';
-
-        for (size_t i = 0; i < padding_width; ++i, ++chars_generated)
-        {
-            if (chars_generated < size && str != NULL)
-            {
-                str[chars_generated] = padding_char;
-            }
-        }
+        print_minus(str, size, &chars_generated, is_negative);
+        print_prefix(str, size, &chars_generated, prefix);
+        print_padding(str, size, &chars_generated, width_including_sign_and_prefix, min_width, is_zero_pad);
     }
-
-    if (is_negative && !is_zero_pad)
+    else
     {
-        print_minus(str, size, &chars_generated);
+        print_padding(str, size, &chars_generated, width_including_sign_and_prefix, min_width, is_zero_pad);
+        print_minus(str, size, &chars_generated, is_negative);
+        print_prefix(str, size, &chars_generated, prefix);
     }
-
-
 
     for (size_t i = 0; src[i] != '\0'; ++chars_generated, ++i)
     {
