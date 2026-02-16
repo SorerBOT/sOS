@@ -77,7 +77,7 @@ static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data
 static inline int print_specifier_data(char* restrict dst, size_t size, const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
 static inline const char* get_flags_except_dot(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_dot_flag(const char* str, vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
-static inline const char* get_flag_number_param(const char* str, size_t* param_ptr, va_list* ap_ptr);
+static inline const char* get_flag_number_param(const char* str, size_t* param_ptr, vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
 static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
@@ -341,20 +341,20 @@ static inline const char* get_dot_flag(const char* str, vsnprintf_specifier_t* s
     if ( *str == '.' )
     {
         specifier_data->flags |= VSNPRINTF_FLAG_DOT;
-        return get_flag_number_param(++str, &specifier_data->dot_flag_param, ap_ptr);
+        return get_flag_number_param(++str, &specifier_data->dot_flag_param, specifier_data, ap_ptr);
     }
 
     return str;
 }
 
-static inline const char* get_flag_number_param(const char* str, size_t* param_ptr, va_list* ap_ptr)
+static inline const char* get_flag_number_param(const char* str, size_t* param_ptr, vsnprintf_specifier_t* specifier_data, va_list* ap_ptr)
 {
     if ( *str == '*' )
     {
         int32_t signed_value = va_arg(*ap_ptr, int);
         if (signed_value < 0)
         {
-            // I also need to apply right-pad
+            specifier_data->flags |= VSNPRINTF_FLAG_PAD_RIGHT;
             int64_t lsigned_value = signed_value;
             *param_ptr = (size_t) (-lsigned_value);
         }
@@ -513,7 +513,7 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
     }
 
     str = get_flags_except_dot(str, specifier_data);
-    str = get_flag_number_param(str, &specifier_data->min_width, ap_ptr);
+    str = get_flag_number_param(str, &specifier_data->min_width, specifier_data, ap_ptr);
     str = get_dot_flag(str, specifier_data, ap_ptr);
 
     if ( *str == 'h' )

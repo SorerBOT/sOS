@@ -1507,8 +1507,8 @@ CUNIT_TEST(misc)
   local_sprintf(buffer, "%10.5d", 4);
   CUNIT_ASSERT_STR_EQ(buffer, "     00004");
 
-  //local_sprintf(buffer, "%*sx", -3, "hi");
-  //CUNIT_ASSERT_STR_EQ(buffer, "hi x");
+  local_sprintf(buffer, "%*sx", -3, "hi");
+  CUNIT_ASSERT_STR_EQ(buffer, "hi x");
 
 //#ifndef PRINTF_DISABLE_SUPPORT_EXPONENTIAL
 //  local_sprintf(buffer, "%.*g", 2, 0.33333333);
