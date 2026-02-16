@@ -17,6 +17,10 @@
 #define VSNPRINTF_PREFIX_OCTAL "0"
 #define VSNPRINTF_PREFIX_BINARY "0b"
 
+#define VSNPRINTF_IS_ALTERNATE_FORM(flags) (((flags) & VSNPRINTF_FLAG_ALTERNATE_FORM) != 0)
+#define VSNPRINTF_IS_ZERO_PAD(flags) (((flags) & VSNPRINTF_FLAG_ZERO_PAD) != 0)
+#define VSNPRINTF_IS_PAD_RIGHT(flags) (((flags) & VSNPRINTF_FLAG_PAD_RIGHT) != 0)
+
 typedef enum
 {
     VSNPRINTF_LEN_NONE,
@@ -42,17 +46,23 @@ typedef enum
     VSNPRINTF_TYPE_WRITE_COUNT
 } vsnprintf_modifier_conversion_t;
 
+typedef enum
+{
+    VSNPRINTF_FLAG_ALTERNATE_FORM   = 1,
+    VSNPRINTF_FLAG_ZERO_PAD         = 2,
+    VSNPRINTF_FLAG_PAD_RIGHT        = 4
+} vsnprintf_flags_t;
+
 typedef struct
 {
-    vsnprintf_modifier_length_t len;
-    vsnprintf_modifier_conversion_t type;
     size_t min_width;
     const char* prefix;
+    vsnprintf_modifier_length_t len;
+    vsnprintf_modifier_conversion_t type;
+    vsnprintf_flags_t flags;
     char unknown_specifier_char;
-    bool is_zero_pad;
     bool is_signed;
     bool is_valid_specifier;
-    bool is_alternate_form;
 } vsnprintf_specifier_t;
 
 static inline uint16_t get_highest_contained_power(uintmax_t container, uintmax_t exponentiated_number);
@@ -91,7 +101,7 @@ static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data
     {
         switch (specifier_data->len)
         {
-            case VSNPRINTF_LEN_CHAR:
+case VSNPRINTF_LEN_CHAR:
                 c = (char) va_arg(*ap_ptr, int);
                 if (c < 0)
                 {
@@ -220,7 +230,7 @@ static inline int print_specifier_data(char* restrict dst, size_t size, const vs
 
     vsnprintf_modifier_conversion_t type = specifier_data->type;
     uintmax_t canonical_int;
-    bool should_print_prefix = specifier_data->is_alternate_form;
+    bool should_print_prefix = VSNPRINTF_IS_ALTERNATE_FORM(specifier_data->flags);
     bool is_negative;
     if (type == VSNPRINTF_TYPE_DECIMAL || type == VSNPRINTF_TYPE_OCTAL
         || type == VSNPRINTF_TYPE_HEX_LOWERCASE || type == VSNPRINTF_TYPE_HEX_UPPERCASE
@@ -315,7 +325,7 @@ static inline const char* get_is_alternate_form(const char* str, vsnprintf_speci
     }
     else
     {
-        specifier_data->is_alternate_form = true;
+        specifier_data->flags |= VSNPRINTF_FLAG_ALTERNATE_FORM;
         return str + 1;
     }
 }
@@ -330,7 +340,7 @@ static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* 
 
     if ( *str == '0' )
     {
-        specifier_data->is_zero_pad = true;
+        specifier_data->flags |= VSNPRINTF_FLAG_ZERO_PAD;
         ++str;
     }
 
@@ -387,19 +397,17 @@ static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_
         case 'p':
             specifier_data->type = VSNPRINTF_TYPE_HEX_UPPERCASE;
             specifier_data->is_signed = false;
-            specifier_data->is_zero_pad = true;
+            specifier_data->flags |= VSNPRINTF_FLAG_ZERO_PAD;
             specifier_data->min_width = (specifier_data->len == VSNPRINTF_LEN_INT)
                 ? 8
                 : 16;
-            if (specifier_data->is_alternate_form)
-            {
-                specifier_data->prefix = VSNPRINTF_PREFIX_HEX_UPPERCASE; // It is implementation dependent. Keeping as an option for now
-            }
+            //specifier_data->flags |= VSNPRINTF_FLAG_ALTERNATE_FORM;
+            //specifier_data->prefix = VSNPRINTF_PREFIX_HEX_UPPERCASE; // It is implementation dependent. Keeping as an option for now
             return;
         case 'X':
             specifier_data->type = VSNPRINTF_TYPE_HEX_UPPERCASE;
             specifier_data->is_signed = false;
-            if (specifier_data->is_alternate_form)
+            if (VSNPRINTF_IS_ALTERNATE_FORM(specifier_data->flags))
             {
                 specifier_data->prefix = VSNPRINTF_PREFIX_HEX_UPPERCASE;  // <---- only in alternative form (#)
             }
@@ -408,7 +416,7 @@ static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_
         case 'x':
             specifier_data->type = VSNPRINTF_TYPE_HEX_LOWERCASE;
             specifier_data->is_signed = false;
-            if (specifier_data->is_alternate_form)
+            if (VSNPRINTF_IS_ALTERNATE_FORM(specifier_data->flags))
             {
                 specifier_data->prefix = VSNPRINTF_PREFIX_HEX_LOWERCASE; // <-------- only in alternative form
             }
@@ -417,7 +425,7 @@ static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_
         case 'o':
             specifier_data->type = VSNPRINTF_TYPE_OCTAL;
             specifier_data->is_signed = false;
-            if (specifier_data->is_alternate_form)
+            if (VSNPRINTF_IS_ALTERNATE_FORM(specifier_data->flags))
             {
                 specifier_data->prefix = VSNPRINTF_PREFIX_OCTAL; // <-------- only in alternative form
             }
@@ -426,7 +434,7 @@ static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_
         case 'b':
             specifier_data->type = VSNPRINTF_TYPE_BINARY;
             specifier_data->is_signed = false;
-            if (specifier_data->is_alternate_form)
+            if (VSNPRINTF_IS_ALTERNATE_FORM(specifier_data->flags))
             {
                 specifier_data->prefix = VSNPRINTF_PREFIX_BINARY; // <-------- only in alternative form
             }
@@ -601,7 +609,7 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
     size_t chars_generated = 0;
 
     size_t min_width = specifier_data->min_width;
-    bool is_zero_pad = specifier_data->is_zero_pad;
+    bool is_zero_pad = VSNPRINTF_IS_ZERO_PAD(specifier_data->flags);
     const char* prefix = specifier_data->prefix;
     size_t prefix_width = (prefix == NULL) ? 0 : strlen(prefix);
     size_t sign_width = (is_negative) ? 1 : 0;
