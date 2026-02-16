@@ -1427,8 +1427,8 @@ CUNIT_TEST(string_length)
   local_sprintf(buffer, "%.4.2s", "123456");
   CUNIT_ASSERT_STR_EQ(buffer, ".2s");
 
-  //local_sprintf(buffer, "%.*s", 3, "123456");
-  //CUNIT_ASSERT_STR_EQ(buffer, "123");
+  local_sprintf(buffer, "%.*s", 3, "123456");
+  CUNIT_ASSERT_STR_EQ(buffer, "123");
 }
 
 
