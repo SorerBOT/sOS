@@ -1405,31 +1405,31 @@ CUNIT_TEST(unknown_flag)
 }
 
 
-//CUNIT_TEST(string_length)
-//{
-//  char buffer[PRINT_BUFFER_SIZE];
-//
-//  local_sprintf(buffer, "%.4s", "This is a test");
-//  CUNIT_ASSERT_STR_EQ(buffer, "This");
-//
-//  local_sprintf(buffer, "%.4s", "test");
-//  CUNIT_ASSERT_STR_EQ(buffer, "test");
-//
-//  local_sprintf(buffer, "%.7s", "123");
-//  CUNIT_ASSERT_STR_EQ(buffer, "123");
-//
-//  local_sprintf(buffer, "%.7s", "");
-//  CUNIT_ASSERT_STR_EQ(buffer, "");
-//
-//  local_sprintf(buffer, "%.4s%.2s", "123456", "abcdef");
-//  CUNIT_ASSERT_STR_EQ(buffer, "1234ab");
-//
-//  local_sprintf(buffer, "%.4.2s", "123456");
-//  CUNIT_ASSERT_STR_EQ(buffer, ".2s");
-//
-//  local_sprintf(buffer, "%.*s", 3, "123456");
-//  CUNIT_ASSERT_STR_EQ(buffer, "123");
-//}
+CUNIT_TEST(string_length)
+{
+  char buffer[PRINT_BUFFER_SIZE];
+
+  local_sprintf(buffer, "%.4s", "This is a test");
+  CUNIT_ASSERT_STR_EQ(buffer, "This");
+
+  local_sprintf(buffer, "%.4s", "test");
+  CUNIT_ASSERT_STR_EQ(buffer, "test");
+
+  local_sprintf(buffer, "%.7s", "123");
+  CUNIT_ASSERT_STR_EQ(buffer, "123");
+
+  local_sprintf(buffer, "%.7s", "");
+  CUNIT_ASSERT_STR_EQ(buffer, "");
+
+  local_sprintf(buffer, "%.4s%.2s", "123456", "abcdef");
+  CUNIT_ASSERT_STR_EQ(buffer, "1234ab");
+
+  local_sprintf(buffer, "%.4.2s", "123456");
+  CUNIT_ASSERT_STR_EQ(buffer, ".2s");
+
+  //local_sprintf(buffer, "%.*s", 3, "123456");
+  //CUNIT_ASSERT_STR_EQ(buffer, "123");
+}
 
 
 CUNIT_TEST(buffer_length)
@@ -1498,8 +1498,8 @@ CUNIT_TEST(misc)
   // local_sprintf(buffer, "%.*d", -1, 1);
   // CUNIT_ASSERT_STR_EQ(buffer, "1");
 
-  // local_sprintf(buffer, "%.3s", "foobar"); <------ I cannot be asked to work on this ATM
-  // CUNIT_ASSERT_STR_EQ(buffer, "foo");
+  local_sprintf(buffer, "%.3s", "foobar");
+  CUNIT_ASSERT_STR_EQ(buffer, "foo");
 
   local_sprintf(buffer, "% .0d", 0);
   CUNIT_ASSERT_STR_EQ(buffer, " ");
