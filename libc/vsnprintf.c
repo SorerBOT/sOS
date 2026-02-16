@@ -20,6 +20,7 @@
 #define VSNPRINTF_IS_ALTERNATE_FORM(flags) (((flags) & VSNPRINTF_FLAG_ALTERNATE_FORM) != 0)
 #define VSNPRINTF_IS_ZERO_PAD(flags) (((flags) & VSNPRINTF_FLAG_ZERO_PAD) != 0)
 #define VSNPRINTF_IS_PAD_RIGHT(flags) (((flags) & VSNPRINTF_FLAG_PAD_RIGHT) != 0)
+#define VSNPRINTF_IS_SPACE(flags) (((flags) & VSNPRINTF_FLAG_SPACE) != 0)
 
 typedef enum
 {
@@ -50,7 +51,8 @@ typedef enum
 {
     VSNPRINTF_FLAG_ALTERNATE_FORM   = 1,
     VSNPRINTF_FLAG_ZERO_PAD         = 2,
-    VSNPRINTF_FLAG_PAD_RIGHT        = 4
+    VSNPRINTF_FLAG_PAD_RIGHT        = 4,
+    VSNPRINTF_FLAG_SPACE            = 8
 } vsnprintf_flags_t;
 
 typedef struct
@@ -74,7 +76,7 @@ static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* 
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
 static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
-static inline void print_minus(char* restrict str, size_t size, size_t* chars_generated, bool is_negative);
+static inline void print_char(char* restrict str, size_t size, size_t* chars_generated, char c);
 static inline void print_prefix(char* restrict str, size_t size, size_t* chars_generated, const char* prefix);
 static inline void print_padding(char* restrict str, size_t size, size_t* chars_generated, size_t width_including_sign_and_prefix, size_t min_width, bool is_zero_pad);
 static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src, bool is_negative, bool should_print_prefix, const vsnprintf_specifier_t* specifier_data);
@@ -331,6 +333,9 @@ static inline const char* get_flags(const char* str, vsnprintf_specifier_t* spec
             case '-':
                 specifier_data->flags |= VSNPRINTF_FLAG_PAD_RIGHT;
                 continue;
+            case ' ':
+                specifier_data->flags |= VSNPRINTF_FLAG_SPACE;
+                continue;
             default:
                 return str;
         }
@@ -557,20 +562,16 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
     return str;
 }
 
-static inline void print_minus(char* restrict str, size_t size, size_t* chars_generated, bool is_negative)
+static void print_char(char* restrict str, size_t size, size_t* chars_generated, char c)
 {
-    if (!is_negative)
-    {
-        return;
-    }
-
     if (*chars_generated < size && str != NULL)
     {
-        str[*chars_generated] = '-';
+        str[*chars_generated] = c;
         ++(*chars_generated);
     }
 }
 
+// TODO: make this use print_char. CBA ATM
 static inline void print_prefix(char* restrict str, size_t size, size_t* chars_generated, const char* prefix)
 {
     if (prefix == NULL)
@@ -608,19 +609,33 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
 {
     size_t chars_generated = 0;
 
+    bool is_space_positive_signed = VSNPRINTF_IS_SPACE(specifier_data->flags);
+    bool is_positive_signed = specifier_data->is_signed && !is_negative;
+    bool is_space = is_space_positive_signed && is_positive_signed;
+
     size_t min_width = specifier_data->min_width;
     bool is_pad_right = VSNPRINTF_IS_PAD_RIGHT(specifier_data->flags);
     bool is_zero_pad = !is_pad_right && VSNPRINTF_IS_ZERO_PAD(specifier_data->flags);
 
-    size_t width = strlen(src);
     const char* prefix = specifier_data->prefix;
     size_t prefix_width = (prefix == NULL) ? 0 : strlen(prefix);
+    size_t width = strlen(src);
+    size_t space_width = (is_space) ? 1 : 0;
     size_t sign_width = (is_negative) ? 1 : 0;
-    size_t width_including_sign_and_prefix = width + prefix_width + sign_width;
+    size_t width_including_sign_and_prefix = width + prefix_width + space_width + sign_width;
+
+
+    if (is_space)
+    {
+        print_char(str, size, &chars_generated, ' ');
+    }
 
     if (is_zero_pad)
     {
-        print_minus(str, size, &chars_generated, is_negative);
+        if (is_negative)
+        {
+            print_char(str, size, &chars_generated, '-');
+        }
         if (should_print_prefix)
         {
             print_prefix(str, size, &chars_generated, prefix);
@@ -633,7 +648,10 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
         {
             print_padding(str, size, &chars_generated, width_including_sign_and_prefix, min_width, is_zero_pad);
         }
-        print_minus(str, size, &chars_generated, is_negative);
+        if (is_negative)
+        {
+            print_char(str, size, &chars_generated, '-');
+        }
         if (should_print_prefix)
         {
             print_prefix(str, size, &chars_generated, prefix);
