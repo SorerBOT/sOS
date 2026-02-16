@@ -361,14 +361,14 @@ CUNIT_TEST(hashtag_flag)
 {
   char buffer[PRINT_BUFFER_SIZE];
 
-  //local_sprintf(buffer, "%#.0x", 0);
-  //CUNIT_ASSERT_STR_EQ(buffer, "");
-  //local_sprintf(buffer, "%#.1x", 0);
-  //CUNIT_ASSERT_STR_EQ(buffer, "0");
-  //local_sprintf(buffer, "%#.0llx", (long long)0);
-  //CUNIT_ASSERT_STR_EQ(buffer, "");
-  //local_sprintf(buffer, "%#.8x", 0x614e);
-  //CUNIT_ASSERT_STR_EQ(buffer, "0x0000614e");
+  local_sprintf(buffer, "%#.0x", 0);
+  CUNIT_ASSERT_STR_EQ(buffer, "");
+  local_sprintf(buffer, "%#.1x", 0);
+  CUNIT_ASSERT_STR_EQ(buffer, "0");
+  local_sprintf(buffer, "%#.0llx", (long long)0);
+  CUNIT_ASSERT_STR_EQ(buffer, "");
+  local_sprintf(buffer, "%#.8x", 0x614e);
+  CUNIT_ASSERT_STR_EQ(buffer, "0x0000614e");
   local_sprintf(buffer,"%#o", 0);
   CUNIT_ASSERT_STR_EQ(buffer, "0");
   local_sprintf(buffer,"%#o", 123);
