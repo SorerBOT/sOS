@@ -69,7 +69,7 @@ static inline uint16_t get_highest_contained_power(uintmax_t container, uintmax_
 static inline void get_canonical_int(const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr, uintmax_t* canonical_int, bool* is_negative);
 static inline int print_specifier_data(char* restrict dst, size_t size, const vsnprintf_specifier_t* specifier_data, va_list* ap_ptr);
 static inline const char* get_number_flag_value(const char* str, size_t* flag_value);
-static inline const char* get_is_alternate_form(const char* str, vsnprintf_specifier_t* specifier_data);
+static inline const char* get_flags(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
 static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
@@ -316,17 +316,24 @@ static inline const char* get_number_flag_value(const char* str, size_t* flag_va
     return str;
 }
 
-static inline const char* get_is_alternate_form(const char* str, vsnprintf_specifier_t* specifier_data)
+static inline const char* get_flags(const char* str, vsnprintf_specifier_t* specifier_data)
 {
-   ;
-    if ( *str != '#' )
+    for (; ; ++str)
     {
-        return str;
-    }
-    else
-    {
-        specifier_data->flags |= VSNPRINTF_FLAG_ALTERNATE_FORM;
-        return str + 1;
+        switch ( *str )
+        {
+            case '#':
+                specifier_data->flags |= VSNPRINTF_FLAG_ALTERNATE_FORM;
+                continue;
+            case '0':
+                specifier_data->flags |= VSNPRINTF_FLAG_ZERO_PAD;
+                continue;
+            case '-':
+                specifier_data->flags |= VSNPRINTF_FLAG_PAD_RIGHT;
+                continue;
+            default:
+                return str;
+        }
     }
 }
 
@@ -336,12 +343,6 @@ static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* 
     {
         specifier_data->min_width = 0;
         return str;
-    }
-
-    if ( *str == '0' )
-    {
-        specifier_data->flags |= VSNPRINTF_FLAG_ZERO_PAD;
-        ++str;
     }
 
     str = get_number_flag_value(str, &specifier_data->min_width);
@@ -477,7 +478,7 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
         return str - 1;
     }
 
-    str = get_is_alternate_form(str, specifier_data);
+    str = get_flags(str, specifier_data);
     str = get_min_width(str, specifier_data);
     
 
