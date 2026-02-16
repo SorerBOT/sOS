@@ -572,67 +572,67 @@ CUNIT_TEST(width_20)
 //}
 
 
-//CUNIT_TEST(width_minus_twenty)
-//{
-//  char buffer[PRINT_BUFFER_SIZE];
-//
-//  local_sprintf(buffer, "%-20s", "Hello");
-//  CUNIT_ASSERT_STR_EQ(buffer, "Hello               ");
-//
-//  local_sprintf(buffer, "%-20d", 1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "1024                ");
-//
-//  local_sprintf(buffer, "%-20d", -1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-1024               ");
-//
-//  local_sprintf(buffer, "%-20i", 1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "1024                ");
-//
-//  local_sprintf(buffer, "%-20i", -1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-1024               ");
-//
-//  local_sprintf(buffer, "%-20u", 1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "1024                ");
-//
-//  local_sprintf(buffer, "%-20.4f", 1024.1234);
-//  CUNIT_ASSERT_STR_EQ(buffer, "1024.1234           ");
-//
-//  local_sprintf(buffer, "%-20u", 4294966272U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "4294966272          ");
-//
-//  local_sprintf(buffer, "%-20o", 511);
-//  CUNIT_ASSERT_STR_EQ(buffer, "777                 ");
-//
-//  local_sprintf(buffer, "%-20o", 4294966785U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "37777777001         ");
-//
-//  local_sprintf(buffer, "%-20x", 305441741);
-//  CUNIT_ASSERT_STR_EQ(buffer, "1234abcd            ");
-//
-//  local_sprintf(buffer, "%-20x", 3989525555U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "edcb5433            ");
-//
-//  local_sprintf(buffer, "%-20X", 305441741);
-//  CUNIT_ASSERT_STR_EQ(buffer, "1234ABCD            ");
-//
-//  local_sprintf(buffer, "%-20X", 3989525555U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "EDCB5433            ");
-//
-//  local_sprintf(buffer, "%-20c", 'x');
-//  CUNIT_ASSERT_STR_EQ(buffer, "x                   ");
-//
-//  local_sprintf(buffer, "|%5d| |%-2d| |%5d|", 9, 9, 9);
-//  CUNIT_ASSERT_STR_EQ(buffer, "|    9| |9 | |    9|");
-//
-//  local_sprintf(buffer, "|%5d| |%-2d| |%5d|", 10, 10, 10);
-//  CUNIT_ASSERT_STR_EQ(buffer, "|   10| |10| |   10|");
-//
-//  local_sprintf(buffer, "|%5d| |%-12d| |%5d|", 9, 9, 9);
-//  CUNIT_ASSERT_STR_EQ(buffer, "|    9| |9           | |    9|");
-//
-//  local_sprintf(buffer, "|%5d| |%-12d| |%5d|", 10, 10, 10);
-//  CUNIT_ASSERT_STR_EQ(buffer, "|   10| |10          | |   10|");
-//}
+CUNIT_TEST(width_minus_twenty)
+{
+  char buffer[PRINT_BUFFER_SIZE];
+
+  local_sprintf(buffer, "%-20s", "Hello");
+  CUNIT_ASSERT_STR_EQ(buffer, "Hello               ");
+
+  local_sprintf(buffer, "%-20d", 1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "1024                ");
+
+  local_sprintf(buffer, "%-20d", -1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "-1024               ");
+
+  local_sprintf(buffer, "%-20i", 1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "1024                ");
+
+  local_sprintf(buffer, "%-20i", -1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "-1024               ");
+
+  local_sprintf(buffer, "%-20u", 1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "1024                ");
+
+  //local_sprintf(buffer, "%-20.4f", 1024.1234);
+  //CUNIT_ASSERT_STR_EQ(buffer, "1024.1234           ");
+
+  local_sprintf(buffer, "%-20u", 4294966272U);
+  CUNIT_ASSERT_STR_EQ(buffer, "4294966272          ");
+
+  local_sprintf(buffer, "%-20o", 511);
+  CUNIT_ASSERT_STR_EQ(buffer, "777                 ");
+
+  local_sprintf(buffer, "%-20o", 4294966785U);
+  CUNIT_ASSERT_STR_EQ(buffer, "37777777001         ");
+
+  local_sprintf(buffer, "%-20x", 305441741);
+  CUNIT_ASSERT_STR_EQ(buffer, "1234abcd            ");
+
+  local_sprintf(buffer, "%-20x", 3989525555U);
+  CUNIT_ASSERT_STR_EQ(buffer, "edcb5433            ");
+
+  local_sprintf(buffer, "%-20X", 305441741);
+  CUNIT_ASSERT_STR_EQ(buffer, "1234ABCD            ");
+
+  local_sprintf(buffer, "%-20X", 3989525555U);
+  CUNIT_ASSERT_STR_EQ(buffer, "EDCB5433            ");
+
+  local_sprintf(buffer, "%-20c", 'x');
+  CUNIT_ASSERT_STR_EQ(buffer, "x                   ");
+
+  local_sprintf(buffer, "|%5d| |%-2d| |%5d|", 9, 9, 9);
+  CUNIT_ASSERT_STR_EQ(buffer, "|    9| |9 | |    9|");
+
+  local_sprintf(buffer, "|%5d| |%-2d| |%5d|", 10, 10, 10);
+  CUNIT_ASSERT_STR_EQ(buffer, "|   10| |10| |   10|");
+
+  local_sprintf(buffer, "|%5d| |%-12d| |%5d|", 9, 9, 9);
+  CUNIT_ASSERT_STR_EQ(buffer, "|    9| |9           | |    9|");
+
+  local_sprintf(buffer, "|%5d| |%-12d| |%5d|", 10, 10, 10);
+  CUNIT_ASSERT_STR_EQ(buffer, "|   10| |10          | |   10|");
+}
 
 
 //CUNIT_TEST(width_zero_minus_twenty)
