@@ -52,6 +52,7 @@ typedef struct
     bool is_zero_pad;
     bool is_signed;
     bool is_valid_specifier;
+    bool is_negative;
 } vsnprintf_specifier_t;
 
 static inline uint16_t get_highest_contained_power(uintmax_t container, uintmax_t exponentiated_number);
@@ -62,7 +63,7 @@ static inline const char* get_min_width(const char* str, vsnprintf_specifier_t* 
 static inline vsnprintf_modifier_length_t get_modifier_length_arch_dependent(size_t size_of_arch_dependent_variable);
 static inline void get_modifier_conversion(const char* str, vsnprintf_specifier_t* specifier_data);
 static inline const char* get_format_specifier(const char* str, vsnprintf_specifier_t* specifier_data);
-static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src, const vsnprintf_specifier_t* specifier_data);
+static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src, bool is_negative, const vsnprintf_specifier_t* specifier_data);
 static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintmax_t base, uintmax_t d, bool is_uppercase, bool is_negative, const vsnprintf_specifier_t* specifier_data);
 
 static inline uint16_t get_highest_contained_power(uintmax_t container, uintmax_t exponentiated_number)
@@ -265,17 +266,17 @@ static inline int print_specifier_data(char* restrict dst, size_t size, const vs
             return vsnprintf_print_base_up_to_16(dst, size, 16, canonical_int, false, false, specifier_data);
             break;
         case VSNPRINTF_TYPE_STRING:
-            return vsnprintf_print_string(dst, size, string_arg, specifier_data);
+            return vsnprintf_print_string(dst, size, string_arg, false, specifier_data);
             break;
         case VSNPRINTF_TYPE_CHAR:
-            return vsnprintf_print_string(dst, size, char_buf, specifier_data);
+            return vsnprintf_print_string(dst, size, char_buf, false, specifier_data);
             break;
         case VSNPRINTF_TYPE_NON_SPECIFIER_PERCENT_SIGN:
-            return vsnprintf_print_string(dst, size, non_specifier_percent_sign_buf, specifier_data);
+            return vsnprintf_print_string(dst, size, non_specifier_percent_sign_buf, false, specifier_data);
             break;
         case VSNPRINTF_TYPE_WRITE_COUNT:
         case VSNPRINTF_TYPE_UNKNOWN:
-            return vsnprintf_print_string(dst, size, unknown_char_buf, specifier_data);
+            return vsnprintf_print_string(dst, size, unknown_char_buf, false, specifier_data);
             break;
         default:
             return 0;
@@ -508,7 +509,7 @@ static inline const char* get_format_specifier(const char* str, vsnprintf_specif
     return str;
 }
 
-static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src, const vsnprintf_specifier_t* specifier_data)
+static int vsnprintf_print_string(char* restrict str, size_t size, const char* restrict src, bool is_negative, const vsnprintf_specifier_t* specifier_data)
 {
     size_t width = strlen(src);
     size_t chars_generated = 0;
@@ -517,9 +518,20 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
     bool is_zero_pad = specifier_data->is_zero_pad;
     const char* prefix = specifier_data->prefix;
 
+    if (is_negative)
+    {
+        if (chars_generated < size && str != NULL)
+        {
+            str[chars_generated] = '-';
+            ++chars_generated;
+        }
+    }
+
+    size_t prefix_width = 0;
     if (prefix != NULL)
     {
-        for (size_t i = 0; prefix[i] != '\0'; ++chars_generated, ++i)
+        prefix_width = strlen(prefix);
+        for (size_t i = 0; i < prefix_width; ++chars_generated, ++i)
         {
             if (chars_generated < size && str != NULL)
             {
@@ -528,9 +540,11 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
         }
     }
 
-    if (width < min_width)
+    size_t sign_width = (is_negative) ? 1 : 0;
+    size_t width_including_sign_and_prefix = width + prefix_width + sign_width;
+    if (width_including_sign_and_prefix < min_width)
     {
-        size_t padding_width = min_width - width;
+        size_t padding_width = min_width - width_including_sign_and_prefix;
         char padding_char = is_zero_pad ? '0' : ' ';
 
         for (size_t i = 0; i < padding_width; ++i, ++chars_generated)
@@ -561,12 +575,6 @@ static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintma
 
     uint8_t ascii_addition = is_uppercase ? 0 : VSNPRINTF_UPPERCASE_ADDITION;
     size_t chars_generated = 0;
-
-    if (is_negative)
-    {
-        buf[0] = '-';
-        ++chars_generated;
-    }
 
     uint16_t highest_power = get_highest_contained_power(d, base);
     uintmax_t base_to_highest_power = 1;
@@ -612,7 +620,7 @@ static int vsnprintf_print_base_up_to_16(char* restrict str, size_t size, uintma
     }
 
     buf[chars_generated] = '\0';
-    return vsnprintf_print_string(str, size, buf, specifier_data);
+    return vsnprintf_print_string(str, size, buf, is_negative, specifier_data);
 }
 
 int vsnprintf(char* restrict str, size_t size, const char* restrict format, va_list ap)
