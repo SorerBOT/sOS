@@ -899,19 +899,19 @@ CUNIT_TEST(padding_neg_numbers)
 {
   char buffer[PRINT_BUFFER_SIZE];
 
-//  // space padding
-//  local_sprintf(buffer, "% 1d", -5);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-5");
-//
-//  local_sprintf(buffer, "% 2d", -5);
-//  CUNIT_ASSERT_STR_EQ(buffer, "-5");
-//
-//  local_sprintf(buffer, "% 3d", -5);
-//  CUNIT_ASSERT_STR_EQ(buffer, " -5");
-//
-//  local_sprintf(buffer, "% 4d", -5);
-//  CUNIT_ASSERT_STR_EQ(buffer, "  -5");
-//
+  // space padding
+  local_sprintf(buffer, "% 1d", -5);
+  CUNIT_ASSERT_STR_EQ(buffer, "-5");
+
+  local_sprintf(buffer, "% 2d", -5);
+  CUNIT_ASSERT_STR_EQ(buffer, "-5");
+
+  local_sprintf(buffer, "% 3d", -5);
+  CUNIT_ASSERT_STR_EQ(buffer, " -5");
+
+  local_sprintf(buffer, "% 4d", -5);
+  CUNIT_ASSERT_STR_EQ(buffer, "  -5");
+
   // zero padding
   local_sprintf(buffer, "%01d", -5);
   CUNIT_ASSERT_STR_EQ(buffer, "-5");
