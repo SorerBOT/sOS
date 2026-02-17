@@ -985,88 +985,88 @@ CUNIT_TEST(padding_neg_numbers)
 //#endif
 //}
 
-//CUNIT_TEST(length)
-//{
-//  char buffer[PRINT_BUFFER_SIZE];
-//
-//  local_sprintf(buffer, "%.0s", "Hello testing");
-//  CUNIT_ASSERT_STR_EQ(buffer, "");
-//
-//  local_sprintf(buffer, "%20.0s", "Hello testing");
-//  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
-//
-//  local_sprintf(buffer, "%.s", "Hello testing");
-//  CUNIT_ASSERT_STR_EQ(buffer, "");
-//
-//  local_sprintf(buffer, "%20.s", "Hello testing");
-//  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
-//
-//  local_sprintf(buffer, "%20.0d", 1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "                1024");
-//
-//  local_sprintf(buffer, "%20.0d", -1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "               -1024");
-//
-//  local_sprintf(buffer, "%20.d", 0);
-//  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
-//
-//  local_sprintf(buffer, "%20.0i", 1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "                1024");
-//
-//  local_sprintf(buffer, "%20.i", -1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "               -1024");
-//
-//  local_sprintf(buffer, "%20.i", 0);
-//  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
-//
-//  local_sprintf(buffer, "%20.u", 1024);
-//  CUNIT_ASSERT_STR_EQ(buffer, "                1024");
-//
-//  local_sprintf(buffer, "%20.0u", 4294966272U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "          4294966272");
-//
-//  local_sprintf(buffer, "%20.u", 0U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
-//
-//  local_sprintf(buffer, "%20.o", 511);
-//  CUNIT_ASSERT_STR_EQ(buffer, "                 777");
-//
-//  local_sprintf(buffer, "%20.0o", 4294966785U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "         37777777001");
-//
-//  local_sprintf(buffer, "%20.o", 0U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
-//
-//  local_sprintf(buffer, "%20.x", 305441741);
-//  CUNIT_ASSERT_STR_EQ(buffer, "            1234abcd");
-//
-//  local_sprintf(buffer, "%50.x", 305441741);
-//  CUNIT_ASSERT_STR_EQ(buffer, "                                          1234abcd");
-//
-//  local_sprintf(buffer, "%50.x%10.u", 305441741, 12345);
-//  CUNIT_ASSERT_STR_EQ(buffer, "                                          1234abcd     12345");
-//
-//  local_sprintf(buffer, "%20.0x", 3989525555U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "            edcb5433");
-//
-//  local_sprintf(buffer, "%20.x", 0U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
-//
-//  local_sprintf(buffer, "%20.X", 305441741);
-//  CUNIT_ASSERT_STR_EQ(buffer, "            1234ABCD");
-//
-//  local_sprintf(buffer, "%20.0X", 3989525555U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "            EDCB5433");
-//
-//  local_sprintf(buffer, "%20.X", 0U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
-//
-//  local_sprintf(buffer, "%02.0u", 0U);
-//  CUNIT_ASSERT_STR_EQ(buffer, "  ");
-//
-//  local_sprintf(buffer, "%02.0d", 0);
-//  CUNIT_ASSERT_STR_EQ(buffer, "  ");
-//}
+CUNIT_TEST(length)
+{
+  char buffer[PRINT_BUFFER_SIZE];
+
+  local_sprintf(buffer, "%.0s", "Hello testing");
+  CUNIT_ASSERT_STR_EQ(buffer, "");
+
+  local_sprintf(buffer, "%20.0s", "Hello testing");
+  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
+
+  local_sprintf(buffer, "%.s", "Hello testing");
+  CUNIT_ASSERT_STR_EQ(buffer, "");
+
+  local_sprintf(buffer, "%20.s", "Hello testing");
+  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
+
+  local_sprintf(buffer, "%20.0d", 1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "                1024");
+
+  local_sprintf(buffer, "%20.0d", -1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "               -1024");
+
+  local_sprintf(buffer, "%20.d", 0);
+  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
+
+  local_sprintf(buffer, "%20.0i", 1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "                1024");
+
+  local_sprintf(buffer, "%20.i", -1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "               -1024");
+
+  local_sprintf(buffer, "%20.i", 0);
+  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
+
+  local_sprintf(buffer, "%20.u", 1024);
+  CUNIT_ASSERT_STR_EQ(buffer, "                1024");
+
+  local_sprintf(buffer, "%20.0u", 4294966272U);
+  CUNIT_ASSERT_STR_EQ(buffer, "          4294966272");
+
+  local_sprintf(buffer, "%20.u", 0U);
+  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
+
+  local_sprintf(buffer, "%20.o", 511);
+  CUNIT_ASSERT_STR_EQ(buffer, "                 777");
+
+  local_sprintf(buffer, "%20.0o", 4294966785U);
+  CUNIT_ASSERT_STR_EQ(buffer, "         37777777001");
+
+  local_sprintf(buffer, "%20.o", 0U);
+  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
+
+  local_sprintf(buffer, "%20.x", 305441741);
+  CUNIT_ASSERT_STR_EQ(buffer, "            1234abcd");
+
+  local_sprintf(buffer, "%50.x", 305441741);
+  CUNIT_ASSERT_STR_EQ(buffer, "                                          1234abcd");
+
+  local_sprintf(buffer, "%50.x%10.u", 305441741, 12345);
+  CUNIT_ASSERT_STR_EQ(buffer, "                                          1234abcd     12345");
+
+  local_sprintf(buffer, "%20.0x", 3989525555U);
+  CUNIT_ASSERT_STR_EQ(buffer, "            edcb5433");
+
+  local_sprintf(buffer, "%20.x", 0U);
+  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
+
+  local_sprintf(buffer, "%20.X", 305441741);
+  CUNIT_ASSERT_STR_EQ(buffer, "            1234ABCD");
+
+  local_sprintf(buffer, "%20.0X", 3989525555U);
+  CUNIT_ASSERT_STR_EQ(buffer, "            EDCB5433");
+
+  local_sprintf(buffer, "%20.X", 0U);
+  CUNIT_ASSERT_STR_EQ(buffer, "                    ");
+
+  local_sprintf(buffer, "%02.0u", 0U);
+  CUNIT_ASSERT_STR_EQ(buffer, "  ");
+
+  local_sprintf(buffer, "%02.0d", 0);
+  CUNIT_ASSERT_STR_EQ(buffer, "  ");
+}
 
 // I don't support floats ATM
 //CUNIT_TEST(float)

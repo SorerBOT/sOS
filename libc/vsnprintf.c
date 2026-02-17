@@ -668,43 +668,42 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
 
     size_t width = strlen(src);
 
+    size_t precision_max_width = width;
+    size_t precision_min_width = 0;
+
     bool is_dot_flag = VSNPRINTF_IS_DOT(specifier_data->flags);
     size_t dot_flag_param = specifier_data->dot_flag_param;
-    size_t precision_max_string_len = width;
-    size_t precision_min_number_digits = 0;
-    bool should_print_data = true;
-
+    size_t precision_padding_width;
     if (is_dot_flag)
     {
         if ( get_is_type_decimal(specifier_data->type) )
         {
-            precision_min_number_digits = dot_flag_param;
-            if ( precision_min_number_digits == 0 && width == 1 && src[0] == '0' )
+            precision_min_width = dot_flag_param;
+            if ( precision_min_width == 0 && width == 1 && src[0] == '0' )
             {
-                should_print_data = false;
+                precision_max_width = 0;
             }
         }
         else if ( specifier_data->type == VSNPRINTF_TYPE_STRING )
         {
-            precision_max_string_len = dot_flag_param;
+            precision_max_width = dot_flag_param;
         }
     }
-    size_t precision_padding_width = (width < precision_min_number_digits)
-        ? precision_min_number_digits - width
+    precision_padding_width = (width < precision_min_width)
+        ? precision_min_width - width
         : 0;
 
     size_t min_width = specifier_data->min_width;
     bool is_pad_right = VSNPRINTF_IS_PAD_RIGHT(specifier_data->flags);
-    bool is_zero_pad = !is_pad_right && VSNPRINTF_IS_ZERO_PAD(specifier_data->flags);
+    bool is_zero_pad = !is_dot_flag && !is_pad_right && VSNPRINTF_IS_ZERO_PAD(specifier_data->flags);
 
     const char* prefix = specifier_data->prefix;
     size_t prefix_width = (prefix == NULL) ? 0 : strlen(prefix);
     size_t space_width = (is_space_or_plus) ? 1 : 0;
     size_t sign_width = (is_negative) ? 1 : 0;
-    size_t total_width = (width + prefix_width
+    size_t total_width = (precision_max_width + prefix_width
                             + space_width + sign_width
                             + precision_padding_width);
-
 
     if (is_zero_pad)
     {
@@ -743,20 +742,16 @@ static int vsnprintf_print_string(char* restrict str, size_t size, const char* r
         }
     }
 
-    if (should_print_data)
+    for (size_t i = 0; width + i < precision_min_width; ++i)
     {
+        print_char(str, size, &chars_generated, '0');
+    }
 
-        for (size_t i = 0; width + i < precision_min_number_digits; ++i)
+    for (size_t i = 0; src[i] != '\0' && i < precision_max_width; ++chars_generated, ++i)
+    {
+        if (chars_generated < size && str != NULL)
         {
-            print_char(str, size, &chars_generated, '0');
-        }
-
-        for (size_t i = 0; src[i] != '\0' && i < precision_max_string_len; ++chars_generated, ++i)
-        {
-            if (chars_generated < size && str != NULL)
-            {
-                str[chars_generated] = src[i];
-            }
+            str[chars_generated] = src[i];
         }
     }
 
