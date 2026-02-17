@@ -5,8 +5,9 @@ This is a Legacy BIOS bootloader. The general goal is to slowly turn this into a
 
 ## Where are we ATM?
 
-* 64-bit Long Mode
-* Functional textual VGA driver, including a custom printf function and scroll functionality
+* 64-bit Long Mode.
+* Functional textual VGA driver, including a custom printf function and scroll functionality.
+* Full printf spec (except floats, but including the all flags). Tested using Marco Paland testing suite, adapted to use my own testing framework (cunit.h)
 
 In greater detail, the bootloader already reaches 32-bit Long Mode, but it does not fully adhere to the MBR standard just yet. My aim is to rush-through stages, specifically 16-bit Real Mode (in which you can perform BIOS calls), and 32-bit Protected Mode, and only return to them once they would help me implement a new feature in Long Modes, this is because its my first bootloader/kernel and I feel like this is the most pedagogical approach, at least for me.  
 
