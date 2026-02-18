@@ -2,6 +2,7 @@
 #include <types.h>
 
 #define INTERRUPTS_IDT_SIZE 256
+#define INTERRUPTS_GDT_KERNEL_CODE_IDX 2
 
 __attribute__((packed))
 typedef struct
@@ -27,7 +28,7 @@ static inline word interrupts_get_segment_selector()
     word selector = 0;
     selector |= 0;       // RPL
     selector |= 0 << 2;  // TI
-    selector |= 2 << 3;  // Index
+    selector |= INTERRUPTS_GDT_KERNEL_CODE_IDX << 3;  // Index
 
     return selector;
 }
