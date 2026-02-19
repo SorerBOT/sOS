@@ -1,9 +1,27 @@
 extern isr_handler
 
-.globl isr_wrapper
-.align 16
+global isr_wrapper
+align 16
 
-isr_wrapper:
+%define FAKE_ERROR_CODE 0
+%define FAKE_ERROR_CODE 0
+
+%macro generate_isr_wrapper_without_error_code 1
+global isr_wrapper_%1
+isr_wrapper_%1:
+    push FAKE_ERROR_CODE
+    push %1
+    jmp isr_wrapper_common
+%endmacro
+
+%macro generate_isr_wrapper_with_error_code 1
+global isr_wrapper_%1
+isr_wrapper_%1:
+    push %1
+    jmp isr_wrapper_common
+%endmacro
+
+isr_wrapper_common:
 ;   PUSHING GENERAL PURPOSE REGISTERS
     push rdi
     lea rdi, [rsp + 8]      ; upon receiving an interrupt the CPU pushes some data onto the stack
@@ -29,7 +47,7 @@ isr_wrapper:
 
     call isr_handler
 
-; RETRIEVING GENERAL PURPOSE REGISTERS
+; RETRIEVING GENERAL PURPOSE REGISTERS & CLEARING ERROR CODE + INTERRUPT NUMBER FROM THE STACK
     pop r15
     pop r14
     pop r13
@@ -45,5 +63,7 @@ isr_wrapper:
     pop rbx
     pop rax
     pop rdi
+
+    add rsp, 16             ; accounting for the error code, and the interrupt number that we puhsed onto the stack
 
     iretq
