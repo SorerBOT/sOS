@@ -1,0 +1,330 @@
+extern isr_handler
+
+align 16
+
+%define FAKE_ERROR_CODE 0
+%define EXTRA_STACK_SIZE 16
+
+%macro generate_isr_wrapper_without_error_code 1
+global isr_wrapper_%1
+isr_wrapper_%1:
+    push FAKE_ERROR_CODE
+    push %1
+    jmp isr_wrapper_common
+%endmacro
+
+%macro generate_isr_wrapper_with_error_code 1
+global isr_wrapper_%1
+isr_wrapper_%1:
+    push %1
+    jmp isr_wrapper_common
+%endmacro
+
+
+; DEFINING THE ACTUAL ISR_WRAPPERS WITHOUT ERRORS CODES
+generate_isr_wrapper_without_error_code 0
+generate_isr_wrapper_without_error_code 1
+generate_isr_wrapper_without_error_code 2
+generate_isr_wrapper_without_error_code 3
+generate_isr_wrapper_without_error_code 4
+generate_isr_wrapper_without_error_code 5
+generate_isr_wrapper_without_error_code 6
+generate_isr_wrapper_without_error_code 7
+generate_isr_wrapper_without_error_code 9
+generate_isr_wrapper_without_error_code 15
+generate_isr_wrapper_without_error_code 16
+generate_isr_wrapper_without_error_code 18
+generate_isr_wrapper_without_error_code 19
+generate_isr_wrapper_without_error_code 20
+generate_isr_wrapper_without_error_code 22
+generate_isr_wrapper_without_error_code 23
+generate_isr_wrapper_without_error_code 24
+generate_isr_wrapper_without_error_code 25
+generate_isr_wrapper_without_error_code 26
+generate_isr_wrapper_without_error_code 27
+generate_isr_wrapper_without_error_code 28
+generate_isr_wrapper_without_error_code 31
+generate_isr_wrapper_without_error_code 32
+generate_isr_wrapper_without_error_code 33
+generate_isr_wrapper_without_error_code 34
+generate_isr_wrapper_without_error_code 35
+generate_isr_wrapper_without_error_code 36
+generate_isr_wrapper_without_error_code 37
+generate_isr_wrapper_without_error_code 38
+generate_isr_wrapper_without_error_code 39
+generate_isr_wrapper_without_error_code 40
+generate_isr_wrapper_without_error_code 41
+generate_isr_wrapper_without_error_code 42
+generate_isr_wrapper_without_error_code 43
+generate_isr_wrapper_without_error_code 44
+generate_isr_wrapper_without_error_code 45
+generate_isr_wrapper_without_error_code 46
+generate_isr_wrapper_without_error_code 47
+generate_isr_wrapper_without_error_code 48
+generate_isr_wrapper_without_error_code 49
+generate_isr_wrapper_without_error_code 50
+generate_isr_wrapper_without_error_code 51
+generate_isr_wrapper_without_error_code 52
+generate_isr_wrapper_without_error_code 53
+generate_isr_wrapper_without_error_code 54
+generate_isr_wrapper_without_error_code 55
+generate_isr_wrapper_without_error_code 56
+generate_isr_wrapper_without_error_code 57
+generate_isr_wrapper_without_error_code 58
+generate_isr_wrapper_without_error_code 59
+generate_isr_wrapper_without_error_code 60
+generate_isr_wrapper_without_error_code 61
+generate_isr_wrapper_without_error_code 62
+generate_isr_wrapper_without_error_code 63
+generate_isr_wrapper_without_error_code 64
+generate_isr_wrapper_without_error_code 65
+generate_isr_wrapper_without_error_code 66
+generate_isr_wrapper_without_error_code 67
+generate_isr_wrapper_without_error_code 68
+generate_isr_wrapper_without_error_code 69
+generate_isr_wrapper_without_error_code 70
+generate_isr_wrapper_without_error_code 71
+generate_isr_wrapper_without_error_code 72
+generate_isr_wrapper_without_error_code 73
+generate_isr_wrapper_without_error_code 74
+generate_isr_wrapper_without_error_code 75
+generate_isr_wrapper_without_error_code 76
+generate_isr_wrapper_without_error_code 77
+generate_isr_wrapper_without_error_code 78
+generate_isr_wrapper_without_error_code 79
+generate_isr_wrapper_without_error_code 80
+generate_isr_wrapper_without_error_code 81
+generate_isr_wrapper_without_error_code 82
+generate_isr_wrapper_without_error_code 83
+generate_isr_wrapper_without_error_code 84
+generate_isr_wrapper_without_error_code 85
+generate_isr_wrapper_without_error_code 86
+generate_isr_wrapper_without_error_code 87
+generate_isr_wrapper_without_error_code 88
+generate_isr_wrapper_without_error_code 89
+generate_isr_wrapper_without_error_code 90
+generate_isr_wrapper_without_error_code 91
+generate_isr_wrapper_without_error_code 92
+generate_isr_wrapper_without_error_code 93
+generate_isr_wrapper_without_error_code 94
+generate_isr_wrapper_without_error_code 95
+generate_isr_wrapper_without_error_code 96
+generate_isr_wrapper_without_error_code 97
+generate_isr_wrapper_without_error_code 98
+generate_isr_wrapper_without_error_code 99
+generate_isr_wrapper_without_error_code 100
+generate_isr_wrapper_without_error_code 101
+generate_isr_wrapper_without_error_code 102
+generate_isr_wrapper_without_error_code 103
+generate_isr_wrapper_without_error_code 104
+generate_isr_wrapper_without_error_code 105
+generate_isr_wrapper_without_error_code 106
+generate_isr_wrapper_without_error_code 107
+generate_isr_wrapper_without_error_code 108
+generate_isr_wrapper_without_error_code 109
+generate_isr_wrapper_without_error_code 110
+generate_isr_wrapper_without_error_code 111
+generate_isr_wrapper_without_error_code 112
+generate_isr_wrapper_without_error_code 113
+generate_isr_wrapper_without_error_code 114
+generate_isr_wrapper_without_error_code 115
+generate_isr_wrapper_without_error_code 116
+generate_isr_wrapper_without_error_code 117
+generate_isr_wrapper_without_error_code 118
+generate_isr_wrapper_without_error_code 119
+generate_isr_wrapper_without_error_code 120
+generate_isr_wrapper_without_error_code 121
+generate_isr_wrapper_without_error_code 122
+generate_isr_wrapper_without_error_code 123
+generate_isr_wrapper_without_error_code 124
+generate_isr_wrapper_without_error_code 125
+generate_isr_wrapper_without_error_code 126
+generate_isr_wrapper_without_error_code 127
+generate_isr_wrapper_without_error_code 128
+generate_isr_wrapper_without_error_code 129
+generate_isr_wrapper_without_error_code 130
+generate_isr_wrapper_without_error_code 131
+generate_isr_wrapper_without_error_code 132
+generate_isr_wrapper_without_error_code 133
+generate_isr_wrapper_without_error_code 134
+generate_isr_wrapper_without_error_code 135
+generate_isr_wrapper_without_error_code 136
+generate_isr_wrapper_without_error_code 137
+generate_isr_wrapper_without_error_code 138
+generate_isr_wrapper_without_error_code 139
+generate_isr_wrapper_without_error_code 140
+generate_isr_wrapper_without_error_code 141
+generate_isr_wrapper_without_error_code 142
+generate_isr_wrapper_without_error_code 143
+generate_isr_wrapper_without_error_code 144
+generate_isr_wrapper_without_error_code 145
+generate_isr_wrapper_without_error_code 146
+generate_isr_wrapper_without_error_code 147
+generate_isr_wrapper_without_error_code 148
+generate_isr_wrapper_without_error_code 149
+generate_isr_wrapper_without_error_code 150
+generate_isr_wrapper_without_error_code 151
+generate_isr_wrapper_without_error_code 152
+generate_isr_wrapper_without_error_code 153
+generate_isr_wrapper_without_error_code 154
+generate_isr_wrapper_without_error_code 155
+generate_isr_wrapper_without_error_code 156
+generate_isr_wrapper_without_error_code 157
+generate_isr_wrapper_without_error_code 158
+generate_isr_wrapper_without_error_code 159
+generate_isr_wrapper_without_error_code 160
+generate_isr_wrapper_without_error_code 161
+generate_isr_wrapper_without_error_code 162
+generate_isr_wrapper_without_error_code 163
+generate_isr_wrapper_without_error_code 164
+generate_isr_wrapper_without_error_code 165
+generate_isr_wrapper_without_error_code 166
+generate_isr_wrapper_without_error_code 167
+generate_isr_wrapper_without_error_code 168
+generate_isr_wrapper_without_error_code 169
+generate_isr_wrapper_without_error_code 170
+generate_isr_wrapper_without_error_code 171
+generate_isr_wrapper_without_error_code 172
+generate_isr_wrapper_without_error_code 173
+generate_isr_wrapper_without_error_code 174
+generate_isr_wrapper_without_error_code 175
+generate_isr_wrapper_without_error_code 176
+generate_isr_wrapper_without_error_code 177
+generate_isr_wrapper_without_error_code 178
+generate_isr_wrapper_without_error_code 179
+generate_isr_wrapper_without_error_code 180
+generate_isr_wrapper_without_error_code 181
+generate_isr_wrapper_without_error_code 182
+generate_isr_wrapper_without_error_code 183
+generate_isr_wrapper_without_error_code 184
+generate_isr_wrapper_without_error_code 185
+generate_isr_wrapper_without_error_code 186
+generate_isr_wrapper_without_error_code 187
+generate_isr_wrapper_without_error_code 188
+generate_isr_wrapper_without_error_code 189
+generate_isr_wrapper_without_error_code 190
+generate_isr_wrapper_without_error_code 191
+generate_isr_wrapper_without_error_code 192
+generate_isr_wrapper_without_error_code 193
+generate_isr_wrapper_without_error_code 194
+generate_isr_wrapper_without_error_code 195
+generate_isr_wrapper_without_error_code 196
+generate_isr_wrapper_without_error_code 197
+generate_isr_wrapper_without_error_code 198
+generate_isr_wrapper_without_error_code 199
+generate_isr_wrapper_without_error_code 200
+generate_isr_wrapper_without_error_code 201
+generate_isr_wrapper_without_error_code 202
+generate_isr_wrapper_without_error_code 203
+generate_isr_wrapper_without_error_code 204
+generate_isr_wrapper_without_error_code 205
+generate_isr_wrapper_without_error_code 206
+generate_isr_wrapper_without_error_code 207
+generate_isr_wrapper_without_error_code 208
+generate_isr_wrapper_without_error_code 209
+generate_isr_wrapper_without_error_code 210
+generate_isr_wrapper_without_error_code 211
+generate_isr_wrapper_without_error_code 212
+generate_isr_wrapper_without_error_code 213
+generate_isr_wrapper_without_error_code 214
+generate_isr_wrapper_without_error_code 215
+generate_isr_wrapper_without_error_code 216
+generate_isr_wrapper_without_error_code 217
+generate_isr_wrapper_without_error_code 218
+generate_isr_wrapper_without_error_code 219
+generate_isr_wrapper_without_error_code 220
+generate_isr_wrapper_without_error_code 221
+generate_isr_wrapper_without_error_code 222
+generate_isr_wrapper_without_error_code 223
+generate_isr_wrapper_without_error_code 224
+generate_isr_wrapper_without_error_code 225
+generate_isr_wrapper_without_error_code 226
+generate_isr_wrapper_without_error_code 227
+generate_isr_wrapper_without_error_code 228
+generate_isr_wrapper_without_error_code 229
+generate_isr_wrapper_without_error_code 230
+generate_isr_wrapper_without_error_code 231
+generate_isr_wrapper_without_error_code 232
+generate_isr_wrapper_without_error_code 233
+generate_isr_wrapper_without_error_code 234
+generate_isr_wrapper_without_error_code 235
+generate_isr_wrapper_without_error_code 236
+generate_isr_wrapper_without_error_code 237
+generate_isr_wrapper_without_error_code 238
+generate_isr_wrapper_without_error_code 239
+generate_isr_wrapper_without_error_code 240
+generate_isr_wrapper_without_error_code 241
+generate_isr_wrapper_without_error_code 242
+generate_isr_wrapper_without_error_code 243
+generate_isr_wrapper_without_error_code 244
+generate_isr_wrapper_without_error_code 245
+generate_isr_wrapper_without_error_code 246
+generate_isr_wrapper_without_error_code 247
+generate_isr_wrapper_without_error_code 248
+generate_isr_wrapper_without_error_code 249
+generate_isr_wrapper_without_error_code 250
+generate_isr_wrapper_without_error_code 251
+generate_isr_wrapper_without_error_code 252
+generate_isr_wrapper_without_error_code 253
+generate_isr_wrapper_without_error_code 254
+generate_isr_wrapper_without_error_code 255
+
+; DEFINING THE ACTUAL ISR_WRAPPERS WITH ERRORS CODES
+generate_isr_wrapper_with_error_code 8
+generate_isr_wrapper_with_error_code 10
+generate_isr_wrapper_with_error_code 11
+generate_isr_wrapper_with_error_code 12
+generate_isr_wrapper_with_error_code 13
+generate_isr_wrapper_with_error_code 14
+generate_isr_wrapper_with_error_code 17
+generate_isr_wrapper_with_error_code 21
+generate_isr_wrapper_with_error_code 29
+generate_isr_wrapper_with_error_code 30
+
+
+isr_wrapper_common:
+;   PUSHING GENERAL PURPOSE REGISTERS
+    push rdi
+    lea rdi, [rsp + 8]      ; upon receiving an interrupt the CPU pushes some data onto the stack
+                            ; I want to send it to the C handler, so I'm making rdi point to it.
+                            ; ****Note that the stack grows upside down, meaning that the CPU's struct
+                            ; begins on the last stack address, so this already points to it.
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rbp
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+
+    cld                     ; sysV ABI requirement.
+
+    call isr_handler
+
+; RETRIEVING GENERAL PURPOSE REGISTERS & CLEARING ERROR CODE + INTERRUPT NUMBER FROM THE STACK
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rbp
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    pop rdi
+
+    add rsp, EXTRA_STACK_SIZE       ; accounting for the error code, and the interrupt number that we puhsed onto the stack
+
+    iretq
