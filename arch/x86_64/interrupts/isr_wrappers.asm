@@ -285,10 +285,6 @@ generate_isr_wrapper_with_error_code 30
 isr_wrapper_common:
 ;   PUSHING GENERAL PURPOSE REGISTERS
     push rdi
-    lea rdi, [rsp + 8]      ; upon receiving an interrupt the CPU pushes some data onto the stack
-                            ; I want to send it to the C handler, so I'm making rdi point to it.
-                            ; ****Note that the stack grows upside down, meaning that the CPU's struct
-                            ; begins on the last stack address, so this already points to it.
     push rax
     push rbx
     push rcx
@@ -303,6 +299,13 @@ isr_wrapper_common:
     push r13
     push r14
     push r15
+
+    lea rdi, [rsp]      ; upon receiving an interrupt the CPU pushes some data onto the stack
+                            ; I obviously push more info (general registers, error code, isr_number)
+                            ; that I want to use in my isr handler and so I want to send it to the
+                            ; C handler, so I'm making rdi point to it.
+                            ; ****Note that the stack grows upside down, meaning that the CPU's struct
+                            ; begins on the last stack address, so this already points to it.
 
     cld                     ; sysV ABI requirement.
 
