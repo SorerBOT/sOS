@@ -5,6 +5,5 @@ idt_load:
     mov rbp, rsp
 
     lidt [rdi]
-    sti
 
-    pop rsp
+    pop rbp
