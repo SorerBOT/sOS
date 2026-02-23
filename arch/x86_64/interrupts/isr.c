@@ -11,6 +11,7 @@ enum
 };
 
 static void isr_dump_registers(const isr_args_t* args);
+static void isr_handler_page_fault(const isr_args_t* args);
 
 static void isr_dump_registers(const isr_args_t* args)
 {
@@ -37,6 +38,50 @@ static void isr_dump_registers(const isr_args_t* args)
             "r14", args->general_registers.r12, "r15", args->general_registers.r13);
 }
 
+static void isr_handler_page_fault(const isr_args_t* args)
+{
+    void* faulting_address;
+    __asm__ volatile("mov %%cr2, %0" : "=r" (faulting_address));
+
+    bool is_present                     = (args->error_code & 0b1) != 0;
+    bool is_write                       = (args->error_code & 0b10) != 0;
+    bool is_user                        = (args->error_code & 0b100) != 0;
+    bool is_reserved                    = (args->error_code & 0b1000) != 0;
+    bool is_instruction_fetch           = (args->error_code & 0b10000) != 0;
+    bool is_protection_key              = (args->error_code & 0b100000) != 0;
+    bool is_shadow_stack                = (args->error_code & 0b1000000) != 0;
+    bool is_software_guard_extension    = (args->error_code & 0b10000000) != 0;
+
+    console_io_print_blue_screen(
+            "Page Fault Occurred\n"
+            "Faulting address: %p\n", faulting_address);
+
+    isr_dump_registers(args);
+
+    console_io_printf(
+            "%27s:    %d\n"
+            "%27s:    %d\n"
+            "%27s:    %d\n"
+            "%27s:    %d\n"
+            "%27s:    %d\n"
+            "%27s:    %d\n"
+            "%27s:    %d\n"
+            "%27s:    %d\n",
+            "is_present", is_present,
+            "is_write", is_write,
+            "is_user", is_user,
+            "is_reserved", is_reserved,
+            "is_instruction_fetch", is_instruction_fetch,
+            "is_protection_key", is_protection_key,
+            "is_shadow_stack", is_shadow_stack,
+            "is_software_guard_extension", is_software_guard_extension);
+
+    while (1)
+    {
+        __asm__ volatile("cli; hlt");
+    }
+}
+
 void isr_handler(isr_args_t* args)
 {
     switch ( args->isr_number )
@@ -44,7 +89,10 @@ void isr_handler(isr_args_t* args)
         case ISR_DIVIDE_BY_ZERO:
             console_io_print_blue_screen("DIVIDE BY ZERO OCCURRED:\n");
             isr_dump_registers(args);
-            while (1);
+            while (1)
+            {
+                __asm__ volatile("cli; hlt");
+            }
             break;
         case ISR_BREAKPOINT:
             console_io_printf("Breakpoint on instruction %p reached.\n", args->rip);
@@ -52,12 +100,13 @@ void isr_handler(isr_args_t* args)
         case ISR_DOUBLE_FAULT:
             console_io_print_blue_screen("DOUBLE FAULT OCCURRED:\n");
             isr_dump_registers(args);
-            while (1);
+            while (1)
+            {
+                __asm__ volatile("cli; hlt");
+            }
             break;
         case ISR_PAGE_FAULT:
-            console_io_print_blue_screen("PAGE FAULT OCCURRED:\n");
-            isr_dump_registers(args);
-            while (1);
+            isr_handler_page_fault(args);
             break;
     }
 }

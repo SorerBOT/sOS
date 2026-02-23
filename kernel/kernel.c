@@ -19,5 +19,8 @@ void kernel()
     console_io_report("finished handling a breakpoint interrupt. kernel took back control...", CONSOLE_IO_SUCCESS);
 
 
-    while (1);
+    while (1)
+    {
+        __asm__ volatile("cli; hlt");
+    }
 }
