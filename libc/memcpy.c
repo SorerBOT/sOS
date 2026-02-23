@@ -1,36 +1,54 @@
 #include <types.h>
 #include <string.h>
 
-void* memcpy(void *restrict dst, const void *restrict src, size_t n)
-{
-    byte* restrict dst_byte = dst;
-    const byte* restrict src_byte = src;
+#define MEMCPY_VERSION_NAME memcpy
+#define MEMCPY_SRC_QUALIFIER_BEFORE const
+#define MEMCPY_SRC_QUALIFIER_AFTER restrict
+#define MEMCPY_DST_QUALIFIER_BEFORE
+#define MEMCPY_DST_QUALIFIER_AFTER restrict
+#define MEMCPY_RETURN_TYPE void*
 
-    while (n && (uintptr_t) dst_byte % 8 != 0)
-    {
-        *(dst_byte++) = *(src_byte++);
-        --n;
-    }
+#include "memcpy.inc"
 
-    qword* restrict dst_qword = (qword*) dst_byte;
-    const qword* restrict src_qword = (const qword*) src_byte;
+#undef MEMCPY_VERSION_NAME
+#undef MEMCPY_SRC_QUALIFIER_BEFORE
+#undef MEMCPY_SRC_QUALIFIER_AFTER
+#undef MEMCPY_DST_QUALIFIER_BEFORE
+#undef MEMCPY_DST_QUALIFIER_AFTER
+#undef MEMCPY_RETURN_TYPE
 
-    while (n >= 8)
-    {
-        *(dst_qword++) = *(src_qword++);
-        n -= 8;
-    }
+/*-----------------------------------------------*/
 
-    if (n > 0)
-    {
-        dst_byte = (byte*) dst_qword;
-        src_byte = (byte*) src_qword;
+#define MEMCPY_VERSION_NAME memcpy_to_volatile
+#define MEMCPY_SRC_QUALIFIER_BEFORE const
+#define MEMCPY_SRC_QUALIFIER_AFTER restrict
+#define MEMCPY_DST_QUALIFIER_BEFORE volatile
+#define MEMCPY_DST_QUALIFIER_AFTER restrict
+#define MEMCPY_RETURN_TYPE volatile void*
 
-        while (n--)
-        {
-            *(dst_byte++) = *(src_byte++);
-        }
-    }
+#include "memcpy.inc"
 
-    return dst;
-}
+#undef MEMCPY_VERSION_NAME
+#undef MEMCPY_SRC_QUALIFIER_BEFORE
+#undef MEMCPY_SRC_QUALIFIER_AFTER
+#undef MEMCPY_DST_QUALIFIER_BEFORE
+#undef MEMCPY_DST_QUALIFIER_AFTER
+#undef MEMCPY_RETURN_TYPE
+
+/*-----------------------------------------------*/
+
+#define MEMCPY_VERSION_NAME memcpy_from_volatile
+#define MEMCPY_SRC_QUALIFIER_BEFORE const volatile
+#define MEMCPY_SRC_QUALIFIER_AFTER restrict
+#define MEMCPY_DST_QUALIFIER_BEFORE
+#define MEMCPY_DST_QUALIFIER_AFTER restrict
+#define MEMCPY_RETURN_TYPE void*
+
+#include "memcpy.inc"
+
+#undef MEMCPY_VERSION_NAME
+#undef MEMCPY_SRC_QUALIFIER_BEFORE
+#undef MEMCPY_SRC_QUALIFIER_AFTER
+#undef MEMCPY_DST_QUALIFIER_BEFORE
+#undef MEMCPY_DST_QUALIFIER_AFTER
+#undef MEMCPY_RETURN_TYPE

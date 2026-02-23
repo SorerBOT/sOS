@@ -77,7 +77,7 @@ void vga_driver_flush_shadow_buffer()
 
     byte* address_to_read_from = shadow_buffer + line_to_read_from * VGA_DRIVER_LINE_SIZE;
     size_t len = VGA_DRIVER_SIZE;
-    memcpy(buffer_address, address_to_read_from, len);
+    memcpy_to_volatile(buffer_address, address_to_read_from, len);
 }
 
 static void move_cursor(size_t shadow_line, size_t offset)
@@ -156,6 +156,6 @@ void vga_driver_init(const vga_driver_settings_t* settings)
     shadow_line = settings->initial_line;
     if (settings->should_copy_vga_buffer)
     {
-        memcpy(shadow_buffer, buffer_address, VGA_DRIVER_SIZE);
+        memcpy_from_volatile(shadow_buffer, buffer_address, VGA_DRIVER_SIZE);
     }
 }
