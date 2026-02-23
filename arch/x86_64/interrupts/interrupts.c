@@ -19,7 +19,7 @@
 #define INTERRUPTS_GET_ISR_ENTRY(interrupt_number) (isr_wrapper_##interrupt_number)
 
 
-__attribute__((packed))
+
 typedef struct
 {
     word offset_low;
@@ -29,7 +29,7 @@ typedef struct
     word offset_middle;
     dword offset_high;
     dword reserved_high;
-} interrupts_descriptor_t;
+} __attribute__((packed)) interrupts_descriptor_t;
 
 typedef interrupts_descriptor_t interrupts_idt_t[INTERRUPTS_IDT_SIZE];
 
