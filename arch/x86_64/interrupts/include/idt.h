@@ -28,6 +28,5 @@ typedef struct
 typedef idt_descriptor_t idt_t[IDT_SIZE];
 
 void idt_setup(void);
-void idt_load(idt_t* idt);
 
 #endif /* IDT_H */

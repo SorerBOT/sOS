@@ -1,9 +1,10 @@
 #include "include/idt.h"
 #include "include/isr_wrappers.h"
 
-idt_t idt;
-
+extern void idt_load(idt_t* idt);
 static inline void interrupts_descriptor_init(idt_descriptor_t* descriptor, size_t interrupt_number);
+
+idt_t idt;
 
 static inline void idt_descriptor_init(idt_descriptor_t* descriptor, size_t interrupt_number)
 {
