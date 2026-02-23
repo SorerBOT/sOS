@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 static char console_io_buffer[VGA_DRIVER_SHADOW_MAX_CHARS];
+static bool is_blue_screen = false; // this is a terminal state. persists until reboot
 
 static void console_io__internal_vprintf_colored(byte color, const char* restrict format, va_list ap)
 {
@@ -25,12 +26,16 @@ void console_io_printf(const char * restrict format, ...)
 {
     va_list ap;
     va_start(ap, format);
-    console_io__internal_vprintf_colored(VGA_DRIVER_COLOR_DEFAULT, format, ap);
+    byte color = is_blue_screen
+        ? VGA_DRIVER_COLOR_BLUE_SCREEN
+        : VGA_DRIVER_COLOR_DEFAULT;
+    console_io__internal_vprintf_colored(color, format, ap);
     va_end(ap);
 }
 
 void console_io_print_blue_screen(const char* restrict format, ...)
 {
+    is_blue_screen = true;
     vga_driver_clear_colored(VGA_DRIVER_COLOR_BLUE_SCREEN);
     vga_driver_print_string_colored(VGA_DRIVER_COLOR_BLUE_SCREEN, "An error has occurred:\n");
 
