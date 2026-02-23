@@ -31,5 +31,3 @@ void idt_setup(void)
         idt_descriptor_init(&idt[i], i);
     }
 }
-
-void idt_load(idt_t* idt);

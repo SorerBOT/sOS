@@ -1,10 +1,10 @@
-global load_idt
+global idt_load 
 
-load_idt:
+idt_load:
     push rbp
     mov rbp, rsp
 
-    lidt rdi
+    lidt [rdi]
     sti
 
     pop rsp
