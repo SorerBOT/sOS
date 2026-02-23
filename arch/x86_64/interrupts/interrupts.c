@@ -1,7 +1,6 @@
 #include <interrupts.h>
 #include "include/isr_wrappers.h"
 
-#include <stddef.h>
 #include <types.h>
 
 #define INTERRUPTS_IDT_SIZE 256
@@ -30,7 +29,6 @@ typedef struct
     word offset_middle;
     dword offset_high;
     dword reserved_high;
-
 } interrupts_descriptor_t;
 
 typedef interrupts_descriptor_t interrupts_idt_t[INTERRUPTS_IDT_SIZE];

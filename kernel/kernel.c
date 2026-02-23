@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <console_io.h>
+#include <interrupts.h>
 
 void kernel()
 {
@@ -12,26 +13,13 @@ void kernel()
     console_io_init(&settings);
     console_io_report("entered 64-bit long mode...", CONSOLE_IO_SUCCESS);
 
-    console_io_printf("%llx\n", 3735928559);
+    interrupts_setup();
 
-    size_t print_count = 0;
+    console_io_report("set up interrupts...", CONSOLE_IO_SUCCESS);
 
-    while (1)
-    {
-// TODO: add %lu to printf. This is a little messed up
-        console_io_printf("testing VGA scrolling. Print number: %ld...\n", print_count);
-        ++print_count;
-        if (print_count % 15 == 0)
-        {
-            console_io_clear();
-        }
-        for (volatile size_t i = 0; i < 100000000; ++i)
-        {
-        }
-        if (print_count == 50)
-        {
-            console_io_print_blue_screen("You've been found guilty of printing useless stuff! %ld prints, are you crazy?\n", print_count);
-            while (1);
-        }
-    }
+
+    __asm__ volatile ("int $3");
+
+
+    while (1);
 }
