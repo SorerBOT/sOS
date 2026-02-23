@@ -15,8 +15,6 @@
 #define IDT_DPL 0b00
 #define IDT_PRESENT 0b1
 
-#define IDT_GET_ISR_ENTRY(interrupt_number) (isr_wrapper_##interrupt_number)
-
 typedef struct
 {
     word offset_low;
