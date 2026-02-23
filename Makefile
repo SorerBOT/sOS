@@ -9,6 +9,7 @@ INCLUDE_FLAGS = -Ilibc/include -Idrivers/$(ARCH)/include -Iarch/$(ARCH)/include 
 CFLAGS = -std=c99 -ffreestanding -mno-red-zone -m64 -g $(INCLUDE_FLAGS)
 
 BIN_64_BIT_DIR=$(BIN_DIR)/64-bit
+BIN_64_BIT_ASM_DIR=$(BIN_64_BIT_DIR)/asm/
 
 KERNEL_ORG = 0x10000 # 0x7E00 + 32.5KiB
 
@@ -24,9 +25,9 @@ LIBC_SRCS := $(shell find $(LIBC_DIR) -type f \( -name '*.c' -o -name '*.asm' \)
 ALL_SRCS = $(KERNEL_SRCS) $(KERNEL_START_SRC) $(ARCH_SRCS) $(DRIVERS_SRCS) $(LIBC_SRCS)
 
 C_OBJS := $(patsubst %.c, $(BIN_64_BIT_DIR)/%.o, $(filter %.c, $(ALL_SRCS)))
-ASM_OBJS := $(patsubst %.asm, $(BIN_64_BIT_DIR)/%.o, $(filter %.asm, $(ALL_SRCS)))
+ASM_OBJS := $(patsubst %.asm, $(BIN_64_BIT_ASM_DIR)/%.o, $(filter %.asm, $(ALL_SRCS)))
 ALL_OBJS := $(ASM_OBJS) $(C_OBJS)
-START_OBJ := $(BIN_64_BIT_DIR)/$(KERNEL_START).o
+START_OBJ := $(BIN_64_BIT_ASM_DIR)/$(KERNEL_START).o
 ALL_OBJS_EXCEPT_START := $(filter-out $(START_OBJ), $(ALL_OBJS))
 
 $(BIN_64_BIT_DIR)/$(KERNEL).bin: $(ALL_OBJS)
@@ -40,7 +41,7 @@ $(BIN_64_BIT_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	x86_64-elf-gcc $(CFLAGS) -c $< -o $@
 
-$(BIN_64_BIT_DIR)/%.o: %.asm
+$(BIN_64_BIT_ASM_DIR)/%.o: %.asm
 	@echo "Compiling ASM file $<"
 	@mkdir -p $(dir $@)
 	nasm -f elf64 $< -o $@
