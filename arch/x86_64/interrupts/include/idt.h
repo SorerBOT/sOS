@@ -25,6 +25,13 @@ typedef struct
     dword offset_high;
     dword reserved_high;
 } __attribute__((packed)) idt_descriptor_t;
+
+typedef struct
+{
+    word size;
+    idt_descriptor_t* descriptors;
+} __attribute__((packed)) idt_header_t;
+
 typedef idt_descriptor_t idt_t[IDT_SIZE];
 
 void idt_setup(void);

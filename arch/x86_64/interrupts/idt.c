@@ -1,10 +1,12 @@
 #include "include/idt.h"
 #include "include/isr_wrappers.h"
 
-extern void idt_load(idt_t* idt);
-static inline void interrupts_descriptor_init(idt_descriptor_t* descriptor, size_t interrupt_number);
+extern void idt_load(idt_header_t* idt);
+static inline void idt_descriptor_init(idt_descriptor_t* descriptor, size_t interrupt_number);
+static inline void idt_header_init();
 
 idt_t idt;
+idt_header_t idt_header;
 
 static inline void idt_descriptor_init(idt_descriptor_t* descriptor, size_t interrupt_number)
 {
@@ -25,10 +27,21 @@ static inline void idt_descriptor_init(idt_descriptor_t* descriptor, size_t inte
     descriptor->reserved_high = 0;
 }
 
+static inline void idt_header_init()
+{
+    idt_header.descriptors = &idt[0];
+    idt_header.size = IDT_SIZE * sizeof(idt_descriptor_t) - 1;
+}
+
+
 void idt_setup(void)
 {
     for (size_t i = 0; i < IDT_SIZE; ++i)
     {
         idt_descriptor_init(&idt[i], i);
     }
+
+    idt_header_init();
+
+    idt_load(&idt_header);
 }

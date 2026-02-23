@@ -15,9 +15,7 @@ void kernel()
 
     interrupts_setup();
 
-    console_io_report("set up interrupts...", CONSOLE_IO_SUCCESS);
-
-
+    console_io_report("finished setting up interrupts...", CONSOLE_IO_SUCCESS);
     __asm__ volatile ("int $3");
 
 

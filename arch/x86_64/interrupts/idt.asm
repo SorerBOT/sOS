@@ -7,3 +7,4 @@ idt_load:
     lidt [rdi]
 
     pop rbp
+    ret
