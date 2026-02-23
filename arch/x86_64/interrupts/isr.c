@@ -29,7 +29,6 @@ static void isr_dump_registers(const isr_args_t* args)
             "cs", args->cs, "ss", args->ss,
             "rsp", args->rsp, "rbp", args->general_registers.rbp,
             "rdi", args->general_registers.rdi, "rsi", args->general_registers.rsi,
-            "rdi", args->general_registers.rdi, "rsi", args->general_registers.rsi,
             "rax", args->general_registers.rax, "rbx", args->general_registers.rbx,
             "rcx", args->general_registers.rcx, "rdx", args->general_registers.rdx,
             "r8", args->general_registers.r8, "r9", args->general_registers.r9,
@@ -45,17 +44,20 @@ void isr_handler(isr_args_t* args)
         case ISR_DIVIDE_BY_ZERO:
             console_io_print_blue_screen("DIVIDE BY ZERO OCCURRED:\n");
             isr_dump_registers(args);
+            while (1);
             break;
         case ISR_BREAKPOINT:
-            console_io_print_blue_screen("Breakpoint on instruction %p reached.\n", args->rip);
+            console_io_printf("Breakpoint on instruction %p reached.\n", args->rip);
             break;
         case ISR_DOUBLE_FAULT:
             console_io_print_blue_screen("DOUBLE FAULT OCCURRED:\n");
             isr_dump_registers(args);
+            while (1);
             break;
         case ISR_PAGE_FAULT:
             console_io_print_blue_screen("PAGE FAULT OCCURRED:\n");
             isr_dump_registers(args);
+            while (1);
             break;
     }
 }

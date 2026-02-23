@@ -300,7 +300,7 @@ isr_wrapper_common:
     push r14
     push r15
 
-    lea rdi, [rsp]      ; upon receiving an interrupt the CPU pushes some data onto the stack
+    lea rdi, [rsp]          ; upon receiving an interrupt the CPU pushes some data onto the stack
                             ; I obviously push more info (general registers, error code, isr_number)
                             ; that I want to use in my isr handler and so I want to send it to the
                             ; C handler, so I'm making rdi point to it.
@@ -309,7 +309,13 @@ isr_wrapper_common:
 
     cld                     ; sysV ABI requirement.
 
+    mov rbx, rsp            ; sysV ABI requires 16-byte stack alignment before
+    and rsp, -16            ; a function call. this just masks with 0b111111...0000
+                            ; but I don't have to count the 1's
+
     call isr_handler
+
+    mov rsp, rbx            ; restoring the unaligned stack pointer
 
 ; RETRIEVING GENERAL PURPOSE REGISTERS & CLEARING ERROR CODE + INTERRUPT NUMBER FROM THE STACK
     pop r15
@@ -328,6 +334,6 @@ isr_wrapper_common:
     pop rax
     pop rdi
 
-    add rsp, EXTRA_STACK_SIZE       ; accounting for the error code, and the interrupt number that we puhsed onto the stack
+    add rsp, EXTRA_STACK_SIZE   ; accounting for the error code, and the interrupt number that we puhsed onto the stack
 
     iretq

@@ -15,8 +15,8 @@ void kernel()
 
     interrupts_setup();
 
-    console_io_report("finished setting up interrupts...", CONSOLE_IO_SUCCESS);
     __asm__ volatile ("int $3");
+    console_io_report("finished handling a breakpoint interrupt. kernel took back control...", CONSOLE_IO_SUCCESS);
 
 
     while (1);
