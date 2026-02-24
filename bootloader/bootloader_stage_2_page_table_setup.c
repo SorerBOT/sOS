@@ -85,7 +85,7 @@ void PT_init_identity_map(PT_t* pt, int64_t pages_count)
 
 void PDT_init_identity_map(PDT_t* pdt, int64_t pages_count)
 {
-    console_io_report("Mapping pages. Can't print how many pages remaining xD...\n", CONSOLE_IO_SUCCESS);
+    console_io_report("Mapping pages. Can't print how many pages remaining...\n", CONSOLE_IO_SUCCESS);
 
 
     size_t created_pt_count = 0;
@@ -111,7 +111,7 @@ void PDPT_init_identity_map(PDPT_t* pdpt, int64_t pages_count)
 PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
 {
     int64_t pages_count = memory_size_to_map / PAGE_SIZE;
-    console_io_report("Mapping pages. Can't print how many pages remaining xD...\n", CONSOLE_IO_SUCCESS);
+    console_io_report("Mapping pages. Can't print how many pages remaining...\n", CONSOLE_IO_SUCCESS);
 
     PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
 
