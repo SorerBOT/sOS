@@ -1,19 +1,20 @@
-#include <io_startup.h>
+#include <io_setup.h>
 #include <console_io.h>
 #include <ps2_keyboard.h>
 
-static inline void inputs_startup(void);
-static inline void outputs_startup(void);
+static inline void inputs_setup(void);
+static inline void outputs_setup(void);
 
-static inline void inputs_startup(void)
+static inline void inputs_setup(void)
 {
     ps2_keyboard_settings_t settings =
     {
-        .data_address = 0x60
+        .data_port = 0x60
     };
+    ps2_keyboard_init(&settings);
 }
 
-static inline void outputs_startup(void)
+static inline void outputs_setup(void)
 {
     console_io_init_settings_t settings =
     {
@@ -24,8 +25,8 @@ static inline void outputs_startup(void)
     console_io_init(&settings);
 }
 
-void io_startup()
+void io_setup()
 {
-    inputs_startup();
-    outputs_startup();
+    inputs_setup();
+    outputs_setup();
 }
