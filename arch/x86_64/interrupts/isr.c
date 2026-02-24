@@ -130,7 +130,7 @@ static void isr_handler_pic_interrupts(const isr_args_t* args)
     if ( irq_number == 1 )
     {
         console_io_printf("KEYBOARD PRESSED\n");
-        cpu_io_inb(0x60);
+        cpu_io_read_byte(0x60);
     }
 
 
