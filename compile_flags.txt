@@ -1,13 +1,13 @@
 -xc
 -std=c99
 -DCUNIT_IMPLEMENTATION
---target=x86_64-elf
+--target=i386-elf
 -m64
 -ffreestanding
 -mno-red-zone
 -Ilibc/include
--Iarch/x86_64/include
+-Iarch/i386/include
 -Iarch/common/include
--Idrivers/x86_64/include
+-Idrivers/i386/include
 -Idrivers/input/include
 -Itests/libc/external

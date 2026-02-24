@@ -280,7 +280,7 @@ void ps2_keyboard_read_and_handle_scancode(void)
 
     if ( event->event_type == KEYBOARD_RELEASED )
     {
-        if ( keyboard_head_idx < KEYBOARD_BUFFER_SIZE - 1 )
+       if ( keyboard_head_idx < KEYBOARD_BUFFER_SIZE - 1 )
         {
             keyboard_ring_buffer[(keyboard_head_idx++) % KEYBOARD_BUFFER_SIZE] = event->key_ascii;
         }

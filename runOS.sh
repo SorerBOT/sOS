@@ -3,7 +3,7 @@
 OS_IMG="os-img"
 OS_IMAGE_SIZE_MAX=66560 # 33KiB + 32KiB
 
-ARCH="x86_32"
+ARCH="i386"
 DRIVERS_DIR="drivers"
 ARCH_DIR="arch"
 LIBC_DIR="libc"
@@ -28,8 +28,7 @@ KERNEL_START="$KERNEL_DIR/kernel_start"
 KERNEL="$KERNEL_DIR/kernel"
 
 
-# I urgently need to stop linking 32-bit code with kernel libraries....
-INCLUDE_FLAGS="-Ilibc/include -Idrivers/$ARCH/include -Idrivers/input/include -Iarch/$ARCH/include -Iarch/common/include"
+INCLUDE_FLAGS="-Ilibc/include -Idrivers/$ARCH/include -Iarch/$ARCH/include -Iarch/common/include"
 
 set -e # quits on fail
 
@@ -53,8 +52,6 @@ mkdir -p "$BIN_64_BIT_DIR/$ARCH_DIR/$ARCH"
 
 echo "Compiling stage 1..."
 nasm -f bin "$STAGE_1.asm" -o "$BIN_16_BIT_DIR/$STAGE_1.bin"
-
-
 
 echo "Compiling stage 2..."
 CFLAGS_32_BIT="-std=c99 -ffreestanding -m32 -g $INCLUDE_FLAGS"
