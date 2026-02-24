@@ -12,6 +12,7 @@ enum
 
 static void isr_dump_registers(const isr_args_t* args);
 static void isr_handler_page_fault(const isr_args_t* args);
+static void isr_handler_general_protection_fault(const isr_args_t* args);
 
 static void isr_dump_registers(const isr_args_t* args)
 {
@@ -82,6 +83,19 @@ static void isr_handler_page_fault(const isr_args_t* args)
     }
 }
 
+static void isr_handler_general_protection_fault(const isr_args_t* args)
+{
+    console_io_print_blue_screen("General Protection Fault Occurred\n");
+    if ( args->error_code == 0 )
+    {
+        console_io_printf("The fault is not segment related\n");
+    }
+    else
+    {
+        console_io_printf("Segment violation error at segment %llu\n", args->error_code);
+    }
+}
+
 void isr_handler(isr_args_t* args)
 {
     switch ( args->isr_number )
@@ -107,6 +121,9 @@ void isr_handler(isr_args_t* args)
             break;
         case ISR_PAGE_FAULT:
             isr_handler_page_fault(args);
+            break;
+        case ISR_GENERAL_PROTECTION_FAULT:
+            isr_handler_general_protection_fault(args);
             break;
     }
 }
