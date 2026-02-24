@@ -9,4 +9,5 @@
 -Iarch/x86_64/include
 -Iarch/common/include
 -Idrivers/x86_64/include
+-Idrivers/input/include
 -Itests/libc/external

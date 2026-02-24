@@ -27,7 +27,9 @@ KERNEL_DIR="kernel"
 KERNEL_START="$KERNEL_DIR/kernel_start"
 KERNEL="$KERNEL_DIR/kernel"
 
-INCLUDE_FLAGS="-Ilibc/include -Idrivers/$ARCH/include -Iarch/$ARCH/include -Iarch/common/include"
+
+# I urgently need to stop linking 32-bit code with kernel libraries....
+INCLUDE_FLAGS="-Ilibc/include -Idrivers/$ARCH/include -Idrivers/input/include -Iarch/$ARCH/include -Iarch/common/include"
 
 set -e # quits on fail
 

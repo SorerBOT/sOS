@@ -5,7 +5,7 @@ ARCH_DIR=arch
 LIBC_DIR=libc
 BIN_DIR=bin
 
-INCLUDE_FLAGS = -Ilibc/include -Idrivers/$(ARCH)/include -Iarch/$(ARCH)/include -Iarch/common/include
+INCLUDE_FLAGS = -Ilibc/include -Idrivers/$(ARCH)/include -Idrivers/input/include -Iarch/$(ARCH)/include -Iarch/common/include
 CFLAGS = -std=c99 -ffreestanding -mno-red-zone -m64 -g $(INCLUDE_FLAGS)
 
 BIN_64_BIT_DIR=$(BIN_DIR)/64-bit
