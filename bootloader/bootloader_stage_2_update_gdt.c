@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <types.h> 
-#include <console_io.h>
+//#include <console_io.h>
 
 #define STRIP_FLAGS(limit_top_plus_flags) (limit_top_plus_flags & 0b1111)
 #define APPEND_FLAGS(stripped, flags) (stripped | flags)
@@ -60,5 +60,5 @@ void update_gdt()
         descriptor->limit_top_plus_flags = with_new_flags;
     }
 
-    console_io_report("updated GDT table...", CONSOLE_IO_SUCCESS);
+    //console_io_report("updated GDT table...", CONSOLE_IO_SUCCESS);
 }

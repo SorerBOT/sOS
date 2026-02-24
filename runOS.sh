@@ -3,7 +3,7 @@
 OS_IMG="os-img"
 OS_IMAGE_SIZE_MAX=66560 # 33KiB + 32KiB
 
-ARCH="x86_64"
+ARCH="x86_32"
 DRIVERS_DIR="drivers"
 ARCH_DIR="arch"
 LIBC_DIR="libc"
@@ -50,8 +50,6 @@ mkdir -p "$BIN_64_BIT_DIR/$KERNEL_DIR"
 mkdir "$BIN_64_BIT_DIR/$LIBC_DIR"
 mkdir -p "$BIN_64_BIT_DIR/$DRIVERS_DIR/$ARCH"
 mkdir -p "$BIN_64_BIT_DIR/$ARCH_DIR/$ARCH"
-
-
 
 echo "Compiling stage 1..."
 nasm -f bin "$STAGE_1.asm" -o "$BIN_16_BIT_DIR/$STAGE_1.bin"
