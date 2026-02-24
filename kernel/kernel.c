@@ -21,6 +21,6 @@ void kernel()
 
     while (1)
     {
-        __asm__ volatile("cli; hlt");
+        __asm__ volatile("hlt");
     }
 }

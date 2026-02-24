@@ -15,6 +15,9 @@
 #define IDT_DPL 0b00
 #define IDT_PRESENT 0b1
 
+#define IDT_OFFSET_PIC_MASTER 0x20
+#define IDT_OFFSET_PIC_SLAVE 0x28
+
 typedef struct
 {
     word offset_low;

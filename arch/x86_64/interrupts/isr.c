@@ -1,4 +1,6 @@
 #include "include/isr.h"
+#include "include/idt.h"
+#include "include/pic.h"
 #include <console_io.h>
 
 enum
@@ -13,6 +15,8 @@ enum
 static void isr_dump_registers(const isr_args_t* args);
 static void isr_handler_page_fault(const isr_args_t* args);
 static void isr_handler_general_protection_fault(const isr_args_t* args);
+static void isr_handler_pic_interrupts(const isr_args_t* args);
+static bool isr_is_pic_interrupt(qword isr_number);
 
 static void isr_dump_registers(const isr_args_t* args)
 {
@@ -96,8 +100,49 @@ static void isr_handler_general_protection_fault(const isr_args_t* args)
     }
 }
 
+static bool isr_is_pic_interrupt(qword isr_number)
+{
+    return ((isr_number >= IDT_OFFSET_PIC_MASTER && isr_number < IDT_OFFSET_PIC_MASTER + 8)
+        || (isr_number >= IDT_OFFSET_PIC_SLAVE && isr_number < IDT_OFFSET_PIC_SLAVE + 8));
+}
+
+static void isr_handler_pic_interrupts(const isr_args_t* args)
+{
+    uint8_t irq_number;
+    uint8_t isr_number = (uint8_t) args->isr_number;
+
+    /* even though I placed the slave PIC right after the master PIC, this should not depend on it.
+     * I might want to support multiple slave PICs in the future, and I wanted to make it obvious
+     * where changes would be needed.
+     */
+    if ( isr_number >= IDT_OFFSET_PIC_MASTER
+            && isr_number < IDT_OFFSET_PIC_MASTER + PIC_IRQ_COUNT_PER_UNIT )
+    {
+        irq_number = isr_number - IDT_OFFSET_PIC_MASTER;
+    }
+    else
+    {
+        irq_number = PIC_IRQ_COUNT_PER_UNIT + isr_number - IDT_OFFSET_PIC_SLAVE;
+    }
+
+
+    if ( irq_number == 1 )
+    {
+        console_io_printf("KEYBOARD PRESSED\n");
+    }
+
+
+    pic_send_EOI(irq_number);
+}
+
+
 void isr_handler(isr_args_t* args)
 {
+    if ( isr_is_pic_interrupt(args->isr_number) )
+    {
+        isr_handler_pic_interrupts(args);
+        return;
+    }
     switch ( args->isr_number )
     {
         case ISR_DIVIDE_BY_ZERO:

@@ -1,15 +1,13 @@
 #include <types.h>
 #include <cpu_io.h>
 #include "include/pic.h"
+#include "include/idt.h"
 
 #define PIC_MASTER_COMMAND  0x20
 #define PIC_MASTER_DATA     0x21
 
 #define PIC_SLAVE_COMMAND   0xA0
 #define PIC_SLAVE_DATA      0xA1
-
-#define PIC_MASTER_IDT_OFFSET 0x20
-#define PIC_SLAVE_IDT_OFFSET 0x28
 
 #define PIC_MASTER_IRQ_MASK_FOR_SLAVE   0b00000100  // IRQ 2
 #define PIC_SLAVE_IRQ_NUMBER_FOR_MASTER 0x02        // IRQ 2
@@ -51,8 +49,8 @@ void pic_remap(void)
     outb_plus_wait(PIC_SLAVE_COMMAND, 0x11);
 
     /* telling the PICs what is their IDT offset */
-    outb_plus_wait(PIC_MASTER_DATA, PIC_MASTER_IDT_OFFSET);
-    outb_plus_wait(PIC_SLAVE_DATA, PIC_SLAVE_IDT_OFFSET);
+    outb_plus_wait(PIC_MASTER_DATA, IDT_OFFSET_PIC_MASTER);
+    outb_plus_wait(PIC_SLAVE_DATA, IDT_OFFSET_PIC_SLAVE);
 
     /* connecting the master & slave PICs */
     outb_plus_wait(PIC_MASTER_DATA, PIC_MASTER_IRQ_MASK_FOR_SLAVE);
@@ -62,7 +60,7 @@ void pic_remap(void)
     outb_plus_wait(PIC_MASTER_DATA, PIC_X86_MODE);
     outb_plus_wait(PIC_SLAVE_DATA, PIC_X86_MODE);
     
-    pic_set_imrs(imr_master, imr_slave);    
+    pic_set_imrs(0x00, 0x00);
 }
 
 void pic_send_EOI(uint8_t irq_number)
