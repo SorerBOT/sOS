@@ -19,10 +19,11 @@ KERNEL = $(KERNEL_DIR)/kernel
 
 KERNEL_SRCS := $(shell find $(KERNEL_DIR) -type f \( -name '*.c' -o -name '*.asm' \))
 ARCH_SRCS := $(shell find $(ARCH_DIR)/$(ARCH) -type f \( -name '*.c' -o -name '*.asm' \))
-DRIVERS_SRCS := $(shell find $(DRIVERS_DIR)/$(ARCH) -type f \( -name '*.c' -o -name '*.asm' \))
+DRIVERS_ARCH_SRCS := $(shell find $(DRIVERS_DIR)/$(ARCH) -type f \( -name '*.c' -o -name '*.asm' \))
+DRIVERS_INPUT_SRCS := $(shell find $(DRIVERS_DIR)/input/ -type f \( -name '*.c' -o -name '*.asm' \))
 LIBC_SRCS := $(shell find $(LIBC_DIR) -type f \( -name '*.c' -o -name '*.asm' \))
 
-ALL_SRCS = $(KERNEL_SRCS) $(KERNEL_START_SRC) $(ARCH_SRCS) $(DRIVERS_SRCS) $(LIBC_SRCS)
+ALL_SRCS = $(KERNEL_SRCS) $(KERNEL_START_SRC) $(ARCH_SRCS) $(DRIVERS_ARCH_SRCS) $(DRIVERS_INPUT_SRCS) $(LIBC_SRCS)
 
 C_OBJS := $(patsubst %.c, $(BIN_64_BIT_DIR)/%.o, $(filter %.c, $(ALL_SRCS)))
 ASM_OBJS := $(patsubst %.asm, $(BIN_64_BIT_ASM_DIR)/%.o, $(filter %.asm, $(ALL_SRCS)))
