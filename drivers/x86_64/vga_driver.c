@@ -45,6 +45,11 @@ static inline void carriage_return()
 static inline void line_feed()
 {
     ++shadow_line;
+    if (shadow_line >= VGA_DRIVER_SHADOW_HEIGHT)
+    {
+        shift_shadow_buffer();
+        shadow_line = VGA_DRIVER_SHADOW_HEIGHT - 1;
+    }
 }
 
 static void shift_shadow_buffer()
@@ -108,12 +113,6 @@ static void print_char(byte color, char character)
 
         vga_driver_flush_shadow_buffer();
         move_cursor(shadow_line, offset);
-
-        if (shadow_line >= VGA_DRIVER_SHADOW_HEIGHT)
-        {
-            shift_shadow_buffer();
-            shadow_line = VGA_DRIVER_SHADOW_HEIGHT - 1;
-        }
 
         return;
     }
