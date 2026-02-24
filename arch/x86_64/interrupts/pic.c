@@ -16,6 +16,8 @@
 
 #define PIC_X86_MODE 0x01
 
+#define PIC_EOI_COMMAND_CODE 0x20
+
 static inline void outb_plus_wait(word port, byte value);
 static inline void pic_get_imrs(byte* imr_master, byte* imr_slave);
 static inline void pic_set_imrs(byte imr_master, byte imr_slave);
@@ -61,4 +63,13 @@ void pic_remap(void)
     outb_plus_wait(PIC_SLAVE_DATA, PIC_X86_MODE);
     
     pic_set_imrs(imr_master, imr_slave);    
+}
+
+void pic_send_EOI(uint8_t irq_number)
+{
+    if ( irq_number >= 8 )
+    {
+        outb_plus_wait(PIC_SLAVE_COMMAND, PIC_EOI_COMMAND_CODE);
+    }
+    cpu_io_outb(PIC_MASTER_COMMAND, PIC_EOI_COMMAND_CODE);
 }
