@@ -5,17 +5,17 @@
 
 typedef struct
 {
-    word data_address;
+    word data_port;
 } ps2_keyboard_settings_t;
 
 void ps2_keyboard_init(const ps2_keyboard_settings_t* settings);
 
 /* HARDWARE FACING */
-void ps2_keyboard_write_char();
+void ps2_keyboard_read_and_handle_scancode(void);
 
 
 /* KERNEL FACING */
-
+void ps2_keyboard_read_char_from_ring_buffer(char* c);
 
 
 
