@@ -2,6 +2,7 @@
 #include "include/idt.h"
 #include "include/pic.h"
 #include <console_io.h>
+#include <cpu_io.h>
 
 enum
 {
@@ -129,6 +130,7 @@ static void isr_handler_pic_interrupts(const isr_args_t* args)
     if ( irq_number == 1 )
     {
         console_io_printf("KEYBOARD PRESSED\n");
+        cpu_io_inb(0x60);
     }
 
 
@@ -143,10 +145,11 @@ void isr_handler(isr_args_t* args)
         isr_handler_pic_interrupts(args);
         return;
     }
+
     switch ( args->isr_number )
     {
         case ISR_DIVIDE_BY_ZERO:
-            console_io_print_blue_screen("DIVIDE BY ZERO OCCURRED:\n");
+            console_io_print_blue_screen("Divide by zero occurred:\n");
             isr_dump_registers(args);
             while (1)
             {
@@ -157,7 +160,7 @@ void isr_handler(isr_args_t* args)
             console_io_printf("Breakpoint on instruction %p reached.\n", args->rip);
             break;
         case ISR_DOUBLE_FAULT:
-            console_io_print_blue_screen("DOUBLE FAULT OCCURRED:\n");
+            console_io_print_blue_screen("Double fault occurred:\n");
             isr_dump_registers(args);
             while (1)
             {
