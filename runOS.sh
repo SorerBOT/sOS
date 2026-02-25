@@ -27,31 +27,22 @@ KERNEL_DIR="kernel"
 KERNEL_START="$KERNEL_DIR/kernel_start"
 KERNEL="$KERNEL_DIR/kernel"
 
-
 INCLUDE_FLAGS="-Ibootloader/ -Idrivers/$ARCH/include -Iarch/$ARCH/include -Iarch/common/include"
+
+MAKEFILE_STAGE_1="Makefile_bootloader_stage_1"
+MAKEFILE_STAGE_2="Makefile_bootloader_stage_2"
+MAKEFILE_KERNEL="Makefile_kernel"
 
 set -e # quits on fail
 
 echo "Cleaning up previous builds..."
-rm -rf $BIN_DIR
+make -f $MAKEFILE_STAGE_1 clean
+make -f $MAKEFILE_STAGE_2 clean
+make -f $MAKEFILE_KERNEL clean
 
-echo "Creating 16-bit BIN directories..."
-mkdir -p "$BIN_16_BIT_DIR/$BOOTLOADER_DIR"
-
-echo "Creating 32-bit BIN directories..."
-mkdir -p "$BIN_32_BIT_DIR/$BOOTLOADER_DIR"
-mkdir "$BIN_32_BIT_DIR/$LIBC_DIR"
-mkdir -p "$BIN_32_BIT_DIR/$DRIVERS_DIR/$ARCH"
-mkdir -p "$BIN_32_BIT_DIR/$ARCH_DIR/$ARCH"
-
-# echo "Creating 64-bit BIN directories..."
-# mkdir -p "$BIN_64_BIT_DIR/$KERNEL_DIR"
-# mkdir "$BIN_64_BIT_DIR/$LIBC_DIR"
-# mkdir -p "$BIN_64_BIT_DIR/$DRIVERS_DIR/$ARCH"
-# mkdir -p "$BIN_64_BIT_DIR/$ARCH_DIR/$ARCH"
-
-make -f Makefile_bootloader_stage_1 "$BIN_16_BIT_DIR/$STAGE_1.bin"
-make -f Makefile_bootloader_stage_2 "$BIN_32_BIT_DIR/$STAGE_2.bin"
+make -f $MAKEFILE_STAGE_1 "$BIN_16_BIT_DIR/$STAGE_1.bin"
+make -f $MAKEFILE_STAGE_2 "$BIN_32_BIT_DIR/$STAGE_2.bin"
+make -f $MAKEFILE_KERNEL "$BIN_64_BIT_DIR/$KERNEL.bin"
 
 cat "$BIN_16_BIT_DIR/$STAGE_1.bin" "$BIN_32_BIT_DIR/$STAGE_2.bin" > "$BIN_DIR/$OS_IMG.bin"
 
@@ -67,8 +58,6 @@ fi
 echo "Padding bootloader binary (entire OS image)..."
 truncate -s $BOOTLOADER_SIZE_MAX "$BIN_DIR/$OS_IMG.bin"
 
-# Compiling and linking the kernel via a makefile
-make -f Makefile_kernel "$BIN_64_BIT_DIR/$KERNEL.bin"
 
 
 echo "Appending kernel to OS image..."
