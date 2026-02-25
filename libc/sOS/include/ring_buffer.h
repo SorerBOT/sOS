@@ -13,12 +13,16 @@ typedef struct
     byte* buffer;
 } ring_buffer_t;
 
+/*
+ * {size} - must be a power of 2
+ */
 static inline errors_t ring_buffer_init(ring_buffer_t* ring_buffer, byte* buffer, size_t size)
 {
-    if ( buffer == NULL || size == 0)
+    if ( buffer == NULL || size == 0 || (size & (size - 1)) != 0)
     {
         return ERRORS_INVALID_PARAMETERS;
     }
+
 
     *ring_buffer = (ring_buffer_t)
     {
@@ -63,9 +67,11 @@ static inline errors_t ring_buffer_force_write(ring_buffer_t* ring_buffer, byte*
 
     for (size_t i = 0; i < src_size; ++i)
     {
-        ring_buffer->buffer[ring_buffer->head % ring_buffer->size] = src[i];
+        ring_buffer->buffer[ring_buffer->head & ring_buffer->size] = src[i];
         ++ring_buffer->head;
     }
+
+    return ERRORS_NONE;
 }
 
 static inline errors_t ring_buffer_try_write(ring_buffer_t* ring_buffer, byte* src, size_t src_size)
@@ -79,7 +85,7 @@ static inline errors_t ring_buffer_try_write(ring_buffer_t* ring_buffer, byte* s
     for (size_t i = 0; i < src_size;
             ++i, ++ring_buffer->head)
     {
-        ring_buffer->buffer[ring_buffer->head % ring_buffer->size] = src[i];
+        ring_buffer->buffer[ring_buffer->head & ring_buffer->size] = src[i];
     }
 
     return ERRORS_NONE;
@@ -91,7 +97,7 @@ static inline size_t ring_buffer_read(ring_buffer_t* ring_buffer, byte* dst, siz
     for (; i < dst_size && !ring_buffer_get_is_empty(ring_buffer);
             ++i, ++ring_buffer->tail)
     {
-        dst[i] = ring_buffer->buffer[ring_buffer->tail % ring_buffer->size];
+        dst[i] = ring_buffer->buffer[ring_buffer->tail & ring_buffer->size];
     }
 
     return i;

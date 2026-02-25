@@ -14,7 +14,7 @@ void kernel()
     __asm__ volatile ("int $3");
     console_io_report("finished handling a breakpoint interrupt. kernel took back control...", CONSOLE_IO_SUCCESS);
 
-    for (size_t i = 0; i < 256; ++i)
+    for (;;)
     {
         char c;
         ps2_keyboard_read_char_from_ring_buffer(&c);
