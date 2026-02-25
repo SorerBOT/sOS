@@ -1,7 +1,6 @@
 #include <console_io.h>
 #include <vga_driver.h>
 #include <stdarg.h>
-#include <stdio.h>
 
 void console_io_report(const char* restrict message, console_io_report_status_t status)
 {

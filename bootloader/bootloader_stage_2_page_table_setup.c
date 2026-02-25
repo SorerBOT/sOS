@@ -2,8 +2,9 @@ __asm__(".code32\n");
 
 #include <stddef.h>
 #include <stdbool.h>
-#include <types.h>
-#include <string.h>
+
+#include <libc_partials/include/types.h>
+#include <libc_partials/include/string.h>
 
 #include <console_io.h>
 

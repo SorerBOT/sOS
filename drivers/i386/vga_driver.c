@@ -1,12 +1,11 @@
 #include <stdint.h>
 #include <stddef.h>
-#include <stdarg.h>
 #include <stdbool.h>
 
-#include <types.h>
-#include <string.h>
 #include <vga_driver.h>
-#include <cpu_io.h>
+
+#include <libc_partials/include/string.h>
+#include <libc_partials/include/types.h>
 
 #define VGA_DRIVER_BUFFER_ADDRESS 0xB8000
 #define VGA_DRIVER_LINE_SIZE (2 * VGA_DRIVER_WIDTH)
@@ -30,8 +29,7 @@ static inline void line_feed();
 static inline void shift_shadow_buffer();
 static inline void init_shadow_buffer();
 static inline void vga_driver_flush_shadow_buffer();
-
-inline static void print_char(byte color, char character);
+static inline void print_char(byte color, char character);
 
 static size_t shadow_line = 0;
 static size_t offset = 0;
@@ -42,6 +40,7 @@ static inline void carriage_return()
 {
     offset = 0;
 }
+
 static inline void line_feed()
 {
     ++shadow_line;
@@ -60,7 +59,7 @@ static void shift_shadow_buffer()
     {
         dst = shadow_buffer + i * VGA_DRIVER_LINE_SIZE;
         src = shadow_buffer + (i+1) * VGA_DRIVER_LINE_SIZE;
-        memcpy(dst, src, VGA_DRIVER_LINE_SIZE);
+        memcpy_from_volatile_to_volatile(dst, src, VGA_DRIVER_LINE_SIZE);
     }
 
     word* last_line_word = (word*) src;
@@ -83,7 +82,7 @@ static inline void vga_driver_flush_shadow_buffer()
 
     byte* address_to_read_from = shadow_buffer + line_to_read_from * VGA_DRIVER_LINE_SIZE;
     size_t len = VGA_DRIVER_SIZE;
-    memcpy_to_volatile(buffer_address, address_to_read_from, len);
+    memcpy_from_volatile_to_volatile(buffer_address, address_to_read_from, len);
 }
 
 static inline void print_char(byte color, char character)
@@ -126,6 +125,6 @@ void vga_driver_init(const vga_driver_settings_t* settings)
     shadow_line = settings->initial_line;
     if (settings->should_copy_vga_buffer)
     {
-        memcpy_from_volatile(shadow_buffer, buffer_address, VGA_DRIVER_SIZE);
+        memcpy_from_volatile_to_volatile(shadow_buffer, buffer_address, VGA_DRIVER_SIZE);
     }
 }

@@ -1,10 +1,9 @@
 #ifndef VGA_DRIVER_H
 #define VGA_DRIVER_H
 
-#include <types.h>
+#include <libc_partials/include/types.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <stdarg.h>
 
 #define VGA_DRIVER_COLOR_DEFAULT 0x07
 #define VGA_DRIVER_COLOR_SUCCESS 0x02

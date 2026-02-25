@@ -6,7 +6,7 @@ OS_IMAGE_SIZE_MAX=66560 # 33KiB + 32KiB
 ARCH="i386"
 DRIVERS_DIR="drivers"
 ARCH_DIR="arch"
-LIBC_DIR="libc"
+LIBC_DIR="bootloader/libc_partials/"
 
 BIN_DIR="./bin"
 BIN_16_BIT_DIR="$BIN_DIR/16-bit"
@@ -28,7 +28,7 @@ KERNEL_START="$KERNEL_DIR/kernel_start"
 KERNEL="$KERNEL_DIR/kernel"
 
 
-INCLUDE_FLAGS="-Ilibc/include -Idrivers/$ARCH/include -Iarch/$ARCH/include -Iarch/common/include"
+INCLUDE_FLAGS="-Ibootloader/ -Idrivers/$ARCH/include -Iarch/$ARCH/include -Iarch/common/include"
 
 set -e # quits on fail
 
@@ -44,11 +44,11 @@ mkdir "$BIN_32_BIT_DIR/$LIBC_DIR"
 mkdir -p "$BIN_32_BIT_DIR/$DRIVERS_DIR/$ARCH"
 mkdir -p "$BIN_32_BIT_DIR/$ARCH_DIR/$ARCH"
 
-echo "Creating 64-bit BIN directories..."
-mkdir -p "$BIN_64_BIT_DIR/$KERNEL_DIR"
-mkdir "$BIN_64_BIT_DIR/$LIBC_DIR"
-mkdir -p "$BIN_64_BIT_DIR/$DRIVERS_DIR/$ARCH"
-mkdir -p "$BIN_64_BIT_DIR/$ARCH_DIR/$ARCH"
+# echo "Creating 64-bit BIN directories..."
+# mkdir -p "$BIN_64_BIT_DIR/$KERNEL_DIR"
+# mkdir "$BIN_64_BIT_DIR/$LIBC_DIR"
+# mkdir -p "$BIN_64_BIT_DIR/$DRIVERS_DIR/$ARCH"
+# mkdir -p "$BIN_64_BIT_DIR/$ARCH_DIR/$ARCH"
 
 echo "Compiling stage 1..."
 nasm -f bin "$STAGE_1.asm" -o "$BIN_16_BIT_DIR/$STAGE_1.bin"

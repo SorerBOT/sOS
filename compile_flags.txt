@@ -6,6 +6,7 @@
 -ffreestanding
 -mno-red-zone
 -Ilibc/include
+-Ibootloader/
 -Iarch/i386/include
 -Iarch/common/include
 -Idrivers/i386/include

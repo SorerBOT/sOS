@@ -1,5 +1,5 @@
 #include <stddef.h>
-#include <types.h> 
+#include <libc_partials/include/types.h>
 #include <console_io.h>
 
 #define STRIP_FLAGS(limit_top_plus_flags) (limit_top_plus_flags & 0b1111)
