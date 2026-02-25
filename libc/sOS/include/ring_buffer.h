@@ -67,7 +67,7 @@ static inline errors_t ring_buffer_force_write(ring_buffer_t* ring_buffer, byte*
 
     for (size_t i = 0; i < src_size; ++i)
     {
-        ring_buffer->buffer[ring_buffer->head & ring_buffer->size] = src[i];
+        ring_buffer->buffer[ring_buffer->head & (ring_buffer->size - 1)] = src[i];
         ++ring_buffer->head;
     }
 
@@ -85,7 +85,7 @@ static inline errors_t ring_buffer_try_write(ring_buffer_t* ring_buffer, byte* s
     for (size_t i = 0; i < src_size;
             ++i, ++ring_buffer->head)
     {
-        ring_buffer->buffer[ring_buffer->head & ring_buffer->size] = src[i];
+        ring_buffer->buffer[ring_buffer->head & (ring_buffer->size - 1)] = src[i];
     }
 
     return ERRORS_NONE;
@@ -97,7 +97,7 @@ static inline size_t ring_buffer_read(ring_buffer_t* ring_buffer, byte* dst, siz
     for (; i < dst_size && !ring_buffer_get_is_empty(ring_buffer);
             ++i, ++ring_buffer->tail)
     {
-        dst[i] = ring_buffer->buffer[ring_buffer->tail & ring_buffer->size];
+        dst[i] = ring_buffer->buffer[ring_buffer->tail & (ring_buffer->size - 1)];
     }
 
     return i;
