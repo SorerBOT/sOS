@@ -1,0 +1,29 @@
+ARCH = i386
+
+BIN_DIR = bin
+BIN_16_BIT_DIR = $(BIN_DIR)/16-bit
+BIN_32_BIT_DIR = $(BIN_DIR)/32-bit
+
+BOOTLOADER_DIR = bootloader
+ARCH_DIR = arch
+LIBC_DIR = $(BOOTLOADER_DIR)/libc_partials
+
+STAGE_1 = $(BOOTLOADER_DIR)/bootloader_stage_1
+STAGE_2 = $(BOOTLOADER_DIR)/bootloader_stage_2
+
+STAGE_2_ORG=0x7E00
+
+BOOTLOADER_SRCS := $(shell find $(BOOTLOADER_DIR) -type f -name '*.c')
+ARCH_SRCS := $(shell find $(ARCH_DIR)/$(ARCH) -type f \( -name '*.c' -o -name '*.asm' \))
+DRIVERS_ARCH_SRCS := $(shell find $(DRIVERS_DIR)/$(ARCH) -type f \( -name '*.c' -o -name '*.asm' \))
+LIBC_PARTIALS_SRCS := $(shell find $(LIBC_DIR) -type f \( -name '*.c' -o -name '*.asm' \))
+
+ALL_SRCS = $(BOOTLOADER_SRCS) $(ARCH_SRCS) $(DRIVERS_ARCH_SRCS) $(LIBC_SRCS)
+C_OBJS := $(patsubst %.c, $(BIN_64_BIT_DIR)/%.o, $(filter %.c, $(ALL_SRCS)))
+ASM_OBJS := $(patsubst %.asm, $(BIN_64_BIT_ASM_DIR)/%.o, $(filter %.asm, $(ALL_SRCS)))
+$(BIN_16_BIT_DIR)/$(STAGE_1).bin: $(STAGE_1).asm
+	@echo "Compiling stage 1..."
+	@mkdir -p $(dir $@)
+	nasm -f bin  -o $@
+
+

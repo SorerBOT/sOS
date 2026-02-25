@@ -50,8 +50,7 @@ mkdir -p "$BIN_32_BIT_DIR/$ARCH_DIR/$ARCH"
 # mkdir -p "$BIN_64_BIT_DIR/$DRIVERS_DIR/$ARCH"
 # mkdir -p "$BIN_64_BIT_DIR/$ARCH_DIR/$ARCH"
 
-echo "Compiling stage 1..."
-nasm -f bin "$STAGE_1.asm" -o "$BIN_16_BIT_DIR/$STAGE_1.bin"
+make -f Makefile_bootloader_stage_1 "$BIN_16_BIT_DIR/$STAGE_1.bin"
 
 echo "Compiling stage 2..."
 CFLAGS_32_BIT="-std=c99 -ffreestanding -m32 -g $INCLUDE_FLAGS"
@@ -98,7 +97,7 @@ echo "Padding bootloader binary (entire OS image)..."
 truncate -s $BOOTLOADER_SIZE_MAX "$BIN_DIR/$OS_IMG.bin"
 
 # Compiling and linking the kernel via a makefile
-make -f Makefile-kernel "$BIN_64_BIT_DIR/$KERNEL.bin"
+make -f Makefile_kernel "$BIN_64_BIT_DIR/$KERNEL.bin"
 
 
 echo "Appending kernel to OS image..."
