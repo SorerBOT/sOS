@@ -14,8 +14,6 @@ void kernel()
     __asm__ volatile ("int $3");
     console_io_report("finished handling a breakpoint interrupt. kernel took back control...", CONSOLE_IO_SUCCESS);
 
-
-    // i haven't implemented my ring buffer to wrap yet xD
     for (size_t i = 0; i < 256; ++i)
     {
         char c;

@@ -295,7 +295,6 @@ void ps2_keyboard_read_and_handle_scancode(void)
 
 void ps2_keyboard_read_char_from_ring_buffer(char* c)
 {
-    // this is temporary
     while ( ring_buffer_read(&keyboard_ring_buffer, (byte*)c, sizeof(*c)) == 0 )
     {
         __asm__ volatile("hlt");

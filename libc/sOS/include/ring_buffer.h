@@ -46,7 +46,7 @@ static inline bool ring_buffer_get_is_full(ring_buffer_t* ring_buffer)
     return ring_buffer->head >= ring_buffer->tail + ring_buffer->size;
 }
 
-static inline void ring_buffer_force_write(ring_buffer_t* ring_buffer, byte* src, size_t src_size)
+static inline errors_t ring_buffer_force_write(ring_buffer_t* ring_buffer, byte* src, size_t src_size)
 {
     size_t remaining_space = ring_buffer_get_remaining_space(ring_buffer);
     if ( remaining_space < src_size )
@@ -54,6 +54,10 @@ static inline void ring_buffer_force_write(ring_buffer_t* ring_buffer, byte* src
         if ( src_size <= ring_buffer->size )
         {
             ring_buffer->tail += src_size - remaining_space;
+        }
+        else
+        {
+            return ERRORS_WRITE_NOT_ENOUGH_SPACE;
         }
     }
 
