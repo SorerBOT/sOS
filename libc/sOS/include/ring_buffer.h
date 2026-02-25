@@ -47,7 +47,12 @@ static inline bool ring_buffer_get_is_empty(ring_buffer_t* ring_buffer)
 
 static inline bool ring_buffer_get_is_full(ring_buffer_t* ring_buffer)
 {
-    return ring_buffer->head >= ring_buffer->tail + ring_buffer->size;
+    /*
+     * unsigned int subtraction supports wrapping
+     * its important that the variable which wraps
+     * first is the one subtracted from
+     */
+    return (ring_buffer->head - ring_buffer->tail) >= ring_buffer->size;
 }
 
 static inline errors_t ring_buffer_force_write(ring_buffer_t* ring_buffer, byte* src, size_t src_size)

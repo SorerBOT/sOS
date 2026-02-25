@@ -289,7 +289,7 @@ void ps2_keyboard_read_and_handle_scancode(void)
 
     if ( event->event_type == KEYBOARD_RELEASED )
     {
-        ring_buffer_force_write(&keyboard_ring_buffer, (byte*)&event->key_ascii, sizeof(event->key_ascii));
+        ring_buffer_try_write(&keyboard_ring_buffer, (byte*)&event->key_ascii, sizeof(event->key_ascii));
     }
 }
 
