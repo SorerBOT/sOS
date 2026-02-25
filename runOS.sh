@@ -98,7 +98,7 @@ echo "Padding bootloader binary (entire OS image)..."
 truncate -s $BOOTLOADER_SIZE_MAX "$BIN_DIR/$OS_IMG.bin"
 
 # Compiling and linking the kernel via a makefile
-make "$BIN_64_BIT_DIR/$KERNEL.bin"
+make -f Makefile-kernel "$BIN_64_BIT_DIR/$KERNEL.bin"
 
 
 echo "Appending kernel to OS image..."
