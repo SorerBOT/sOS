@@ -2,11 +2,13 @@ BIN_DIR = bin
 BIN_16_BIT_DIR = $(BIN_DIR)/16-bit
 
 BOOTLOADER_DIR = bootloader
-STAGE_1 = $(BOOTLOADER_DIR)/bootloader_stage_1
+STAGE_1_DIR = $(BOOTLOADER_DIR)/stage_1
+STAGE_1 = $(STAGE_1_DIR)/bootloader_stage_1
 
 $(BIN_16_BIT_DIR)/$(STAGE_1).bin: $(STAGE_1).asm
 	@echo "Compiling stage 1..."
 	@mkdir -p $(dir $@)
 	nasm -f bin $< -o $@
 
-
+clean:
+	rm -rf $(BIN_16_BIT_DIR)

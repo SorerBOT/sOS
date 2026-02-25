@@ -14,8 +14,8 @@ BIN_32_BIT_DIR="$BIN_DIR/32-bit"
 BIN_64_BIT_DIR="$BIN_DIR/64-bit"
 
 BOOTLOADER_DIR="bootloader"
-STAGE_1="$BOOTLOADER_DIR/bootloader_stage_1"
-STAGE_2="$BOOTLOADER_DIR/bootloader_stage_2"
+STAGE_1="$BOOTLOADER_DIR/stage_1/bootloader_stage_1"
+STAGE_2="$BOOTLOADER_DIR/stage_2/bootloader_stage_2"
 PAGE_TABLE_SETUP="$BOOTLOADER_DIR/bootloader_stage_2_page_table_setup"
 UPDATE_GDT="$BOOTLOADER_DIR/bootloader_stage_2_update_gdt"
 BOOTLOADER_SIZE_MAX=0x8400 # 32.5KiB + 512 bytes = 33 KiB
@@ -51,36 +51,7 @@ mkdir -p "$BIN_32_BIT_DIR/$ARCH_DIR/$ARCH"
 # mkdir -p "$BIN_64_BIT_DIR/$ARCH_DIR/$ARCH"
 
 make -f Makefile_bootloader_stage_1 "$BIN_16_BIT_DIR/$STAGE_1.bin"
-
-echo "Compiling stage 2..."
-CFLAGS_32_BIT="-std=c99 -ffreestanding -m32 -g $INCLUDE_FLAGS"
-nasm -f elf32 "$STAGE_2.asm" -o "$BIN_32_BIT_DIR/$STAGE_2.o"
-x86_64-elf-gcc $CFLAGS_32_BIT -c "$PAGE_TABLE_SETUP.c" -o "$BIN_32_BIT_DIR/$PAGE_TABLE_SETUP.o"
-x86_64-elf-gcc $CFLAGS_32_BIT -c "$UPDATE_GDT.c" -o "$BIN_32_BIT_DIR/$UPDATE_GDT.o"
-
-echo "Compiling 32-bit drivers..."
-for file in "$DRIVERS_DIR/$ARCH"/*.c; do
-    [ -e "$file" ] || continue
-    x86_64-elf-gcc $CFLAGS_32_BIT -c "$file" -o "$BIN_32_BIT_DIR/$(dirname "$file")/$(basename "$file" .c).o"
-done
-echo "Compiling 32-bit architecture specific code..."
-for file in "$ARCH_DIR/$ARCH"/*.c; do
-    [ -e "$file" ] || continue
-    x86_64-elf-gcc $CFLAGS_32_BIT -c "$file" -o "$BIN_32_BIT_DIR/$(dirname "$file")/$(basename "$file" .c).o"
-done
-echo "Compiling 32-bit libc..."
-for file in "$LIBC_DIR"/*.c; do
-    [ -e "$file" ] || continue
-    x86_64-elf-gcc $CFLAGS_32_BIT -c "$file" -o "$BIN_32_BIT_DIR/$(dirname "$file")/$(basename "$file" .c).o"
-done
-
-echo "Linking Stage 2..."
-OBJ_FILES_EXCEPT_ENTRY=$(find $BIN_32_BIT_DIR -type f -name "*.o" ! -name "$(basename "$BIN_32_BIT_DIR/$STAGE_2.o")")
-x86_64-elf-ld -m elf_i386 --oformat binary -Ttext $STAGE_2_ORG \
-    -o "$BIN_32_BIT_DIR/$STAGE_2.bin" \
-    "$BIN_32_BIT_DIR/$STAGE_2.o" $OBJ_FILES_EXCEPT_ENTRY
-echo "Successfully linked stage 2..."
-
+make -f Makefile_bootloader_stage_2 "$BIN_32_BIT_DIR/$STAGE_2.bin"
 
 cat "$BIN_16_BIT_DIR/$STAGE_1.bin" "$BIN_32_BIT_DIR/$STAGE_2.bin" > "$BIN_DIR/$OS_IMG.bin"
 

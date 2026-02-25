@@ -9,7 +9,7 @@ INCLUDE_FLAGS = -Ilibc/include -Idrivers/$(ARCH)/include -Idrivers/input/include
 CFLAGS = -std=c99 -ffreestanding -mno-red-zone -m64 -g $(INCLUDE_FLAGS)
 
 BIN_64_BIT_DIR=$(BIN_DIR)/64-bit
-BIN_64_BIT_ASM_DIR=$(BIN_64_BIT_DIR)/asm/
+BIN_64_BIT_ASM_DIR=$(BIN_64_BIT_DIR)/asm
 
 KERNEL_ORG = 0x10000 # 0x7E00 + 32.5KiB
 
