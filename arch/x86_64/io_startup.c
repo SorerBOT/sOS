@@ -19,7 +19,7 @@ static inline void outputs_setup(void)
     console_io_init_settings_t settings =
     {
         .initial_line = 19,
-            .should_copy_existing_buffer = true
+        .should_copy_existing_buffer = true
     };
 
     console_io_init(&settings);

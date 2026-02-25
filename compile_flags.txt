@@ -6,6 +6,7 @@
 -ffreestanding
 -mno-red-zone
 -Ilibc/include
+-Ilibc/sOS/include
 -Ibootloader/
 -Iarch/x86_64/include
 -Iarch/common/include

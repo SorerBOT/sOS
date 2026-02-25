@@ -6,6 +6,7 @@
 #include <ps2_keyboard.h>
 #include <cpu_io.h>
 #include <console_io.h>
+#include <ring_buffer.h>
 
 #define KEYBOARD_SCANCODE_2_EXTENDED_OFFSET 0xE0
 #define KEYBOARD_BUFFER_SIZE 256
@@ -29,10 +30,8 @@ static const keyboard_event_t* parse_scancode(byte scancode);
 
 
 static ps2_keyboard_settings_t settings;
-static char keyboard_ring_buffer[KEYBOARD_BUFFER_SIZE];
-static size_t keyboard_head_idx = 0;
-static size_t keyboard_tail_idx = 0;
-
+static char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
+static ring_buffer_t keyboard_ring_buffer;
 
 static keyboard_event_t map_scancode_to_event[KEYBOARD_SCANCODE_2_EXTENDED_OFFSET];
 
@@ -44,6 +43,16 @@ static const keyboard_event_t* parse_scancode(byte scancode)
 void ps2_keyboard_init(const ps2_keyboard_settings_t* _settings)
 {
     settings = *_settings;
+
+    keyboard_ring_buffer = (ring_buffer_t)
+    {
+        .buffer = (byte*) &keyboard_buffer[0],
+        .head = 0,
+        .tail = 0,
+        .size = KEYBOARD_BUFFER_SIZE
+    };
+
+
     // i don't want to get a huge binary because of this....
     map_scancode_to_event[0]    = (keyboard_event_t) { .event_type = KEYBOARD_INVALID };
     map_scancode_to_event[1]    = (keyboard_event_t) { .event_type = KEYBOARD_PRESSED, .key_ascii = 0x1b };
@@ -280,23 +289,15 @@ void ps2_keyboard_read_and_handle_scancode(void)
 
     if ( event->event_type == KEYBOARD_RELEASED )
     {
-       if ( keyboard_head_idx < KEYBOARD_BUFFER_SIZE - 1 )
-        {
-            keyboard_ring_buffer[(keyboard_head_idx++) % KEYBOARD_BUFFER_SIZE] = event->key_ascii;
-        }
-        // i'll handle the rest of the ring buffer logic later.
+        ring_buffer_force_write(&keyboard_ring_buffer, (byte*)&event->key_ascii, sizeof(event->key_ascii));
     }
 }
 
 void ps2_keyboard_read_char_from_ring_buffer(char* c)
 {
     // this is temporary
-    while ( keyboard_tail_idx == keyboard_head_idx )
+    while ( ring_buffer_read(&keyboard_ring_buffer, (byte*)c, sizeof(*c)) == 0 )
     {
         __asm__ volatile("hlt");
     }
-
-    // i have not yet handled the actual ring buffer logic, but printing 256
-    // chars is cool enough :D
-    *c = keyboard_ring_buffer[(keyboard_tail_idx++) % KEYBOARD_BUFFER_SIZE];
 }
