@@ -15,7 +15,7 @@ void ps2_keyboard_read_and_handle_scancode(void);
 
 
 /* KERNEL FACING */
-void ps2_keyboard_read_char_from_ring_buffer(char* c);
+void ps2_keyboard_read_char(char* c);
 
 
 

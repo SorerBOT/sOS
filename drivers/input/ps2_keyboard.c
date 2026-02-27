@@ -293,7 +293,7 @@ void ps2_keyboard_read_and_handle_scancode(void)
     }
 }
 
-void ps2_keyboard_read_char_from_ring_buffer(char* c)
+void ps2_keyboard_read_char(char* c)
 {
     while ( ring_buffer_read(&keyboard_ring_buffer, (byte*)c, sizeof(*c)) == 0 )
     {

@@ -17,7 +17,7 @@ void kernel()
     for (;;)
     {
         char c;
-        ps2_keyboard_read_char_from_ring_buffer(&c);
+        ps2_keyboard_read_char(&c);
         console_io_printf("%c", c);
         console_io_flush();
     }
