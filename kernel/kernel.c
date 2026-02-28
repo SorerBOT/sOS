@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <console_io.h>
 #include <interrupts.h>
-#include <ps2_keyboard.h>
+#include <keyboard.h>
 
 void kernel()
 {
@@ -17,7 +17,7 @@ void kernel()
     for (;;)
     {
         char c;
-        ps2_keyboard_read_char(&c);
+        keyboard_read_char(&c);
         console_io_printf("%c", c);
         console_io_flush();
     }
