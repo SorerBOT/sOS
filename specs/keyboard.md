@@ -3,10 +3,10 @@ This spec details the requirements of any keyboard driver implemented in the pro
 
 ## The General Idea
 
-### One Instance Driver
+### Single Instance Driver
 The simplest possible keyboard driver listens to keyboard inputs, interprets their meaning (i.e. transforms a key-id into a concrete character), and keeps track of those events, so that it can serve them to the OS on demand.
 
-### Abstracting the Layout Away
+### Abstracting the "Single Instance Driver"
 To my initial comprehension, the keyboard driver's role was to, on demand, return the character corresponding to the key currently pressed. Only later did it strike me that a keyboard driver has no way whatsoever of establishing that relation, as it is completely oblivious to the type of keyboard its operator is using; be it an English keyboard equipped with the QWERTY layout, or a Hebrew keyboard equipped with the SI-1452-1 layout. Distinguishing different languages and different layouts seems to be out of the driver's scope, and so we must resolve to a lower mutual criteria. My initial idea was to create an internal set of "key-id"'s, and have the OS translate these key-ids based on the current language/layout. The issue with this approach is that it is "lossy" in the sense that it completely revokes the structural aspect of the keyboard; which consists of neighbouring, and general key positions. For instance, when the user presses "control + c" in order to copy something, the ascii code for 'c' is completely irrelevant. We don't care in the slightest whether the current language & layout combination identify this character as 'c', or the Hebrew 'ב' or whatever, we simply care about a certain position being clicked on the keyboard. The same goes for the WASD keys in video games, where the video games care not about 'A' being pressed, but rather about a key in a certain position being held down. For this reason, the prevalent way to identify keys is by their physical positions. To my understanding, most keyboards have the same set of physical keys whose interpretation differs based on the user's preference (handled by the OS). With this mindset, the driver's role would be to simply highlight which keys are currently pressed, which keys have just been released and so on. The role of transforming this into an actual state with resolved control-keys and characters would be delegated to some part of the kernel, or a libc extension.
 
 ## Concrete Specs
