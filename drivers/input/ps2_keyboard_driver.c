@@ -7,27 +7,12 @@
 #include <cpu_io.h>
 #include <console_io.h>
 #include <ring_buffer.h>
+#include <keyboard_driver.h>
 
 #define KEYBOARD_SCANCODE_2_EXTENDED_OFFSET 0xE0
 #define KEYBOARD_BUFFER_SIZE 256
 
-
-typedef enum
-{
-    KEYBOARD_INVALID,
-    KEYBOARD_PRESSED,
-    KEYBOARD_RELEASED
-} keyboard_event_type_t;
-
-typedef struct
-{
-    keyboard_event_type_t event_type;
-    char key_ascii;
-} keyboard_event_t;
-
 static const keyboard_event_t* parse_scancode(byte scancode);
-
-
 
 static ps2_keyboard_driver_settings_t settings;
 static char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
