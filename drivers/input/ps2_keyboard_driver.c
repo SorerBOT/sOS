@@ -1,9 +1,9 @@
-/* Im sorta using two namespaces, because KEYBOARD will soon be separated from ps2_keyboard.
+/* Im sorta using two namespaces, because KEYBOARD will soon be separated from ps2_keyboard_driver.
  * keyboard will handle a general keypress, without the specifics of how to read the data when using ps2.
  * don't freak out.
  */
 
-#include <ps2_keyboard.h>
+#include <ps2_keyboard_driver.h>
 #include <cpu_io.h>
 #include <console_io.h>
 #include <ring_buffer.h>
@@ -29,7 +29,7 @@ static const keyboard_event_t* parse_scancode(byte scancode);
 
 
 
-static ps2_keyboard_settings_t settings;
+static ps2_keyboard_driver_settings_t settings;
 static char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
 static ring_buffer_t keyboard_ring_buffer;
 
@@ -40,7 +40,7 @@ static const keyboard_event_t* parse_scancode(byte scancode)
     return &map_scancode_to_event[scancode];
 }
 
-void ps2_keyboard_init(const ps2_keyboard_settings_t* _settings)
+void ps2_keyboard_driver_init(const ps2_keyboard_driver_settings_t* _settings)
 {
     settings = *_settings;
 
@@ -282,7 +282,7 @@ void ps2_keyboard_init(const ps2_keyboard_settings_t* _settings)
     map_scancode_to_event[223]  = (keyboard_event_t) { .event_type = KEYBOARD_INVALID };
 }
 
-void ps2_keyboard_read_and_handle_scancode(void)
+void ps2_keyboard_driver_read_and_handle_scancode(void)
 {
     byte scancode = cpu_io_read_byte(settings.data_port);
     const keyboard_event_t* event = parse_scancode(scancode);
@@ -293,7 +293,7 @@ void ps2_keyboard_read_and_handle_scancode(void)
     }
 }
 
-void ps2_keyboard_read_char(char* c)
+void ps2_keyboard_driver_read_char(char* c)
 {
     while ( ring_buffer_read(&keyboard_ring_buffer, (byte*)c, sizeof(*c)) == 0 )
     {

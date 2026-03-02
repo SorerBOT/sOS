@@ -3,7 +3,7 @@
 #include "include/pic.h"
 #include <console_io.h>
 #include <cpu_io.h>
-#include <ps2_keyboard.h>
+#include <ps2_keyboard_driver.h>
 
 enum
 {
@@ -130,7 +130,7 @@ static void isr_handler_pic_interrupts(const isr_args_t* args)
 
     if ( irq_number == 1 )
     {
-        ps2_keyboard_read_and_handle_scancode();
+        ps2_keyboard_driver_read_and_handle_scancode();
     }
 
 
