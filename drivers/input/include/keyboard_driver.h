@@ -1,7 +1,7 @@
 #ifndef KEYBOARD_DRIVER_H
 #define KEYBOARD_DRIVER_H
 
-#include <keyboard_driver_types.h>
+#include <keyboard_types.h>
 
 /*
  * ----- HARDWARE FACING -----
