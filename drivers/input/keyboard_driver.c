@@ -130,7 +130,7 @@ errors_t keyboard_driver_try_consume_unit(keyboard_unit_t* dst)
             return error;
         }
 
-        if ( is_terminal_event(&current_event) )
+        if ( !is_terminal_event(&current_event) )
         {
             continue;
         }
