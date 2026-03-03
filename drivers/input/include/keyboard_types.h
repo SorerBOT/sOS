@@ -6,7 +6,6 @@
 
 typedef enum
 {
-    KEYBOARD_INVALID,
     KEYBOARD_PRESSED,
     KEYBOARD_RELEASED
 } keyboard_event_type_t;
@@ -199,6 +198,7 @@ typedef struct
         keyboard_action_t action;
     } data;
 } keyboard_unit_t;
+
 
 
 

@@ -9,7 +9,8 @@ typedef enum
 {
     ERRORS_NONE,
     ERRORS_WRITE_NOT_ENOUGH_SPACE,
-    ERRORS_INVALID_PARAMETERS
+    ERRORS_INVALID_PARAMETERS,
+    ERRORS_FAILED,
 } errors_t;
 
 typedef uint8_t byte;

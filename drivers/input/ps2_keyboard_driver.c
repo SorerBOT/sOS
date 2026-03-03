@@ -7,12 +7,13 @@
 #include <cpu_io.h>
 #include <keyboard_driver.h>
 #include <scancode_1.h>
+#include <types.h>
 
-static void parse_scancode(byte scancode, keyboard_event_t* event);
+static errors_t parse_scancode(byte scancode, keyboard_event_t* event);
 
 static ps2_keyboard_driver_settings_t settings;
 
-static void parse_scancode(byte scancode, keyboard_event_t* event)
+static errors_t parse_scancode(byte scancode, keyboard_event_t* event)
 {
     keyboard_keycode_t keycode;
     if ( scancode < SCANCODE_1_EXTENDED_OFFSET )
@@ -21,13 +22,10 @@ static void parse_scancode(byte scancode, keyboard_event_t* event)
             ? KEYBOARD_PRESSED
             : KEYBOARD_RELEASED;
         keycode = map_scancode_to_keycode[scancode];
+        return ERRORS_NONE;
     }
 
-    else
-    {
-        event->type = KEYBOARD_INVALID;
-        event->keycode = KEYBOARD_KEYCODE_INVALID;
-    }
+    return ERRORS_FAILED;
 }
 
 void ps2_keyboard_driver_init(const ps2_keyboard_driver_settings_t* _settings)
@@ -39,6 +37,9 @@ void ps2_keyboard_driver_read_and_handle_scancode(void)
 {
     byte scancode = cpu_io_read_byte(settings.data_port);
     keyboard_event_t event;
-    parse_scancode(scancode, &event);
-    keyboard_driver_record_event(event);
+
+    if ( parse_scancode(scancode, &event) == ERRORS_NONE )
+    {
+        keyboard_driver_record_event(event);
+    }
 }
