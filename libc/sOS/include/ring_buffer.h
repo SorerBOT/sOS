@@ -4,7 +4,6 @@
 #include <types.h>
 
 
-
 typedef struct
 {
     size_t size;
@@ -105,7 +104,7 @@ static inline errors_t ring_buffer_read(ring_buffer_t* ring_buffer, byte* dst, s
 {
     if ( dst_size > ring_buffer_get_content_size(ring_buffer) )
     {
-        return ERRORS_WRITE_NOT_ENOUGH_DATA;
+        return ERRORS_NOT_ENOUGH_DATA;
     }
 
     size_t i = 0;
