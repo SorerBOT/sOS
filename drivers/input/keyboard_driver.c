@@ -24,6 +24,12 @@ void keyboard_driver_record_event(keyboard_event_t event)
     keycode_states[event.keycode] = (event.type == KEYBOARD_PRESSED);
 }
 
+bool keyboard_driver_get_key_state(keyboard_keycode_t keycode)
+{
+    return keycode_states[keycode];
+}
+
+
 void keyboard_driver_read_char(char* c)
 {
     while ( ring_buffer_read(&keyboard_ring_buffer, (byte*)c, sizeof(*c)) == 0 )
