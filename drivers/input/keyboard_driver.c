@@ -1,6 +1,6 @@
-#include "keyboard_types.h"
 #include <keyboard_driver.h>
 #include <ring_buffer.h>
+#include <string.h>
 
 #define KEYBOARD_BUFFER_SIZE 256
 
@@ -29,6 +29,11 @@ bool keyboard_driver_get_key_state(keyboard_keycode_t keycode)
     return keycode_states[keycode];
 }
 
+
+void keyboard_driver_get_all_key_states(bool _keycode_states[KEYBOARD_KEYCODE_COUNT])
+{
+    memcpy(_keycode_states, keycode_states, KEYBOARD_KEYCODE_COUNT);
+}
 
 void keyboard_driver_read_char(char* c)
 {
