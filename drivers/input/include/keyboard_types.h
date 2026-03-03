@@ -15,6 +15,7 @@ typedef enum
 {
     KEYBOARD_KEYCODE_INVALID,
 
+
     /* first row */
     KEYBOARD_KEYCODE_ESC,
     KEYBOARD_KEYCODE_F1,
@@ -106,6 +107,7 @@ typedef enum
     KEYBOARD_KEYCODE_SHIFT_R,
     KEYBOARD_KEYCODE_ARROW_UP,
 
+
     /* sixth row */
     KEYBOARD_KEYCODE_APPLE_FN,
     KEYBOARD_KEYCODE_CONTROL_L,
@@ -119,6 +121,7 @@ typedef enum
     KEYBOARD_KEYCODE_ARROW_LEFT,
     KEYBOARD_KEYCODE_ARROW_DOWN,
     KEYBOARD_KEYCODE_ARROW_RIGHT,
+
 
     /* KEYPAD */
     KEYBOARD_KEYCODE_KEYPAD_ASTRIX,
@@ -135,6 +138,7 @@ typedef enum
     KEYBOARD_KEYCODE_KEYPAD_3,
     KEYBOARD_KEYCODE_KEYPAD_0,
     KEYBOARD_KEYCODE_KEYPAD_DOT,
+
 
     /* MISC */
     KEYBOARD_KEYCODE_MISC_NUM_LOCK,
@@ -167,6 +171,7 @@ typedef enum
 
 typedef enum 
 {
+    KEYBOARD_MODIFIERS_NONE         = 0,
     KEYBOARD_MODIFIERS_SHIFT_L      = (1 << 0),
     KEYBOARD_MODIFIERS_SHIFT_R      = (1 << 1),
     KEYBOARD_MODIFIERS_APPLE_FN     = (1 << 2),
@@ -198,8 +203,5 @@ typedef struct
         keyboard_action_t action;
     } data;
 } keyboard_unit_t;
-
-
-
 
 #endif /* KEYBOARD_TYPES_H */
