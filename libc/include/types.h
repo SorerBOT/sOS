@@ -17,4 +17,6 @@ typedef uint16_t word;
 typedef uint32_t dword;
 typedef uint64_t qword;
 
+typedef uint32_t utf32_t;
+
 #endif /* TYPES_H */

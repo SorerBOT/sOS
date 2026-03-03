@@ -17,7 +17,7 @@ void keyboard_driver_record_event(keyboard_event_t event);
 
 
 /* KERNEL FACING */
-void keyboard_driver_read_char(char* c);
+void keyboard_driver_read_unit(char* c);
 
 
 

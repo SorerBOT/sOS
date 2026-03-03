@@ -2,6 +2,7 @@
 #define KEYBOARD_TYPES_H
 
 #include <stdint.h>
+#include <types.h>
 
 typedef enum
 {
@@ -150,6 +151,55 @@ typedef struct
     keyboard_event_type_t type;
     keyboard_keycode_t keycode;
 } keyboard_event_t;
+
+
+/*
+ * this architecture is explained thoroughly
+ * in the spec. but basically its a terminal
+ * group of keyboard_event_t's, where terminal
+ * means either an ASCII character, or an action
+ * sequence, such as control + a
+ */
+typedef enum
+{
+    KEYBOARD_UNIT_ASCII,
+    KEYBOARD_UNIT_ACTION
+} keyboard_unit_type_t;
+
+typedef enum 
+{
+    KEYBOARD_MODIFIERS_SHIFT_L      = (1 << 0),
+    KEYBOARD_MODIFIERS_SHIFT_R      = (1 << 1),
+    KEYBOARD_MODIFIERS_APPLE_FN     = (1 << 2),
+    KEYBOARD_MODIFIERS_CONTROL_L    = (1 << 3),
+    KEYBOARD_MODIFIERS_CONTROL_R    = (1 << 4),
+    KEYBOARD_MODIFIERS_SUPER_L      = (1 << 5),
+    KEYBOARD_MODIFIERS_SUPER_R      = (1 << 6),
+    KEYBOARD_MODIFIERS_ALT_L        = (1 << 7),
+    KEYBOARD_MODIFIERS_ALT_R        = (1 << 8),
+    KEYBOARD_MODIFIERS_CAPS_LOCK    = (1 << 9),
+    KEYBOARD_MODIFIERS_NUM_LOCK     = (1 << 10),
+} keyboard_modifiers_type_t;
+
+typedef keyboard_modifiers_type_t keyboard_modifiers_state_t;
+
+typedef struct
+{
+    keyboard_modifiers_state_t control_state;
+    keyboard_keycode_t key;
+} keyboard_action_t;
+
+typedef struct
+{
+    keyboard_unit_type_t unit_type;
+    keyboard_event_type_t event_type;
+    union
+    {
+        utf32_t character;
+        keyboard_action_t action;
+    } data;
+} keyboard_unit_t;
+
 
 
 #endif /* KEYBOARD_TYPES_H */
