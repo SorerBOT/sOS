@@ -1,4 +1,3 @@
-#include "keyboard_types.h"
 #include <types.h>
 #include <keyboard_driver.h>
 #include <ring_buffer.h>
@@ -136,6 +135,8 @@ errors_t keyboard_driver_try_consume_unit(keyboard_unit_t* dst)
         }
 
         build_unit(dst, &current_event, modifiers_state);
+
+        return error;
     }
 }
 
