@@ -147,7 +147,7 @@ typedef enum
 
 typedef struct
 {
-    keyboard_event_type_t event_type;
+    keyboard_event_type_t type;
     keyboard_keycode_t keycode;
 } keyboard_event_t;
 
