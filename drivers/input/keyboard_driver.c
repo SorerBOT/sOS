@@ -54,7 +54,7 @@ static void build_unit(keyboard_unit_t* dst,
         dst->unit_type = KEYBOARD_UNIT_ACTION;
         dst->data.action = (keyboard_action_t)
         {
-            .control_state = modifiers_state,
+            .modifiers_state = modifiers_state,
             .key = current_event->keycode
         };
     }

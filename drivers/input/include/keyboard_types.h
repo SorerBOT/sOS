@@ -194,7 +194,7 @@ typedef keyboard_modifiers_type_t keyboard_modifiers_state_t;
 
 typedef struct
 {
-    keyboard_modifiers_state_t control_state;
+    keyboard_modifiers_state_t modifiers_state;
     keyboard_keycode_t key;
 } keyboard_action_t;
 
