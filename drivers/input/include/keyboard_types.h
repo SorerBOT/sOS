@@ -165,7 +165,7 @@ typedef struct
  */
 typedef enum
 {
-    KEYBOARD_UNIT_ASCII,
+    KEYBOARD_UNIT_UNICODE,
     KEYBOARD_UNIT_ACTION
 } keyboard_unit_type_t;
 

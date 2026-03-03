@@ -18,6 +18,55 @@ static ring_buffer_t keyboard_ring_buffer =
     .size = KEYBOARD_BUFFER_SIZE
 };
 
+static bool is_modifier(keyboard_keycode_t keycode);
+static bool is_terminal_event(const keyboard_event_t* event);
+static bool is_action_unit_because_modifiers(keyboard_modifiers_state_t modifiers_state);
+static void build_unit(keyboard_unit_t* dst,
+        const keyboard_event_t* current_event,
+        keyboard_modifiers_state_t modifiers_state);
+
+static bool is_modifier(keyboard_keycode_t keycode)
+{
+    return (mapping_keycode_to_modifier[keycode] != KEYBOARD_MODIFIERS_NONE);
+}
+
+static bool is_terminal_event(const keyboard_event_t* event)
+{
+    return !is_modifier(event->keycode) && event->type == KEYBOARD_PRESSED;
+}
+
+static bool is_action_unit_because_modifiers(keyboard_modifiers_state_t modifiers_state)
+{
+    return
+    (
+        ( modifiers_state & KEYBOARD_MODIFIERS_CONTROL_ANY ) ||
+        ( modifiers_state & KEYBOARD_MODIFIERS_SUPER_ANY )   ||
+        ( modifiers_state & KEYBOARD_MODIFIERS_ALT_ANY )
+    );
+}
+
+static void build_unit(keyboard_unit_t* dst,
+        const keyboard_event_t* current_event,
+        keyboard_modifiers_state_t modifiers_state)
+{
+    dst->event_type = current_event->type;
+    if ( is_action_unit_because_modifiers(modifiers_state) )
+    {
+        dst->unit_type = KEYBOARD_UNIT_ACTION;
+        dst->data.action = (keyboard_action_t)
+        {
+            .control_state = modifiers_state,
+            .key = current_event->keycode
+        };
+    }
+
+    else
+    {
+        dst->unit_type = KEYBOARD_UNIT_UNICODE;
+        dst->data.character = 'A';
+    }
+}
+
 void keyboard_driver_record_event(keyboard_event_t event)
 {
     byte* event_bytes = (byte*) &event;
@@ -39,19 +88,19 @@ void keyboard_driver_get_all_key_states(bool _keycode_states[KEYBOARD_KEYCODE_CO
     memcpy(_keycode_states, keycode_states, KEYBOARD_KEYCODE_COUNT);
 }
 
-errors_t keyboard_driver_try_consume_event(keyboard_event_t* _event)
+errors_t keyboard_driver_try_consume_event(keyboard_event_t* dst)
 {
-    errors_t error = ring_buffer_read(&keyboard_ring_buffer, (byte*) _event, sizeof(*_event));
+    errors_t error = ring_buffer_read(&keyboard_ring_buffer, (byte*) dst, sizeof(*dst));
     if ( error == ERRORS_NONE )
     {
-        keyboard_modifiers_type_t modifier = mapping_keycode_to_modifier[_event->keycode];
+        keyboard_modifiers_type_t modifier = mapping_keycode_to_modifier[dst->keycode];
         if ( modifier != KEYBOARD_MODIFIERS_NONE )
         {
-            if ( _event->type == KEYBOARD_PRESSED )
+            if ( dst->type == KEYBOARD_PRESSED )
             {
                 modifiers_state |= modifier;
             }
-            else if ( _event->type == KEYBOARD_RELEASED )
+            else if ( dst->type == KEYBOARD_RELEASED )
             {
                 modifiers_state &= ~modifier;
             }
@@ -61,9 +110,38 @@ errors_t keyboard_driver_try_consume_event(keyboard_event_t* _event)
     return error;
 }
 
-void keyboard_driver_consume_event(keyboard_event_t* _event)
+void keyboard_driver_consume_event(keyboard_event_t* dst)
 {
-    while ( keyboard_driver_try_consume_event(_event) == ERRORS_NOT_ENOUGH_DATA )
+    while ( keyboard_driver_try_consume_event(dst) == ERRORS_NOT_ENOUGH_DATA )
+    {
+        __asm__ volatile("hlt");
+    }
+}
+
+errors_t keyboard_driver_try_consume_unit(keyboard_unit_t* dst)
+{
+    for (;;)
+    {
+        keyboard_event_t current_event;
+        errors_t error = keyboard_driver_try_consume_event(&current_event);
+
+        if ( error == ERRORS_NOT_ENOUGH_DATA )
+        {
+            return error;
+        }
+
+        if ( is_terminal_event(&current_event) )
+        {
+            continue;
+        }
+
+        build_unit(dst, &current_event, modifiers_state);
+    }
+}
+
+void keyboard_driver_consume_unit(keyboard_unit_t* dst)
+{
+    while ( keyboard_driver_try_consume_unit(dst) == ERRORS_NOT_ENOUGH_DATA )
     {
         __asm__ volatile("hlt");
     }
