@@ -1,3 +1,4 @@
+#include "types.h"
 #include <keyboard_driver.h>
 #include <ring_buffer.h>
 #include <string.h>
@@ -35,15 +36,18 @@ void keyboard_driver_get_all_key_states(bool _keycode_states[KEYBOARD_KEYCODE_CO
     memcpy(_keycode_states, keycode_states, KEYBOARD_KEYCODE_COUNT);
 }
 
+errors_t keyboard_driver_try_read_event(keyboard_event_t* _event)
+{
+    return ring_buffer_read(&keyboard_ring_buffer, (byte*) _event, sizeof(*_event));
+}
 
 void keyboard_driver_read_event(keyboard_event_t* _event)
 {
-    while ( ring_buffer_read(&keyboard_ring_buffer, (byte*) _event, sizeof(*_event)) == ERRORS_NOT_ENOUGH_DATA )
+    while ( keyboard_driver_try_read_event(_event) == ERRORS_NOT_ENOUGH_DATA )
     {
         __asm__ volatile("hlt");
     }
 }
-
 
 void keyboard_driver_read_char(char* c)
 {
