@@ -12,12 +12,12 @@
  * spec
  */
 
-void keyboard_driver_record_event(void);
+void keyboard_driver_record_event(keyboard_event_t event);
 
 
 
 /* KERNEL FACING */
-void ps2_keyboard_driver_read_char(char* c);
+void keyboard_driver_read_char(char* c);
 
 
 
