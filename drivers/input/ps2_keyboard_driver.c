@@ -1,8 +1,3 @@
-/* Im sorta using two namespaces, because KEYBOARD will soon be separated from ps2_keyboard_driver.
- * keyboard will handle a general keypress, without the specifics of how to read the data when using ps2.
- * don't freak out.
- */
-
 #include <ps2_keyboard_driver.h>
 #include <cpu_io.h>
 #include <keyboard_driver.h>
