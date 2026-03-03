@@ -49,6 +49,7 @@ static void build_unit(keyboard_unit_t* dst,
         keyboard_modifiers_state_t modifiers_state)
 {
     dst->event_type = current_event->type;
+
     if ( is_action_unit_because_modifiers(modifiers_state) )
     {
         dst->unit_type = KEYBOARD_UNIT_ACTION;
@@ -133,6 +134,7 @@ errors_t keyboard_driver_try_consume_unit(keyboard_unit_t* dst)
         {
             continue;
         }
+
 
         build_unit(dst, &current_event, modifiers_state);
 

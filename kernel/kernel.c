@@ -1,5 +1,5 @@
 #include <io_setup.h>
-#include <stdbool.h>
+#include <types.h>
 #include <console_io.h>
 #include <interrupts.h>
 #include <keyboard.h>

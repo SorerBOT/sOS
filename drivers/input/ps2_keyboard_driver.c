@@ -10,13 +10,12 @@ static ps2_keyboard_driver_settings_t settings;
 
 static errors_t parse_scancode(byte scancode, keyboard_event_t* event)
 {
-    keyboard_keycode_t keycode;
     if ( scancode < SCANCODE_1_EXTENDED_OFFSET )
     {
         event->type = (scancode < SCANCODE_1_SINGLE_BYTE_MAKE_SCANCODES_COUNT)
             ? KEYBOARD_PRESSED
             : KEYBOARD_RELEASED;
-        keycode = map_scancode_to_keycode[scancode];
+        event->keycode = map_scancode_to_keycode[scancode];
         return ERRORS_NONE;
     }
 
