@@ -35,6 +35,11 @@ static inline errors_t ring_buffer_init(ring_buffer_t* ring_buffer, byte* buffer
     return ERRORS_NONE;
 }
 
+static inline size_t ring_buffer_get_content_size(ring_buffer_t* ring_buffer)
+{
+    return ring_buffer->head - ring_buffer->tail;
+}
+
 static inline size_t ring_buffer_get_remaining_space(ring_buffer_t* ring_buffer)
 {
     return (ring_buffer->size) - (ring_buffer->head - ring_buffer->tail);
@@ -96,8 +101,13 @@ static inline errors_t ring_buffer_try_write(ring_buffer_t* ring_buffer, byte* s
     return ERRORS_NONE;
 }
 
-static inline size_t ring_buffer_read(ring_buffer_t* ring_buffer, byte* dst, size_t dst_size)
+static inline errors_t ring_buffer_read(ring_buffer_t* ring_buffer, byte* dst, size_t dst_size)
 {
+    if ( dst_size > ring_buffer_get_content_size(ring_buffer) )
+    {
+        return ERRORS_WRITE_NOT_ENOUGH_DATA;
+    }
+
     size_t i = 0;
     for (; i < dst_size && !ring_buffer_get_is_empty(ring_buffer);
             ++i, ++ring_buffer->tail)
@@ -105,7 +115,7 @@ static inline size_t ring_buffer_read(ring_buffer_t* ring_buffer, byte* dst, siz
         dst[i] = ring_buffer->buffer[ring_buffer->tail & (ring_buffer->size - 1)];
     }
 
-    return i;
+    return ERRORS_NONE;
 }
 
 #endif /* RING_BUFFER_H */
