@@ -56,10 +56,10 @@ static void shift_shadow_buffer()
 {
     byte* restrict dst;
     byte* restrict src;
-    for (size_t i = 0; i < VGA_DRIVER_SHADOW_HEIGHT - 1; ++i)
+    for (size_t i = 1; i < VGA_DRIVER_SHADOW_HEIGHT - 1; ++i)
     {
-        dst = shadow_buffer + i * VGA_DRIVER_LINE_SIZE;
-        src = shadow_buffer + (i+1) * VGA_DRIVER_LINE_SIZE;
+        dst = shadow_buffer + (i-1) * VGA_DRIVER_LINE_SIZE;
+        src = shadow_buffer + (i) * VGA_DRIVER_LINE_SIZE;
         memcpy(dst, src, VGA_DRIVER_LINE_SIZE);
     }
 
