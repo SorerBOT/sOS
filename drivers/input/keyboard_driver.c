@@ -62,7 +62,7 @@ static utf32_t transform_to_unicode(keyboard_modifiers_state_t modifiers_state, 
 
     if ( is_shifted && is_alted )
     {
-        return keyboard_layout->map_shifted[keycode];
+        return keyboard_layout->map_shifted_alted[keycode];
     }
 
     if ( is_shifted )
