@@ -3,8 +3,7 @@
 
 #include <keyboard_types.h>
 
-
-void keyboard_manager_set_layout(const keyboard_layout_t* layout);
+void keyboard_manager_set_layout(keyboard_layout_type_t layout_type);
 
 
 

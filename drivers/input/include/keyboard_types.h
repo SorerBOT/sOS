@@ -213,9 +213,15 @@ typedef struct
 /*  ------KEYBOARD LAYOUTS------*/
 typedef struct
 {
-    utf32_t map_normal;
-    utf32_t map_shifted;
-    utf32_t map_alted;
+    utf32_t map_normal[KEYBOARD_KEYCODE_COUNT];
+    utf32_t map_shifted[KEYBOARD_KEYCODE_COUNT];
+    utf32_t map_alted[KEYBOARD_KEYCODE_COUNT];
 } keyboard_layout_t;
+
+typedef enum
+{
+    KEYBOARD_LAYOUT_US_QWERTY,
+    KEYBOARD_LAYOUT_COUNT
+} keyboard_layout_type_t;
 
 #endif /* KEYBOARD_TYPES_H */
