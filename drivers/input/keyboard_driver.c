@@ -3,18 +3,18 @@
 #include <ring_buffer.h>
 #include <string.h>
 
-#define KEYBOARD_BUFFER_SIZE 256
+#define KEYBOARD_DRIVER_BUFFER_SIZE 256
 
 static keyboard_modifiers_state_t modifiers_state = 0;
 static keyboard_modifiers_state_t mapping_keycode_to_modifier[KEYBOARD_KEYCODE_COUNT];
 static bool keycode_states[KEYBOARD_KEYCODE_COUNT] = { false };
-static keyboard_event_t keyboard_buffer[KEYBOARD_BUFFER_SIZE];
+static keyboard_event_t keyboard_buffer[KEYBOARD_DRIVER_BUFFER_SIZE];
 static ring_buffer_t keyboard_ring_buffer =
 {
     .buffer = (byte*) &keyboard_buffer[0],
     .head = 0,
     .tail = 0,
-    .size = KEYBOARD_BUFFER_SIZE
+    .size = KEYBOARD_DRIVER_BUFFER_SIZE
 };
 
 static bool is_modifier(keyboard_keycode_t keycode);
@@ -36,12 +36,14 @@ static bool is_terminal_event(const keyboard_event_t* event)
 
 static bool is_action_unit_because_modifiers(keyboard_modifiers_state_t modifiers_state)
 {
-    return
-    (
-        ( modifiers_state & KEYBOARD_MODIFIERS_CONTROL_ANY ) ||
-        ( modifiers_state & KEYBOARD_MODIFIERS_SUPER_ANY )   ||
-        ( modifiers_state & KEYBOARD_MODIFIERS_ALT_ANY )
-    );
+    return (
+            modifiers_state & 
+            (
+             KEYBOARD_MODIFIERS_CONTROL_ANY |
+             KEYBOARD_MODIFIERS_SUPER_ANY   |
+             KEYBOARD_MODIFIERS_ALT_ANY
+            )
+           ) != 0;
 }
 
 static void build_unit(keyboard_unit_t* dst,
@@ -134,7 +136,6 @@ errors_t keyboard_driver_try_consume_unit(keyboard_unit_t* dst)
         {
             continue;
         }
-
 
         build_unit(dst, &current_event, modifiers_state);
 
