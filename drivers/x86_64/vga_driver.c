@@ -82,7 +82,7 @@ void vga_driver_flush_shadow_buffer()
         : 0;
 
     byte* address_to_read_from = ((byte*) shadow_buffer) + line_to_read_from * VGA_DRIVER_LINE_SIZE;
-    size_t len = VGA_DRIVER_SIZE;
+    size_t len = writable_lines_count * VGA_DRIVER_LINE_SIZE;
     memcpy_to_volatile(buffer_address, address_to_read_from, len);
 }
 
