@@ -169,9 +169,17 @@ void isr_handler(isr_args_t* args)
             break;
         case ISR_PAGE_FAULT:
             isr_handler_page_fault(args);
+            while (1)
+            {
+                __asm__ volatile("cli; hlt");
+            }
             break;
         case ISR_GENERAL_PROTECTION_FAULT:
             isr_handler_general_protection_fault(args);
+            while (1)
+            {
+                __asm__ volatile("cli; hlt");
+            }
             break;
     }
 }
