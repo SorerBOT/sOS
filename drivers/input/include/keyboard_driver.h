@@ -26,6 +26,6 @@ void keyboard_driver_consume_event(keyboard_event_t* dst);
 errors_t keyboard_driver_try_consume_unit(keyboard_unit_t* unit);
 void keyboard_driver_consume_unit(keyboard_unit_t* unit);
 
-
+void keyboard_driver_set_layout(const keyboard_layout_t* layout);
 
 #endif /* KEYBOARD_DRIVER_H */

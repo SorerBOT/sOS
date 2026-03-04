@@ -210,4 +210,12 @@ typedef struct
     } data;
 } keyboard_unit_t;
 
+/*  ------KEYBOARD LAYOUTS------*/
+typedef struct
+{
+    utf32_t map_normal;
+    utf32_t map_shifted;
+    utf32_t map_alted;
+} keyboard_layout_t;
+
 #endif /* KEYBOARD_TYPES_H */

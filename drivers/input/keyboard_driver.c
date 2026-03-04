@@ -5,6 +5,7 @@
 
 #define KEYBOARD_DRIVER_BUFFER_SIZE 256
 
+static const keyboard_layout_t* keyboard_layout = NULL;
 static keyboard_modifiers_state_t modifiers_state = 0;
 static keyboard_modifiers_state_t mapping_keycode_to_modifier[KEYBOARD_KEYCODE_COUNT];
 static bool keycode_states[KEYBOARD_KEYCODE_COUNT] = { false };
@@ -151,12 +152,9 @@ void keyboard_driver_consume_unit(keyboard_unit_t* dst)
     }
 }
 
-void keyboard_driver_read_char(char* c)
+void keyboard_driver_set_layout(const keyboard_layout_t* layout)
 {
-    while ( ring_buffer_read(&keyboard_ring_buffer, (byte*)c, sizeof(*c)) == 0 )
-    {
-        __asm__ volatile("hlt");
-    }
+    keyboard_layout = layout;
 }
 
 
