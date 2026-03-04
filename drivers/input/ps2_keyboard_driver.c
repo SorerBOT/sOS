@@ -40,12 +40,24 @@ static inline errors_t handle_state_normal(byte scancode, keyboard_event_t* even
         return ERRORS_NONE;
     }
 
-    return ERRORS_FAILED;
+    return ERRORS_INVALID_PARAMETERS;
 }
 
 static inline errors_t handle_state_extended(byte scancode, keyboard_event_t* event)
 {
-    return ERRORS_FAILED;
+    if ( scancode <= SCANCODE_1_EXTENDED_MAX_SCANCODE )
+    {
+        event->type = (scancode < SCANCODE_1_EXTENDED_MAKE_SCANCODES_COUNT)
+            ? KEYBOARD_PRESSED
+            : KEYBOARD_RELEASED;
+
+        byte make_scancode = scancode & ~SCANCODE_1_NORMAL_MAKE_SCANCODES_COUNT;
+        event->keycode = map_normal_scancode_to_keycode[make_scancode];
+
+        return ERRORS_NONE;
+    }
+
+    return ERRORS_INVALID_PARAMETERS;
 }
 
 static inline errors_t consume_scancode(byte scancode, keyboard_event_t* event)

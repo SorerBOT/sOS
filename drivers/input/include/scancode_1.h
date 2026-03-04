@@ -1,12 +1,13 @@
 #ifndef SCANCODE_1_H
 #define SCANCODE_1_H
 
-#include "keyboard_types.h"
+#include <keyboard_types.h>
 #include <keyboard_driver.h>
 
 #define SCANCODE_1_NORMAL_MAKE_SCANCODES_COUNT 0x80
 #define SCANCODE_1_EXTENDED_MAKE_SCANCODES_COUNT 0x80
 #define SCANCODE_1_EXTENDED_OFFSET 0xE0
+#define SCANCODE_1_EXTENDED_MAX_SCANCODE 0xED
 
 static keyboard_keycode_t map_normal_scancode_to_keycode[SCANCODE_1_NORMAL_MAKE_SCANCODES_COUNT] =
 {
