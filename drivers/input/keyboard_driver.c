@@ -1,3 +1,4 @@
+#include <keyboard_types.h>
 #include <types.h>
 #include <keyboard_driver.h>
 #include <ring_buffer.h>
@@ -21,6 +22,8 @@ static ring_buffer_t keyboard_ring_buffer =
 static bool is_modifier(keyboard_keycode_t keycode);
 static bool is_terminal_event(const keyboard_event_t* event);
 static bool is_action_unit_because_modifiers(keyboard_modifiers_state_t modifiers_state);
+static utf32_t transform_to_unicode(keyboard_modifiers_state_t modifiers_state, keyboard_keycode_t keycode);
+
 static void build_unit(keyboard_unit_t* dst,
         const keyboard_event_t* current_event,
         keyboard_modifiers_state_t modifiers_state);
@@ -47,6 +50,34 @@ static bool is_action_unit_because_modifiers(keyboard_modifiers_state_t modifier
            ) != 0;
 }
 
+static utf32_t transform_to_unicode(keyboard_modifiers_state_t modifiers_state, keyboard_keycode_t keycode)
+{
+    bool is_alted = modifiers_state & KEYBOARD_MODIFIERS_ALT_R;
+    bool is_shifted = modifiers_state & KEYBOARD_MODIFIERS_CAPS_LOCK;
+
+    if ( modifiers_state & KEYBOARD_MODIFIERS_SHIFT_ANY )
+    {
+        is_shifted = !is_shifted;
+    }
+
+    if ( is_shifted && is_alted )
+    {
+        return keyboard_layout->map_shifted[keycode];
+    }
+
+    if ( is_shifted )
+    {
+        return keyboard_layout->map_shifted[keycode];
+    }
+
+    if ( is_alted )
+    {
+        return keyboard_layout->map_alted[keycode];
+    }
+
+    return keyboard_layout->map_normal[keycode];
+}
+
 static void build_unit(keyboard_unit_t* dst,
         const keyboard_event_t* current_event,
         keyboard_modifiers_state_t modifiers_state)
@@ -61,12 +92,26 @@ static void build_unit(keyboard_unit_t* dst,
             .modifiers_state = modifiers_state,
             .key = current_event->keycode
         };
+        return;
+    }
+
+    utf32_t character = transform_to_unicode(modifiers_state, current_event->keycode);
+    if ( character != KEYBOARD_NON_RESOLVABLE_UNICODE )
+    {
+        dst->unit_type = KEYBOARD_UNIT_UNICODE;
+        dst->data.character = character;
+        return;
     }
 
     else
     {
-        dst->unit_type = KEYBOARD_UNIT_UNICODE;
-        dst->data.character = 'A';
+        dst->unit_type = KEYBOARD_UNIT_ACTION;
+        dst->data.action = (keyboard_action_t)
+        {
+            .modifiers_state = modifiers_state,
+            .key = current_event->keycode
+        };
+        return;
     }
 }
 

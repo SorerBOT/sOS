@@ -3,6 +3,8 @@
 #include <console_io.h>
 #include <interrupts.h>
 #include <keyboard.h>
+#include "keyboard_manager/include/keyboard_manager.h"
+#include <keyboard_types.h>
 
 void kernel()
 {
@@ -13,6 +15,8 @@ void kernel()
 
     __asm__ volatile ("int $3");
     console_io_report("finished handling a breakpoint interrupt. kernel took back control...", CONSOLE_IO_SUCCESS);
+
+    keyboard_manager_set_layout(KEYBOARD_LAYOUT_US_QWERTY);
 
     for (;;)
     {
