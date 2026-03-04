@@ -15,7 +15,10 @@ static errors_t parse_scancode(byte scancode, keyboard_event_t* event)
         event->type = (scancode < SCANCODE_1_SINGLE_BYTE_MAKE_SCANCODES_COUNT)
             ? KEYBOARD_PRESSED
             : KEYBOARD_RELEASED;
-        event->keycode = map_scancode_to_keycode[scancode];
+
+        byte make_scancode = scancode & ~SCANCODE_1_SINGLE_BYTE_MAKE_SCANCODES_COUNT;
+        event->keycode = map_scancode_to_keycode[make_scancode];
+
         return ERRORS_NONE;
     }
 
