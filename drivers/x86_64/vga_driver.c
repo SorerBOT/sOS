@@ -42,6 +42,7 @@ static inline void carriage_return()
 {
     offset = 0;
 }
+
 static inline void line_feed()
 {
     ++shadow_line;
@@ -80,7 +81,7 @@ void vga_driver_flush_shadow_buffer()
         ? shadow_line - writable_lines_count + 1
         : 0;
 
-    byte* address_to_read_from = shadow_buffer + line_to_read_from * VGA_DRIVER_LINE_SIZE;
+    byte* address_to_read_from = ((byte*) shadow_buffer) + line_to_read_from * VGA_DRIVER_LINE_SIZE;
     size_t len = VGA_DRIVER_SIZE;
     memcpy_to_volatile(buffer_address, address_to_read_from, len);
 }
