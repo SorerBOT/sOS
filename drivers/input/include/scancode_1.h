@@ -6,7 +6,7 @@
 #define SCANCODE_1_SINGLE_BYTE_MAKE_SCANCODES_COUNT 0x80
 #define SCANCODE_1_EXTENDED_OFFSET 0xE0
 
-static keyboard_keycode_t map_scancode_to_keycode[SCANCODE_1_SINGLE_BYTE_MAKE_SCANCODES_COUNT] =
+static keyboard_keycode_t map_normal_scancode_to_keycode[SCANCODE_1_SINGLE_BYTE_MAKE_SCANCODES_COUNT] =
 {
     [0x00] = KEYBOARD_KEYCODE_INVALID,
     [0x01] = KEYBOARD_KEYCODE_ESC,
