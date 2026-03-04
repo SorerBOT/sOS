@@ -45,7 +45,7 @@ static bool is_action_unit_because_modifiers(keyboard_modifiers_state_t modifier
             (
              KEYBOARD_MODIFIERS_CONTROL_ANY |
              KEYBOARD_MODIFIERS_SUPER_ANY   |
-             KEYBOARD_MODIFIERS_ALT_ANY
+             KEYBOARD_MODIFIERS_ALT_L
             )
            ) != 0;
 }
