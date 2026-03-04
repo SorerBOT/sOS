@@ -55,9 +55,9 @@ static inline void line_feed()
 
 static void shift_shadow_buffer()
 {
-    byte* restrict dst;
-    byte* restrict src;
-    for (size_t i = 1; i < VGA_DRIVER_SHADOW_HEIGHT - 1; ++i)
+    byte* dst;
+    byte* src;
+    for (size_t i = 1; i < VGA_DRIVER_SHADOW_HEIGHT; ++i)
     {
         dst = shadow_buffer + (i-1) * VGA_DRIVER_LINE_SIZE;
         src = shadow_buffer + (i) * VGA_DRIVER_LINE_SIZE;
@@ -65,7 +65,7 @@ static void shift_shadow_buffer()
     }
 
     word* last_line_word = (word*) src;
-    memset_word(last_line_word, VGA_DRIVER_SPACE_AND_DEFAULT_COLOR, VGA_DRIVER_LINE_SIZE);
+    memset_word(last_line_word, VGA_DRIVER_SPACE_AND_DEFAULT_COLOR, VGA_DRIVER_LINE_SIZE / 2);
 }
 
 static inline void init_shadow_buffer()
