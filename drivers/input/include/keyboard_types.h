@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <types.h>
 
+#define KEYBOARD_NON_RESOLVABLE_UNICODE '\0'
+
 typedef enum
 {
     KEYBOARD_PRESSED,
