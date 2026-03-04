@@ -218,6 +218,7 @@ typedef struct
     utf32_t map_normal[KEYBOARD_KEYCODE_COUNT];
     utf32_t map_shifted[KEYBOARD_KEYCODE_COUNT];
     utf32_t map_alted[KEYBOARD_KEYCODE_COUNT];
+    utf32_t map_shifted_alted[KEYBOARD_KEYCODE_COUNT];
 } keyboard_layout_t;
 
 typedef enum
