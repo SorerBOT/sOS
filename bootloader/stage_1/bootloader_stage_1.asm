@@ -6,9 +6,6 @@
 ;           terminate with the magic number: 0x55AA (big endian).
 ;   - BIOS copy these 512 bytes to address 0x7c00 and JMP to it
 ;   - This is where our bootloader comes to life.
-[BITS 16]               ; setting 16-bit mode
-[ORG 0x7C00]
-
 %define CRLF 0x0D, 0x0A
 
 %define BIOS_INT_PRINT 0x10
@@ -21,7 +18,11 @@
 %define REPORT_FAILURE_PREFIX "[ FAILURE ] "
 %define REPORT_SUCCESS_PREFIX "[ SUCCESS ] "
 
+%define STAGE_2_ORG 0x7C00
 %define STAGE_2_ORG 0x7E00
+
+[BITS 16]
+[ORG STAGE_1_ORG]
 
 start:
 ; We want to ensure CS=0, to change it (or keep it as is) we perform a far jump
@@ -34,10 +35,10 @@ main:
     xor ax, ax
 
 ; defining the stack to be before stage 1 code.
-; since it grows backwards, we can set it to 0x7C00
+; since it grows backwards, we can set it to STAGE_1_ORG
     mov ss, ax
-    mov sp, 0x7C00
-    mov bp, 0x7C00
+    mov sp, STAGE_1_ORG
+    mov bp, STAGE_1_ORG
 
 ; Zero-ing some segment pointers
     mov ds, ax
@@ -100,7 +101,7 @@ DAP:
     dw 0x0020           ; Number of sectors to read
 
                         ; RAM address to write to is represented by (Segment * 16) + Offset
-    dw 0x7E00           ; Offset, directly after stage 1 which is at 0x7C00
+    dw STAGE_2_ORG      ; Offset, directly after stage 1 which is at STAGE_1_ORG
     dw 0x0000           ; Segment
 
     dq 0x00000001       ; Disk sector to read from, each sector is 512 bytes.
