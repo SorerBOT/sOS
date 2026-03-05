@@ -1,3 +1,20 @@
+%define CRLF 0x0D, 0x0A
+%define OS_STATUS "[sOS]"
+%define GDT_BASE_ADDRESS
+%define GDT_SEGMENT_DATA_SELECTOR 0x08
+%define GDT_SEGMENT_CODE_SELECTOR 0x10
+
+%define REPORT_FAILURE_PREFIX "[ FAILURE ] "
+%define REPORT_SUCCESS_PREFIX "[ SUCCESS ] "
+
+%define BIOS_INT_PRINT 0x10
+%define BIOS_FUNC_PRINT_CHAR 0x0E
+
+%define BIOS_INT_DISK 0x13
+%define BIOS_FUNC_DISK_READ 0x42
+
+%define STAGE_1_ORG 0x7C00
+
 [BITS 16]
 
 global GDT_HEADER
@@ -6,38 +23,51 @@ global BASE_PAGE_TABLE_ADDRESS
 extern page_table_setup
 extern update_gdt
 
-%define CRLF 0x0D, 0x0A
-%define OS_STATUS "[sOS]"
-%define GDT_BASE_ADDRESS
-%define GDT_SEGMENT_DATA_SELECTOR 0x08
-%define GDT_SEGMENT_CODE_SELECTOR 0x10
-
 start:
     xor ax, ax
     mov ds, ax
 
 
+stack_setup:
+    mov ss, ax
+    mov sp, STAGE_1_ORG
+    mov bp, STAGE_1_ORG
+
+print_stage_1_completed:
+    mov si, STAGE_1_COMPLETED_MSG
+    call print_msg
+
 load_kernel:
     mov si, DAP
-    mov ah, 0x42
-    int 0x13            ; First BIOS call to store stage 2 (16KiB) at 0x7E00.
-    jc error            ; CF==1 means that an error has occurred.
+    mov ah, BIOS_FUNC_DISK_READ
+    int BIOS_INT_DISK   ; First BIOS call to store stage 2 (16KiB) at 0x7E00.
+    jc fail_read_disk   ; CF==1 means that an error has occurred.
     jmp stage_2_after_loading_kernel
+
+fail_read_disk:
+    mov si, FAIL_READ_DISK_MSG
+    call print_msg
+    jmp error
+
+print_msg:
+    mov al, [si]
+    test al, al
+    jz print_msg_finished
+    mov ah, BIOS_FUNC_PRINT_CHAR
+    int BIOS_INT_PRINT
+    inc si
+    jmp print_msg
+
+print_msg_finished:
+    ret
 
 error:
     jmp $               ; infinite loop. I use it to keep QEMU open
 
 stage_2_after_loading_kernel:
     mov si, msg_stage_2
-print_msg:
-    mov al, [si]
-    test al, al
-    jz print_msg_finished
-    mov ah, 0x0E            ; BIOS interrupt for printing a character
-    int 0x10
-    inc si
-    jmp print_msg
-print_msg_finished:
+    call print_msg
+
 prepare_protected_mode:
     cli                     ; disabling interrupts
 
@@ -98,7 +128,11 @@ GDT_HEADER:
     dd GDT_START                ; base: the base address of the GDT
 
 msg_stage_2 db OS_STATUS, ": booting...", CRLF, OS_STATUS, ": stage 1 completed...", CRLF, OS_STATUS, ": running stage 2...", 0
+STAGE_1_COMPLETED_MSG:
+    db REPORT_SUCCESS_PREFIX, "stage 1 completed...", CRLF, 0
 
+FAIL_READ_DISK_MSG:
+    db REPORT_FAILURE_PREFIX, "Couldn't read from disk.", CRLF, 0
 
 [BITS 32]
 
