@@ -18,7 +18,7 @@
 %define REPORT_FAILURE_PREFIX "[ FAILURE ] "
 %define REPORT_SUCCESS_PREFIX "[ SUCCESS ] "
 
-%define STAGE_2_ORG 0x7C00
+%define STAGE_1_ORG 0x7C00
 %define STAGE_2_ORG 0x7E00
 
 [BITS 16]
@@ -62,11 +62,10 @@ load_stage_2:
     mov ah, BIOS_FUNC_DISK_READ
     int BIOS_INT_DISK   ; First BIOS call to store stage 2 (16KiB) at 0x7E00.
     jc failed_read_disk ; CF==1 means that an error has occurred.
-    mov si, SUCCESS_LBA_SUPPORT_MSG
     jmp STAGE_2_ORG     ; jump to the RAM address where we loaded the code
 
 failed_read_disk:
-    mov si, FAIL_READ_DISK
+    mov si, FAIL_READ_DISK_MSG
     call print_msg
     jmp error
 
@@ -112,7 +111,7 @@ FAIL_LBA_SUPPORT_MSG:
     db REPORT_FAILURE_PREFIX, "No LBA support.", CRLF, 0
 SUCCESS_LBA_SUPPORT_MSG:
     db REPORT_SUCCESS_PREFIX, "LBA support verified.", CRLF, 0
-FAIL_READ_DISK:
+FAIL_READ_DISK_MSG:
     db REPORT_FAILURE_PREFIX, "Couldn't read from disk.", CRLF, 0
 
 
