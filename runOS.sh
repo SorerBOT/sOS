@@ -11,6 +11,7 @@ BIN_64_BIT_DIR="$BIN_DIR/64-bit"
 BOOTLOADER_DIR="bootloader"
 STAGE_1="$BOOTLOADER_DIR/stage_1/bootloader_stage_1"
 STAGE_2="$BOOTLOADER_DIR/stage_2/bootloader_stage_2"
+STAGE_1_SIZE_MAX=0x200 # 512 bytes
 BOOTLOADER_SIZE_MAX=0x8400 # 32.5KiB + 512 bytes = 33 KiB
 
 KERNEL_DIR="kernel"
@@ -34,8 +35,17 @@ make -f $MAKEFILE_KERNEL "$BIN_64_BIT_DIR/$KERNEL.bin"
 
 cat "$BIN_16_BIT_DIR/$STAGE_1.bin" "$BIN_32_BIT_DIR/$STAGE_2.bin" > "$BIN_DIR/$OS_IMG.bin"
 
-BOOTLOADER_SIZE=$(wc -c < "$BIN_DIR/$OS_IMG.bin")
 echo "Bootloader built successfully..."
+STAGE_1_SIZE=$(wc -c < "$BIN_16_BIT_DIR/$STAGE_1.bin")
+if (( STAGE_1_SIZE > STAGE_1_SIZE_MAX )); then
+    echo "Stage 1 size: $STAGE_1_SIZE, exceeds allowed size of $STAGE_1_SIZE_MAX bytes. Bloat!"
+    exit 1
+else
+    echo "Stage 1 size: $STAGE_1_SIZE is OK."
+fi
+
+
+BOOTLOADER_SIZE=$(wc -c < "$BIN_DIR/$OS_IMG.bin")
 if (( BOOTLOADER_SIZE > BOOTLOADER_SIZE_MAX )); then
     echo "Bootloader size: $BOOTLOADER_SIZE, exceeds allowed size of 33KiB bytes. It's time to make the BIOS load more code in stage 1..."
     exit 1
