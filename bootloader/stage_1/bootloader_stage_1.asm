@@ -44,7 +44,6 @@ main:
     mov es, ax
     mov gs, ax
 
-
 ; I want to use LBA addressing
 check_bios_support_lba_addressing:
     mov ah, BIOS_FUNC_CHECK_LBA_SUPPORT
@@ -53,16 +52,7 @@ check_bios_support_lba_addressing:
 
 success_check_bios_support_lba_addressing:
     mov si, SUCCESS_LBA_SUPPORT_MSG
-.print_msg:
-    mov al, [si]
-    test al, al
-    jz .print_finished
-    mov ah, BIOS_FUNC_PRINT_CHAR
-    int BIOS_INT_PRINT
-    inc si
-    jmp .print_msg
-    
-.print_finished:
+    call print_msg
     jmp load_stage_2
 
 load_stage_2:
@@ -71,37 +61,30 @@ load_stage_2:
     mov ah, BIOS_FUNC_DISK_READ
     int BIOS_INT_DISK   ; First BIOS call to store stage 2 (16KiB) at 0x7E00.
     jc failed_read_disk ; CF==1 means that an error has occurred.
+    mov si, SUCCESS_LBA_SUPPORT_MSG
     jmp STAGE_2_ORG     ; jump to the RAM address where we loaded the code
 
 failed_read_disk:
     mov si, FAIL_READ_DISK
-.print_msg:
-    mov al, [si]
-    test al, al
-    jz .print_finished
-    mov ah, BIOS_FUNC_PRINT_CHAR
-    int BIOS_INT_PRINT
-    inc si
-    jmp .print_msg
-
-.print_finished:
-    jmp error 
-
-
+    call print_msg
+    jmp error
 
 failed_check_bios_support_lba_addressing:
     mov si, FAIL_LBA_SUPPORT_MSG
-.print_msg:
+    call print_msg
+    jmp error
+
+
+print_msg:
     mov al, [si]
     test al, al
-    jz .print_finished
+    jz print_finished
     mov ah, BIOS_FUNC_PRINT_CHAR
     int BIOS_INT_PRINT
     inc si
-    jmp .print_msg
-    
-.print_finished:
-    jmp error
+    jmp print_msg    
+print_finished:
+    ret
 
 error:
     hlt
