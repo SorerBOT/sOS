@@ -1,12 +1,10 @@
 [BITS 16]
 
-global start
 global GDT_HEADER
 global BASE_PAGE_TABLE_ADDRESS
 
 extern page_table_setup
 extern update_gdt
-;extern kernel
 
 %define CRLF 0x0D, 0x0A
 %define OS_STATUS "[sOS]"
@@ -17,20 +15,9 @@ extern update_gdt
 start:
     xor ax, ax
     mov ds, ax
-align 4                 ; Just to be safe, align on 4-byte boundary
-DAP:
-    db 0x10             ; Packet Size, this tells the BIOS what version of DAP struct we're using
-    db 0x00             ; Padding byte. Needs to be reset to 0 if ran in a loop
-    dw 0x0040           ; Number of sectors to read
 
-                        ; RAM address to write to is represented by (Segment * 16) + Offset
-    dw 0x0000           ; Offset, directly after 16KiB
-    dw 0x1000           ; Segment this is exactly 16 KiB.
 
-    dq 0x00000042       ; Disk sector to read from, each sector is 512 bytes.
-                        ; the first one contains stage 1, the next 32 contian stage 2
-                        ; and afterwards its the kernel
-
+load_kernel:
     mov si, DAP
     mov ah, 0x42
     int 0x13            ; First BIOS call to store stage 2 (16KiB) at 0x7E00.
@@ -71,6 +58,19 @@ prepare_protected_mode:
 ; THE LEAP OF FAITH (WEARING THE PROTECTION)
     jmp GDT_SEGMENT_CODE_SELECTOR:protected_mode_start
 
+align 4                 ; Just to be safe, align on 4-byte boundary
+DAP:
+    db 0x10             ; Packet Size, this tells the BIOS what version of DAP struct we're using
+    db 0x00             ; Padding byte. Needs to be reset to 0 if ran in a loop
+    dw 0x0040           ; Number of sectors to read
+
+                        ; RAM address to write to is represented by (Segment * 16) + Offset
+    dw 0x0000           ; Offset, directly after 16KiB
+    dw 0x1000           ; Segment this is exactly 16 KiB.
+
+    dq 0x00000042       ; Disk sector to read from, each sector is 512 bytes.
+                        ; the first one contains stage 1, the next 32 contian stage 2
+                        ; and afterwards its the kernel
 align 8
 GDT_START:
 GDT_DATA:
