@@ -4,13 +4,11 @@
 #include <scancode_1.h>
 #include <types.h>
 
-
 typedef enum
 {
     PS2_KEYBOARD_DRIVER_NORMAL,
     PS2_KEYBOARD_DRIVER_EXTENDED
 } ps2_keyboard_driver_state_type_t;
-
 
 static ps2_keyboard_driver_settings_t settings;
 static ps2_keyboard_driver_state_type_t current_state = PS2_KEYBOARD_DRIVER_NORMAL;
@@ -45,6 +43,8 @@ static inline errors_t handle_state_normal(byte scancode, keyboard_event_t* even
 
 static inline errors_t handle_state_extended(byte scancode, keyboard_event_t* event)
 {
+    current_state = PS2_KEYBOARD_DRIVER_NORMAL;
+
     if ( scancode <= SCANCODE_1_EXTENDED_MAX_SCANCODE )
     {
         event->type = (scancode < SCANCODE_1_EXTENDED_MAKE_SCANCODES_COUNT)
