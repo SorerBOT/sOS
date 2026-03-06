@@ -108,11 +108,11 @@ DAP:
 
 
 FAIL_LBA_SUPPORT_MSG:
-    db REPORT_FAILURE_PREFIX, "No LBA support.", CRLF, 0
+    db REPORT_FAILURE_PREFIX, "no LBA support.", CRLF, 0
 SUCCESS_LBA_SUPPORT_MSG:
     db REPORT_SUCCESS_PREFIX, "LBA support verified.", CRLF, 0
 FAIL_READ_DISK_MSG:
-    db REPORT_FAILURE_PREFIX, "Couldn't read from disk.", CRLF, 0
+    db REPORT_FAILURE_PREFIX, "couldn't read from disk.", CRLF, 0
 
 
 ; Adding the magic number at the end of the 512 bytes indicates that this is a bootloader
