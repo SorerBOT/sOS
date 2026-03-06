@@ -6,6 +6,7 @@
 
 %define REPORT_FAILURE_PREFIX "[ FAILURE ] "
 %define REPORT_SUCCESS_PREFIX "[ SUCCESS ] "
+%define REPORT_MSG_PREFIX   "[ MESSAGE ] "
 
 %define BIOS_INT_PRINT 0x10
 %define BIOS_FUNC_PRINT_CHAR 0x0E
@@ -43,6 +44,10 @@ start:
     call load_kernel
     call enable_a20_fastgate
     call setup_gdt
+
+    mov si, INFO_JUMPING_TO_PROTECTED_MODE_MSG
+    call print_msg
+
     jmp enable_and_jump_to_protected_mode
 
 load_kernel:
@@ -106,8 +111,6 @@ enable_and_jump_to_protected_mode:
     jmp GDT_SEGMENT_CODE_SELECTOR:protected_mode_start
 
 
-
-
 align 4                 ; Just to be safe, align on 4-byte boundary
 DAP:
     db 0x10             ; Packet Size, this tells the BIOS what version of DAP struct we're using
@@ -162,16 +165,18 @@ SUCCESS_ENABLE_A20_MSG:
 SUCCESS_SETUP_GDT_MSG:
     db REPORT_SUCCESS_PREFIX, "finished setting up gdt.", CRLF, 0
 
+INFO_JUMPING_TO_PROTECTED_MODE_MSG:
+    db REPORT_MSG_PREFIX, "jumping to protected mode.", CRLF, 0
 
 
 [BITS 32]
 
 %define LONG_MODE_MSR 0xC0000080
 %define KERNEL_ORG 0x10000
+%define CONSOLE_IO_SUCCESS 0
+%define CONSOLE_IO_FAILURE 1
 
-BASE_PAGE_TABLE_ADDRESS:
-    dd 0x1000000
-
+extern console_io_report
 
 ; FOR THE TIME BEING, I DON'T CHECK WHETHER LONG MODE IS AVAILABLE.
 ; I KNOW THAT IT IS ON MY HARDWARE, AND I CARE MUCH MORE ABOUT MAKING
@@ -179,7 +184,7 @@ BASE_PAGE_TABLE_ADDRESS:
 protected_mode_start:
     cld ; CLEARING DIRECTION FLAG
 
-    cli ; DISABLING INTERRUPTS (GOIGN TO SET STACK SEGMENT)
+    cli ; DISABLING INTERRUPTS (GOING TO SET STACK SEGMENT)
 
 ; MAKING ALL SEGMENTS POINT TO THE GDT ENTRY OF THE DATA SEGMENT
     mov ax, GDT_SEGMENT_DATA_SELECTOR
@@ -197,9 +202,7 @@ protected_mode_start:
     call page_table_setup
     call update_gdt
 
-; TELLING THE CPU WHERE THE PAGE TABLE IS
-    mov eax, [BASE_PAGE_TABLE_ADDRESS] 
-    mov cr3, eax
+    call load_page_table
 
 ; TELLING THE CPU THAT I WANNA USE PAE PAGING (ONLY TAKES EFFECT WHEN PAGING WOULD BE ENABLED)
     mov eax, cr4
@@ -220,6 +223,26 @@ protected_mode_start:
 
 ; FAR JUMP, THE LEAP OF FAITH x2
     jmp GDT_SEGMENT_CODE_SELECTOR:long_mode_start
+
+load_page_table:
+; TELLING THE CPU WHERE THE PAGE TABLE IS
+    mov eax, [BASE_PAGE_TABLE_ADDRESS] 
+    mov cr3, eax
+
+    ;mov edi, SUCCESS_LOAD_PAGE_TABLE_MSG
+    ;mov esi, CONSOLE_IO_SUCCESS
+    ;call console_io_report
+
+    ret
+
+
+BASE_PAGE_TABLE_ADDRESS:
+    dd 0x1000000
+
+
+SUCCESS_LOAD_PAGE_TABLE_MSG:
+    db "finished loading page table.", CRLF, 0
+
 
 [BITS 64]
 long_mode_start:

@@ -60,5 +60,5 @@ void update_gdt()
         descriptor->limit_top_plus_flags = with_new_flags;
     }
 
-    console_io_report("updated GDT table...", CONSOLE_IO_SUCCESS);
+    console_io_report("updated GDT table.", CONSOLE_IO_SUCCESS);
 }
