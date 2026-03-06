@@ -206,20 +206,9 @@ protected_mode_start:
     call load_page_table
     call update_gdt
     call enable_pae_paging
+    call toggle_long_mode_paging
 
-; TOGGLING LONG MODE PAGING
-    mov ecx, LONG_MODE_MSR
-    rdmsr
-    or eax, 1 << 8 ; LONG MODE PAGING BIT IS THE NINTH BIT
-    wrmsr
-
-; LONG MODE
-    mov eax, cr0
-    or eax, 1 << 31
-    mov cr0, eax
-
-; FAR JUMP, THE LEAP OF FAITH x2
-    jmp GDT_SEGMENT_CODE_SELECTOR:long_mode_start
+    jmp enable_and_jump_to_long_mode
 
 load_page_table:
 ; TELLING THE CPU WHERE THE PAGE TABLE IS
@@ -246,6 +235,29 @@ enable_pae_paging:
 
     ret
 
+toggle_long_mode_paging:
+; TOGGLING LONG MODE PAGING
+    mov ecx, LONG_MODE_MSR
+    rdmsr
+    or eax, 1 << 8 ; LONG MODE PAGING BIT IS THE NINTH BIT
+    wrmsr
+
+    push CONSOLE_IO_SUCCESS
+    push SUCCESS_TOGGLE_LONG_MODE_PAGING_MSG
+    call console_io_report
+    add esp, 8
+
+    ret
+
+enable_and_jump_to_long_mode:
+; LONG MODE
+    mov eax, cr0
+    or eax, 1 << 31
+    mov cr0, eax
+
+; FAR JUMP, THE LEAP OF FAITH x2
+    jmp GDT_SEGMENT_CODE_SELECTOR:long_mode_start
+
 
 BASE_PAGE_TABLE_ADDRESS:
     dd 0x1000000
@@ -256,6 +268,9 @@ SUCCESS_LOAD_PAGE_TABLE_MSG:
 
 SUCCESS_ENABLE_PAE_PAGING_MSG:
     db "enabled PAE paging." , 0
+
+SUCCESS_TOGGLE_LONG_MODE_PAGING_MSG:
+    db "toggled long mode paging." , 0
 
 [BITS 64]
 long_mode_start:
