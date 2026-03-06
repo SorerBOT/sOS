@@ -173,8 +173,11 @@ INFO_JUMPING_TO_PROTECTED_MODE_MSG:
 
 %define LONG_MODE_MSR 0xC0000080
 %define KERNEL_ORG 0x10000
-%define CONSOLE_IO_SUCCESS 0
-%define CONSOLE_IO_FAILURE 1
+
+%define CONSOLE_IO_FAILURE 0
+%define CONSOLE_IO_SUCCESS 1
+
+%define ASCII_LINE_FEED 0x0a
 
 extern console_io_report
 
@@ -200,19 +203,13 @@ protected_mode_start:
 
 ; PREPARE LONG MODE
     call page_table_setup
-    call update_gdt
-
     call load_page_table
-
-; TELLING THE CPU THAT I WANNA USE PAE PAGING (ONLY TAKES EFFECT WHEN PAGING WOULD BE ENABLED)
-    mov eax, cr4
-    or eax, 1 << 5 ; THE PAE BIT IS THE SIXTH BIT
-    mov cr4, eax
+    call update_gdt
+    call enable_pae_paging
 
 ; TOGGLING LONG MODE PAGING
     mov ecx, LONG_MODE_MSR
     rdmsr
-
     or eax, 1 << 8 ; LONG MODE PAGING BIT IS THE NINTH BIT
     wrmsr
 
@@ -229,9 +226,23 @@ load_page_table:
     mov eax, [BASE_PAGE_TABLE_ADDRESS] 
     mov cr3, eax
 
-    ;mov edi, SUCCESS_LOAD_PAGE_TABLE_MSG
-    ;mov esi, CONSOLE_IO_SUCCESS
-    ;call console_io_report
+    push CONSOLE_IO_SUCCESS
+    push SUCCESS_LOAD_PAGE_TABLE_MSG
+    call console_io_report
+    add esp, 8
+
+    ret
+
+enable_pae_paging:
+; TELLING THE CPU THAT I WANNA USE PAE PAGING (ONLY TAKES EFFECT WHEN PAGING WOULD BE ENABLED)
+    mov eax, cr4
+    or eax, 1 << 5 ; THE PAE BIT IS THE SIXTH BIT
+    mov cr4, eax
+
+    push CONSOLE_IO_SUCCESS
+    push SUCCESS_ENABLE_PAE_PAGING_MSG
+    call console_io_report
+    add esp, 8
 
     ret
 
@@ -241,8 +252,10 @@ BASE_PAGE_TABLE_ADDRESS:
 
 
 SUCCESS_LOAD_PAGE_TABLE_MSG:
-    db "finished loading page table.", CRLF, 0
+    db "loaded page table.",  0
 
+SUCCESS_ENABLE_PAE_PAGING_MSG:
+    db "enabled PAE paging." , 0
 
 [BITS 64]
 long_mode_start:
