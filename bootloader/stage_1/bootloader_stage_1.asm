@@ -97,7 +97,7 @@ align 4                 ; Just to be safe, align on 4-byte boundary
 DAP:
     db 0x10             ; Packet Size, this tells the BIOS what version of DAP struct we're using
     db 0x00             ; Padding byte. Needs to be reset to 0 if ran in a loop
-    dw 0x0020           ; Number of sectors to read
+    dw 0x0040           ; Number of sectors to read
 
                         ; RAM address to write to is represented by (Segment * 16) + Offset
     dw STAGE_2_ORG      ; Offset, directly after stage 1 which is at STAGE_1_ORG
