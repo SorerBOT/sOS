@@ -50,8 +50,8 @@ static inline errors_t consume_scancode_extended(byte scancode, keyboard_event_t
             ? KEYBOARD_PRESSED
             : KEYBOARD_RELEASED;
 
-        byte make_scancode = scancode & ~SCANCODE_1_NORMAL_MAKE_SCANCODES_COUNT;
-        event->keycode = map_normal_scancode_to_keycode[make_scancode];
+        byte make_scancode = scancode & ~SCANCODE_1_EXTENDED_MAKE_SCANCODES_COUNT;
+        event->keycode = map_extended_scancode_to_keycode[make_scancode];
 
         return ERRORS_NONE;
     }
