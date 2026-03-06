@@ -13,11 +13,11 @@ typedef enum
 static ps2_keyboard_driver_settings_t settings;
 static ps2_keyboard_driver_state_type_t current_state = PS2_KEYBOARD_DRIVER_NORMAL;
 
-static inline errors_t handle_state_normal(byte scancode, keyboard_event_t* event);
-static inline errors_t handle_state_extended(byte scancode, keyboard_event_t* event);
+static inline errors_t consume_scancode_normal(byte scancode, keyboard_event_t* event);
+static inline errors_t consume_scancode_extended(byte scancode, keyboard_event_t* event);
 static inline errors_t consume_scancode(byte scancode, keyboard_event_t* event);
 
-static inline errors_t handle_state_normal(byte scancode, keyboard_event_t* event)
+static inline errors_t consume_scancode_normal(byte scancode, keyboard_event_t* event)
 {
     if ( scancode < SCANCODE_1_EXTENDED_OFFSET )
     {
@@ -34,14 +34,13 @@ static inline errors_t handle_state_normal(byte scancode, keyboard_event_t* even
     else if ( scancode == SCANCODE_1_EXTENDED_OFFSET )
     {
         current_state = PS2_KEYBOARD_DRIVER_EXTENDED;
-
-        return ERRORS_NONE;
+        return ERRORS_NOT_ENOUGH_DATA;
     }
 
     return ERRORS_INVALID_PARAMETERS;
 }
 
-static inline errors_t handle_state_extended(byte scancode, keyboard_event_t* event)
+static inline errors_t consume_scancode_extended(byte scancode, keyboard_event_t* event)
 {
     current_state = PS2_KEYBOARD_DRIVER_NORMAL;
 
@@ -65,11 +64,11 @@ static inline errors_t consume_scancode(byte scancode, keyboard_event_t* event)
     switch ( current_state )
     {
         case PS2_KEYBOARD_DRIVER_NORMAL:
-            return handle_state_normal(scancode, event);
+            return consume_scancode_normal(scancode, event);
             break;
 
         case PS2_KEYBOARD_DRIVER_EXTENDED:
-            return handle_state_extended(scancode, event);
+            return consume_scancode_extended(scancode, event);
             break;
     }
 
