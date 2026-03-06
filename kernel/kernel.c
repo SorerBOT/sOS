@@ -9,12 +9,12 @@
 void kernel()
 {
     io_setup();
-    console_io_report("entered 64-bit long mode...", CONSOLE_IO_SUCCESS);
+    console_io_report("entered 64-bit long mode.", CONSOLE_IO_SUCCESS);
 
     interrupts_setup();
 
     __asm__ volatile ("int $3");
-    console_io_report("finished handling a breakpoint interrupt. kernel took back control...", CONSOLE_IO_SUCCESS);
+    console_io_report("finished handling a breakpoint interrupt. kernel took back control.", CONSOLE_IO_SUCCESS);
 
     keyboard_manager_set_layout(KEYBOARD_LAYOUT_US_QWERTY);
 
