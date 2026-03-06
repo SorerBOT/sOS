@@ -24,25 +24,36 @@ extern page_table_setup
 extern update_gdt
 
 start:
+    cli
+
+
     xor ax, ax
     mov ds, ax
 
 
-stack_setup:
     mov ss, ax
     mov sp, STAGE_1_ORG
     mov bp, STAGE_1_ORG
 
-print_stage_1_completed:
+
     mov si, STAGE_1_COMPLETED_MSG
     call print_msg
+
+
+    call load_kernel
+    call enable_a20_fastgate
+    call setup_gdt
+    jmp enable_and_jump_to_protected_mode
 
 load_kernel:
     mov si, DAP
     mov ah, BIOS_FUNC_DISK_READ
     int BIOS_INT_DISK   ; First BIOS call to store stage 2 (16KiB) at 0x7E00.
     jc fail_read_disk   ; CF==1 means that an error has occurred.
-    jmp stage_2_after_loading_kernel
+
+    mov si, SUCCESS_LOAD_KERNEL_MSG
+    call print_msg
+    ret
 
 fail_read_disk:
     mov si, FAIL_READ_DISK_MSG
@@ -64,22 +75,28 @@ print_msg_finished:
 error:
     jmp $               ; infinite loop. I use it to keep QEMU open
 
-stage_2_after_loading_kernel:
-    mov si, msg_stage_2
-    call print_msg
-
-prepare_protected_mode:
-    cli                     ; disabling interrupts
-
+enable_a20_fastgate:
 ; ENABLING a20 USING FAST GATE
     in al, 0x92
     or al, 0x02
     out 0x92, al
 
+    mov si, SUCCESS_ENABLE_A20_MSG
+    call print_msg
+
+    ret
+
+setup_gdt:
 ; SETTING GDT
 ; in order to set the GDT, we need to point GDTR to the GDT_HEADER label defined below
     lgdt [GDT_HEADER]       ; loading GDT_HEADER into gdtr
 
+    mov si, SUCCESS_SETUP_GDT_MSG
+    call print_msg
+
+    ret
+
+enable_and_jump_to_protected_mode:
 ; SETTING CR0.PE (MOVING TO PROTECTED MODE)
     mov eax,cr0
     or eax, 1
@@ -87,6 +104,9 @@ prepare_protected_mode:
 
 ; THE LEAP OF FAITH (WEARING THE PROTECTION)
     jmp GDT_SEGMENT_CODE_SELECTOR:protected_mode_start
+
+
+
 
 align 4                 ; Just to be safe, align on 4-byte boundary
 DAP:
@@ -127,12 +147,22 @@ GDT_HEADER:
     dw GDT_END - GDT_START - 1  ; limit: the maximum offset allowed within the GDT
     dd GDT_START                ; base: the base address of the GDT
 
-msg_stage_2 db OS_STATUS, ": booting...", CRLF, OS_STATUS, ": stage 1 completed...", CRLF, OS_STATUS, ": running stage 2...", 0
 STAGE_1_COMPLETED_MSG:
-    db REPORT_SUCCESS_PREFIX, "stage 1 completed...", CRLF, 0
+    db REPORT_SUCCESS_PREFIX, "stage 1 completed.", CRLF, 0
 
 FAIL_READ_DISK_MSG:
-    db REPORT_FAILURE_PREFIX, "Couldn't read from disk.", CRLF, 0
+    db REPORT_FAILURE_PREFIX, "couldn't read from disk.", CRLF, 0
+
+SUCCESS_LOAD_KERNEL_MSG:
+    db REPORT_SUCCESS_PREFIX, "finished loading kernel.", CRLF, 0
+
+SUCCESS_ENABLE_A20_MSG:
+    db REPORT_SUCCESS_PREFIX, "finished enabling a20.", CRLF, 0
+
+SUCCESS_SETUP_GDT_MSG:
+    db REPORT_SUCCESS_PREFIX, "finished setting up gdt.", CRLF, 0
+
+
 
 [BITS 32]
 
