@@ -1,5 +1,4 @@
 %define CRLF 0x0D, 0x0A
-%define OS_STATUS "[sOS]"
 %define GDT_BASE_ADDRESS
 %define GDT_SEGMENT_DATA_SELECTOR 0x08
 %define GDT_SEGMENT_CODE_SELECTOR 0x10
@@ -15,6 +14,8 @@
 %define BIOS_FUNC_DISK_READ 0x42
 
 %define STAGE_1_ORG 0x7C00
+
+%define SECTORS_PER_SEGMENT 128
 
 [BITS 16]
 
@@ -45,8 +46,10 @@ start:
     call enable_a20_fastgate
     call setup_gdt
 
+
     mov si, INFO_JUMPING_TO_PROTECTED_MODE_MSG
     call print_msg
+
 
     jmp enable_and_jump_to_protected_mode
 
@@ -111,19 +114,23 @@ enable_and_jump_to_protected_mode:
     jmp GDT_SEGMENT_CODE_SELECTOR:protected_mode_start
 
 
-align 4                 ; Just to be safe, align on 4-byte boundary
+align 4                     ; Just to be safe, align on 4-byte boundary
 DAP:
-    db 0x10             ; Packet Size, this tells the BIOS what version of DAP struct we're using
-    db 0x00             ; Padding byte. Needs to be reset to 0 if ran in a loop
-    dw 0x0040           ; Number of sectors to read
+    db 0x10                 ; Packet Size, this tells the BIOS what version of DAP struct we're using
+    db 0x00                 ; Padding byte. Needs to be reset to 0 if ran in a loop
 
-                        ; RAM address to write to is represented by (Segment * 16) + Offset
-    dw 0x0000           ; Offset, directly after 16KiB
-    dw 0x1000           ; Segment this is exactly 16 KiB.
+DAP_SECTORS_COUNT:
+    dw SECTORS_PER_SEGMENT  ; Number of sectors to read
 
-    dq 0x00000042       ; Disk sector to read from, each sector is 512 bytes.
-                        ; the first one contains stage 1, the next 32 contian stage 2
-                        ; and afterwards its the kernel
+DAP_OFFSET:                 ; RAM address to write to is represented by (Segment * 16) + Offset
+    dw 0x0000               ; Offset, directly at the beginning of the segment
+
+DAP_SEGMENT:
+    dw 0x1000               ; Segment this is exactly 64KiB.
+
+    dq 0x00000042           ; Disk sector to read from, each sector is 512 bytes.
+                            ; the first one contains stage 1, the next 32 contian stage 2
+                            ; and afterwards its the kernel
 align 8
 GDT_START:
 GDT_DATA:

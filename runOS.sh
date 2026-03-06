@@ -16,6 +16,7 @@ BOOTLOADER_SIZE_MAX=0x8400 # 32.5KiB + 512 bytes = 33 KiB
 
 KERNEL_DIR="kernel"
 KERNEL="$KERNEL_DIR/kernel"
+KERNEL_SIZE_MAX=0x96000 # 600KiB
 
 MAKEFILE_STAGE_1="Makefile_bootloader_stage_1"
 MAKEFILE_STAGE_2="Makefile_bootloader_stage_2"
@@ -35,7 +36,6 @@ make -f $MAKEFILE_KERNEL "$BIN_64_BIT_DIR/$KERNEL.bin"
 
 cat "$BIN_16_BIT_DIR/$STAGE_1.bin" "$BIN_32_BIT_DIR/$STAGE_2.bin" > "$BIN_DIR/$OS_IMG.bin"
 
-echo "Bootloader built successfully..."
 STAGE_1_SIZE=$(wc -c < "$BIN_16_BIT_DIR/$STAGE_1.bin")
 if (( STAGE_1_SIZE > STAGE_1_SIZE_MAX )); then
     echo "Stage 1 size: $STAGE_1_SIZE, exceeds allowed size of $STAGE_1_SIZE_MAX bytes. Bloat!"
@@ -53,23 +53,25 @@ else
     echo "Bootloader size: $BOOTLOADER_SIZE is OK."
 fi
 
+KERNEL_SIZE=$(wc -c < "$BIN_64_BIT_DIR/$KERNEL.bin")
+if (( KERNEL_SIZE > OS_IMAGE_SIZE_MAX )); then
+    echo "Kernel size: $KERNEL_SIZE, exceeds allowed size of 600KiB. It's time to make the BIOS load more code in stage 2...."
+    exit 1
+else
+    echo "Kernel size: $KERNEL_SIZE is OK. Running the OS"
+fi
+
+echo "Bootloader built successfully..."
 echo "Padding bootloader binary (entire OS image)..."
 truncate -s $BOOTLOADER_SIZE_MAX "$BIN_DIR/$OS_IMG.bin"
+
+echo "Padding kernel binary (entire OS image)..."
+truncate -s $KERNEL_SIZE_MAX "$BIN_64_BIT_DIR/$KERNEL.bin"
 
 echo "Appending kernel to OS image..."
 cat "$BIN_64_BIT_DIR/$KERNEL.bin" >> "$BIN_DIR/$OS_IMG.bin"
 
-OS_IMAGE_SIZE=$(wc -c < "$BIN_DIR/$OS_IMG.bin")
 echo "OS built successfully..."
-if (( OS_IMAGE_SIZE > OS_IMAGE_SIZE_MAX )); then
-    echo "OS size: $OS_IMAGE_SIZE, exceeds allowed size of 65KiB. It's time to make the BIOS load more code in stage 1...."
-    exit 1
-else
-    echo "OS size: $OS_IMAGE_SIZE is OK. Running the OS"
-fi
-
-echo "Padding kernel binary (entire OS image)..."
-truncate -s $OS_IMAGE_SIZE_MAX "$BIN_DIR/$OS_IMG.bin"
 
 echo "Build complete. Running the OS!"
 qemu-system-x86_64 -drive format=raw,file="$BIN_DIR/$OS_IMG.bin" -display cocoa \
