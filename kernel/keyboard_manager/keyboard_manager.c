@@ -308,7 +308,7 @@ static keyboard_layout_t map_layout_type_to_layout[KEYBOARD_LAYOUT_COUNT] =
 
 
             /* MISC */
-            [KEYBOARD_KEYCODE_MISC_NUM_LOCK]    = KEYBOARD_NON_RESOLVABLE_UNICODE,
+            [KEYBOARD_KEYCODE_MISC_NUM_LOCK]            = KEYBOARD_NON_RESOLVABLE_UNICODE,
 
 
             /* MULTIMEDIA */
