@@ -6,8 +6,8 @@
 
 typedef enum
 {
-    CONSOLE_IO_SUCCESS,
-    CONSOLE_IO_FAILURE
+    CONSOLE_IO_FAILURE = 0,
+    CONSOLE_IO_SUCCESS = 1
 } console_io_report_status_t;
 
 typedef struct
