@@ -1,11 +1,12 @@
 # Makefile for compiling the kernel
 ARCH=x86_64
 DRIVERS_DIR=drivers
+APPLICATIONS_DIR=applications
 ARCH_DIR=arch
 LIBC_DIR=libc
 BIN_DIR=bin
 
-INCLUDE_FLAGS = -Ilibc/include -Ilibc/sOS/include -Idrivers/$(ARCH)/include -Idrivers/input/include -Idrivers/tty/include -Iarch/$(ARCH)/include -Iarch/common/include
+INCLUDE_FLAGS = -Ilibc/include -Ilibc/sOS/include -Idrivers/$(ARCH)/include -Idrivers/input/include -Idrivers/tty/include -Iarch/$(ARCH)/include -Iarch/common/include -Iapplications/include
 CFLAGS = -std=c99 -ffreestanding -mno-red-zone -m64 -g $(INCLUDE_FLAGS)
 
 BIN_64_BIT_DIR=$(BIN_DIR)/64-bit
@@ -20,9 +21,10 @@ KERNEL = $(KERNEL_DIR)/kernel
 KERNEL_SRCS := $(shell find $(KERNEL_DIR) -type f \( -name '*.c' -o -name '*.asm' \))
 ARCH_SRCS := $(shell find $(ARCH_DIR)/$(ARCH) -type f \( -name '*.c' -o -name '*.asm' \))
 DRIVERS_SRCS := $(shell find $(DRIVERS_DIR) -type f \( -name '*.c' -o -name '*.asm' \))
+APPLICATIONS_SRCS := $(shell find $(APPLICATIONS_DIR) -type f \( -name '*.c' -o -name '*.asm' \))
 LIBC_SRCS := $(shell find $(LIBC_DIR) -type f \( -name '*.c' -o -name '*.asm' \))
 
-ALL_SRCS = $(KERNEL_SRCS) $(KERNEL_START_SRC) $(ARCH_SRCS) $(DRIVERS_SRCS) $(LIBC_SRCS)
+ALL_SRCS = $(KERNEL_SRCS) $(KERNEL_START_SRC) $(ARCH_SRCS) $(DRIVERS_SRCS) $(APPLICATIONS_SRCS) $(LIBC_SRCS)
 
 C_OBJS := $(patsubst %.c, $(BIN_64_BIT_DIR)/%.o, $(filter %.c, $(ALL_SRCS)))
 ASM_OBJS := $(patsubst %.asm, $(BIN_64_BIT_ASM_DIR)/%.o, $(filter %.asm, $(ALL_SRCS)))

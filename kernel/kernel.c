@@ -4,6 +4,7 @@
 #include <interrupts.h>
 #include <tty.h>
 #include <keyboard_manager.h>
+#include <shell.h>
 
 void kernel()
 {
@@ -13,13 +14,7 @@ void kernel()
 
     interrupts_setup();
 
-    for (;;)
-    {
-        char c;
-        tty_read_char(&c);
-        console_output_printf("%c", c);
-        console_output_flush();
-    }
+    shell_launch();
 
     while (1)
     {
