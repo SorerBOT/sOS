@@ -1,7 +1,8 @@
 #include "include/isr.h"
 #include "include/idt.h"
 #include "include/pic.h"
-#include <console_io.h>
+
+#include <console_output.h>
 #include <cpu_io.h>
 #include <ps2_keyboard_driver.h>
 
@@ -22,7 +23,7 @@ static bool isr_is_pic_interrupt(qword isr_number);
 
 static void isr_dump_registers(const isr_args_t* args)
 {
-    console_io_printf(
+    console_output_printf(
             "Registers dump:\n"
             "%3s: %08x\n"
             "%3s: %08x        %3s: %08x\n"
@@ -59,13 +60,13 @@ static void isr_handler_page_fault(const isr_args_t* args)
     bool is_shadow_stack                = (args->error_code & 0b1000000) != 0;
     bool is_software_guard_extension    = (args->error_code & 0b10000000) != 0;
 
-    console_io_print_blue_screen(
+    console_output_print_blue_screen(
             "Page Fault Occurred\n"
             "Faulting address: %p\n", faulting_address);
 
     isr_dump_registers(args);
 
-    console_io_printf(
+    console_output_printf(
             "%27s:    %d\n"
             "%27s:    %d\n"
             "%27s:    %d\n"
@@ -91,14 +92,14 @@ static void isr_handler_page_fault(const isr_args_t* args)
 
 static void isr_handler_general_protection_fault(const isr_args_t* args)
 {
-    console_io_print_blue_screen("General Protection Fault Occurred\n");
+    console_output_print_blue_screen("General Protection Fault Occurred\n");
     if ( args->error_code == 0 )
     {
-        console_io_printf("The fault is not segment related\n");
+        console_output_printf("The fault is not segment related\n");
     }
     else
     {
-        console_io_printf("Segment violation error at segment %llu\n", args->error_code);
+        console_output_printf("Segment violation error at segment %llu\n", args->error_code);
     }
 }
 
@@ -149,7 +150,7 @@ void isr_handler(isr_args_t* args)
     switch ( args->isr_number )
     {
         case ISR_DIVIDE_BY_ZERO:
-            console_io_print_blue_screen("Divide by zero occurred:\n");
+            console_output_print_blue_screen("Divide by zero occurred:\n");
             isr_dump_registers(args);
             while (1)
             {
@@ -157,10 +158,10 @@ void isr_handler(isr_args_t* args)
             }
             break;
         case ISR_BREAKPOINT:
-            console_io_printf("Breakpoint on instruction %p reached.\n", args->rip);
+            console_output_printf("Breakpoint on instruction %p reached.\n", args->rip);
             break;
         case ISR_DOUBLE_FAULT:
-            console_io_print_blue_screen("Double fault occurred:\n");
+            console_output_print_blue_screen("Double fault occurred:\n");
             isr_dump_registers(args);
             while (1)
             {
