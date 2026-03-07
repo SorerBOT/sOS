@@ -61,9 +61,17 @@ static inline utf32_t transform_to_unicode(keyboard_modifiers_state_t modifiers_
     bool is_alted = modifiers_state & KEYBOARD_MODIFIERS_ALT_R;
     bool is_shifted = modifiers_state & KEYBOARD_MODIFIERS_SHIFT_ANY;
     bool is_caps_lock = modifiers_state & KEYBOARD_MODIFIERS_CAPS_LOCK;
+    bool is_num_lock = modifiers_state & KEYBOARD_MODIFIERS_NUM_LOCK;
+
     bool is_modified_under_caps_lock = keyboard_layout->is_modified_under_caps_lock[keycode];
+    bool is_modified_under_num_lock = keyboard_layout->is_modified_under_num_lock[keycode];
 
     if ( is_caps_lock && is_modified_under_caps_lock )
+    {
+        is_shifted = !is_shifted;
+    }
+
+    if ( is_num_lock && is_modified_under_num_lock )
     {
         is_shifted = !is_shifted;
     }

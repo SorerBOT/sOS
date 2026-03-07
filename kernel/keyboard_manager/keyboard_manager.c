@@ -289,19 +289,19 @@ static keyboard_layout_t map_layout_type_to_layout[KEYBOARD_LAYOUT_COUNT] =
 
             /* KEYPAD */
             [KEYBOARD_KEYCODE_KEYPAD_ASTRIX]            = '*',
-            [KEYBOARD_KEYCODE_KEYPAD_7]                 = '7',
-            [KEYBOARD_KEYCODE_KEYPAD_8]                 = '8',
-            [KEYBOARD_KEYCODE_KEYPAD_9]                 = '9',
+            [KEYBOARD_KEYCODE_KEYPAD_7]                 = KEYBOARD_NON_RESOLVABLE_UNICODE,
+            [KEYBOARD_KEYCODE_KEYPAD_8]                 = KEYBOARD_NON_RESOLVABLE_UNICODE,
+            [KEYBOARD_KEYCODE_KEYPAD_9]                 = KEYBOARD_NON_RESOLVABLE_UNICODE,
             [KEYBOARD_KEYCODE_KEYPAD_HYPHEN]            = '-',
-            [KEYBOARD_KEYCODE_KEYPAD_4]                 = '4',
-            [KEYBOARD_KEYCODE_KEYPAD_5]                 = '5',
-            [KEYBOARD_KEYCODE_KEYPAD_6]                 = '6',
+            [KEYBOARD_KEYCODE_KEYPAD_4]                 = KEYBOARD_NON_RESOLVABLE_UNICODE,
+            [KEYBOARD_KEYCODE_KEYPAD_5]                 = KEYBOARD_NON_RESOLVABLE_UNICODE,
+            [KEYBOARD_KEYCODE_KEYPAD_6]                 = KEYBOARD_NON_RESOLVABLE_UNICODE,
             [KEYBOARD_KEYCODE_KEYPAD_PLUS]              = '+',
-            [KEYBOARD_KEYCODE_KEYPAD_1]                 = '1',
-            [KEYBOARD_KEYCODE_KEYPAD_2]                 = '2',
-            [KEYBOARD_KEYCODE_KEYPAD_3]                 = '3',
-            [KEYBOARD_KEYCODE_KEYPAD_0]                 = '0',
-            [KEYBOARD_KEYCODE_KEYPAD_DOT]               = '.',
+            [KEYBOARD_KEYCODE_KEYPAD_1]                 = KEYBOARD_NON_RESOLVABLE_UNICODE,
+            [KEYBOARD_KEYCODE_KEYPAD_2]                 = KEYBOARD_NON_RESOLVABLE_UNICODE,
+            [KEYBOARD_KEYCODE_KEYPAD_3]                 = KEYBOARD_NON_RESOLVABLE_UNICODE,
+            [KEYBOARD_KEYCODE_KEYPAD_0]                 = KEYBOARD_NON_RESOLVABLE_UNICODE,
+            [KEYBOARD_KEYCODE_KEYPAD_DOT]               = KEYBOARD_NON_RESOLVABLE_UNICODE,
             [KEYBOARD_KEYCODE_KEYPAD_ENTER]             = '\n',
             [KEYBOARD_KEYCODE_KEYPAD_SLASH]             = '/',
             [KEYBOARD_KEYCODE_KEYPAD_APPLE_EQUALS]      = '=',
@@ -826,5 +826,168 @@ static keyboard_layout_t map_layout_type_to_layout[KEYBOARD_LAYOUT_COUNT] =
             [KEYBOARD_KEYCODE_ACPI_SLEEP]               = false,
             [KEYBOARD_KEYCODE_ACPI_WAKE]                = false,
         },
+        .is_modified_under_num_lock =
+        {
+            [KEYBOARD_KEYCODE_INVALID]                  = false,
+
+            /* first row */
+            [KEYBOARD_KEYCODE_ESC]                      = false,
+            [KEYBOARD_KEYCODE_F1]                       = false,
+            [KEYBOARD_KEYCODE_F2]                       = false,
+            [KEYBOARD_KEYCODE_F3]                       = false,
+            [KEYBOARD_KEYCODE_F4]                       = false,
+            [KEYBOARD_KEYCODE_F5]                       = false,
+            [KEYBOARD_KEYCODE_F6]                       = false,
+            [KEYBOARD_KEYCODE_F7]                       = false,
+            [KEYBOARD_KEYCODE_F8]                       = false,
+            [KEYBOARD_KEYCODE_F9]                       = false,
+            [KEYBOARD_KEYCODE_F10]                      = false,
+            [KEYBOARD_KEYCODE_F11]                      = false,
+            [KEYBOARD_KEYCODE_F12]                      = false,
+            [KEYBOARD_KEYCODE_PRINT_SCREEN]             = false,
+            [KEYBOARD_KEYCODE_SCROLL_LOCK]              = false,
+            [KEYBOARD_KEYCODE_PAUSE]                    = false,
+
+
+            /* second row */
+            [KEYBOARD_KEYCODE_BACK_TICK]                = false,
+            [KEYBOARD_KEYCODE_1]                        = false,
+            [KEYBOARD_KEYCODE_2]                        = false,
+            [KEYBOARD_KEYCODE_3]                        = false,
+            [KEYBOARD_KEYCODE_4]                        = false,
+            [KEYBOARD_KEYCODE_5]                        = false,
+            [KEYBOARD_KEYCODE_6]                        = false,
+            [KEYBOARD_KEYCODE_7]                        = false,
+            [KEYBOARD_KEYCODE_8]                        = false,
+            [KEYBOARD_KEYCODE_9]                        = false,
+            [KEYBOARD_KEYCODE_0]                        = false,
+            [KEYBOARD_KEYCODE_HYPHEN]                   = false,
+            [KEYBOARD_KEYCODE_EQUALS]                   = false,
+            [KEYBOARD_KEYCODE_BACKSPACE]                = false,
+            [KEYBOARD_KEYCODE_INSERT]                   = false,
+            [KEYBOARD_KEYCODE_HOME]                     = false,
+            [KEYBOARD_KEYCODE_PAGE_UP]                  = false,
+
+
+            /* third row */
+            [KEYBOARD_KEYCODE_TAB]                      = false,
+            [KEYBOARD_KEYCODE_Q]                        = false,
+            [KEYBOARD_KEYCODE_W]                        = false,
+            [KEYBOARD_KEYCODE_E]                        = false,
+            [KEYBOARD_KEYCODE_R]                        = false,
+            [KEYBOARD_KEYCODE_T]                        = false,
+            [KEYBOARD_KEYCODE_Y]                        = false,
+            [KEYBOARD_KEYCODE_U]                        = false,
+            [KEYBOARD_KEYCODE_I]                        = false,
+            [KEYBOARD_KEYCODE_O]                        = false,
+            [KEYBOARD_KEYCODE_P]                        = false,
+            [KEYBOARD_KEYCODE_BRACKET_L]                = false,
+            [KEYBOARD_KEYCODE_BRACKET_R]                = false,
+            [KEYBOARD_KEYCODE_BACKSLASH]                = false,
+            [KEYBOARD_KEYCODE_DELETE]                   = false,
+            [KEYBOARD_KEYCODE_END]                      = false,
+            [KEYBOARD_KEYCODE_PAGE_DOWN]                = false,
+
+
+            /* fourth row */
+            [KEYBOARD_KEYCODE_CAPS_LOCK]                = false,
+            [KEYBOARD_KEYCODE_A]                        = false,
+            [KEYBOARD_KEYCODE_S]                        = false,
+            [KEYBOARD_KEYCODE_D]                        = false,
+            [KEYBOARD_KEYCODE_F]                        = false,
+            [KEYBOARD_KEYCODE_G]                        = false,
+            [KEYBOARD_KEYCODE_H]                        = false,
+            [KEYBOARD_KEYCODE_J]                        = false,
+            [KEYBOARD_KEYCODE_K]                        = false,
+            [KEYBOARD_KEYCODE_L]                        = false,
+            [KEYBOARD_KEYCODE_SEMICOLON]                = false,
+            [KEYBOARD_KEYCODE_SINGLE_QUOTE]             = false,
+            [KEYBOARD_KEYCODE_ENTER]                    = false,
+
+
+            /* fifth row */
+            [KEYBOARD_KEYCODE_SHIFT_L]                  = false,
+            [KEYBOARD_KEYCODE_ISO_BACKSLASH]            = false,
+            [KEYBOARD_KEYCODE_Z]                        = false,
+            [KEYBOARD_KEYCODE_X]                        = false,
+            [KEYBOARD_KEYCODE_C]                        = false,
+            [KEYBOARD_KEYCODE_V]                        = false,
+            [KEYBOARD_KEYCODE_B]                        = false,
+            [KEYBOARD_KEYCODE_N]                        = false,
+            [KEYBOARD_KEYCODE_M]                        = false,
+            [KEYBOARD_KEYCODE_COMMA]                    = false,
+            [KEYBOARD_KEYCODE_DOT]                      = false,
+            [KEYBOARD_KEYCODE_SLASH]                    = false,
+            [KEYBOARD_KEYCODE_SHIFT_R]                  = false,
+            [KEYBOARD_KEYCODE_ARROW_UP]                 = false,
+
+
+            /* sixth row */
+            [KEYBOARD_KEYCODE_APPLE_FN]                 = false,
+            [KEYBOARD_KEYCODE_CONTROL_L]                = false,
+            [KEYBOARD_KEYCODE_SUPER_L]                  = false,
+            [KEYBOARD_KEYCODE_ALT_L]                    = false,
+            [KEYBOARD_KEYCODE_SPACE]                    = false,
+            [KEYBOARD_KEYCODE_ALT_R]                    = false,
+            [KEYBOARD_KEYCODE_SUPER_R]                  = false,
+            [KEYBOARD_KEYCODE_PC_MENU]                  = false,
+            [KEYBOARD_KEYCODE_CONTROL_R]                = false,
+            [KEYBOARD_KEYCODE_ARROW_LEFT]               = false,
+            [KEYBOARD_KEYCODE_ARROW_DOWN]               = false,
+            [KEYBOARD_KEYCODE_ARROW_RIGHT]              = false,
+
+
+            /* KEYPAD */
+            [KEYBOARD_KEYCODE_KEYPAD_ASTRIX]            = false,
+            [KEYBOARD_KEYCODE_KEYPAD_7]                 = true,
+            [KEYBOARD_KEYCODE_KEYPAD_8]                 = true,
+            [KEYBOARD_KEYCODE_KEYPAD_9]                 = true,
+            [KEYBOARD_KEYCODE_KEYPAD_HYPHEN]            = false,
+            [KEYBOARD_KEYCODE_KEYPAD_4]                 = true,
+            [KEYBOARD_KEYCODE_KEYPAD_5]                 = true,
+            [KEYBOARD_KEYCODE_KEYPAD_6]                 = true,
+            [KEYBOARD_KEYCODE_KEYPAD_PLUS]              = false,
+            [KEYBOARD_KEYCODE_KEYPAD_1]                 = true,
+            [KEYBOARD_KEYCODE_KEYPAD_2]                 = true,
+            [KEYBOARD_KEYCODE_KEYPAD_3]                 = true,
+            [KEYBOARD_KEYCODE_KEYPAD_0]                 = true,
+            [KEYBOARD_KEYCODE_KEYPAD_DOT]               = true,
+            [KEYBOARD_KEYCODE_KEYPAD_ENTER]             = false,
+            [KEYBOARD_KEYCODE_KEYPAD_SLASH]             = false,
+            [KEYBOARD_KEYCODE_KEYPAD_APPLE_EQUALS]      = false,
+
+
+            /* MISC */
+            [KEYBOARD_KEYCODE_MISC_NUM_LOCK]            = false,
+
+
+
+            /* MULTIMEDIA */
+            [KEYBOARD_KEYCODE_MULTIMEDIA_TRACK_PREV]    = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_TRACK_NEXT]    = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_MUTE]          = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_CALCULATOR]    = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_PLAY]          = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_STOP]          = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_VOLUME_DOWN]   = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_VOLUME_UP]     = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_MY_PC]         = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_EMAIL]         = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_MEDIA_SELECT]  = false,
+
+            /* MULTIMEDIA WWW */
+            [KEYBOARD_KEYCODE_MULTIMEDIA_WWW_HOME]      = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_WWW_SEARCH]    = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_WWW_FAVORITES] = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_WWW_REFRESH]   = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_WWW_STOP]      = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_WWW_FORWARD]   = false,
+            [KEYBOARD_KEYCODE_MULTIMEDIA_WWW_BACK]      = false,
+
+            /* ACPI */
+            [KEYBOARD_KEYCODE_ACPI_POWER]               = false,
+            [KEYBOARD_KEYCODE_ACPI_SLEEP]               = false,
+            [KEYBOARD_KEYCODE_ACPI_WAKE]                = false,
+        }
     }
 };

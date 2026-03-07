@@ -249,6 +249,7 @@ typedef struct
     utf32_t map_alted[KEYBOARD_KEYCODE_COUNT];
     utf32_t map_shifted_alted[KEYBOARD_KEYCODE_COUNT];
     bool is_modified_under_caps_lock[KEYBOARD_KEYCODE_COUNT];
+    bool is_modified_under_num_lock[KEYBOARD_KEYCODE_COUNT];
 } keyboard_layout_t;
 
 typedef enum
