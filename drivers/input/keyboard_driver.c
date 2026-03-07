@@ -19,26 +19,32 @@ static ring_buffer_t keyboard_ring_buffer =
     .size = KEYBOARD_DRIVER_BUFFER_SIZE
 };
 
-static bool is_modifier(keyboard_keycode_t keycode);
-static bool is_terminal_event(const keyboard_event_t* event);
-static bool is_action_unit_because_modifiers(keyboard_modifiers_state_t modifiers_state);
-static utf32_t transform_to_unicode(keyboard_modifiers_state_t modifiers_state, keyboard_keycode_t keycode);
+static inline bool is_modifier(keyboard_keycode_t keycode);
+static inline bool is_toggled_modifier(keyboard_modifiers_type_t modifier);
+static inline bool is_terminal_event(const keyboard_event_t* event);
+static inline bool is_action_unit_because_modifiers(keyboard_modifiers_state_t modifiers_state);
+static inline utf32_t transform_to_unicode(keyboard_modifiers_state_t modifiers_state, keyboard_keycode_t keycode);
 
 static void build_unit(keyboard_unit_t* dst,
         const keyboard_event_t* current_event,
         keyboard_modifiers_state_t modifiers_state);
 
-static bool is_modifier(keyboard_keycode_t keycode)
+static inline bool is_modifier(keyboard_keycode_t keycode)
 {
-    return (mapping_keycode_to_modifier[keycode] != KEYBOARD_MODIFIERS_NONE);
+    return mapping_keycode_to_modifier[keycode] != KEYBOARD_MODIFIERS_NONE;
 }
 
-static bool is_terminal_event(const keyboard_event_t* event)
+static inline bool is_toggled_modifier(keyboard_modifiers_type_t modifier)
+{
+    return ( modifier == KEYBOARD_MODIFIERS_CAPS_LOCK || modifier == KEYBOARD_MODIFIERS_NUM_LOCK );
+}
+
+static inline bool is_terminal_event(const keyboard_event_t* event)
 {
     return !is_modifier(event->keycode) && event->type == KEYBOARD_PRESSED;
 }
 
-static bool is_action_unit_because_modifiers(keyboard_modifiers_state_t modifiers_state)
+static inline bool is_action_unit_because_modifiers(keyboard_modifiers_state_t modifiers_state)
 {
     return (
             modifiers_state & 
@@ -50,12 +56,22 @@ static bool is_action_unit_because_modifiers(keyboard_modifiers_state_t modifier
            ) != 0;
 }
 
-static utf32_t transform_to_unicode(keyboard_modifiers_state_t modifiers_state, keyboard_keycode_t keycode)
+static inline utf32_t transform_to_unicode(keyboard_modifiers_state_t modifiers_state, keyboard_keycode_t keycode)
 {
     bool is_alted = modifiers_state & KEYBOARD_MODIFIERS_ALT_R;
-    bool is_shifted = modifiers_state & KEYBOARD_MODIFIERS_CAPS_LOCK;
+    bool is_shifted = modifiers_state & KEYBOARD_MODIFIERS_SHIFT_ANY;
+    bool is_caps_lock = modifiers_state & KEYBOARD_MODIFIERS_CAPS_LOCK;
+    bool is_num_lock = modifiers_state & KEYBOARD_MODIFIERS_NUM_LOCK;
 
-    if ( modifiers_state & KEYBOARD_MODIFIERS_SHIFT_ANY )
+    bool is_modified_under_caps_lock = keyboard_layout->is_modified_under_caps_lock[keycode];
+    bool is_modified_under_num_lock = keyboard_layout->is_modified_under_num_lock[keycode];
+
+    if ( is_caps_lock && is_modified_under_caps_lock )
+    {
+        is_shifted = !is_shifted;
+    }
+
+    if ( is_num_lock && is_modified_under_num_lock )
     {
         is_shifted = !is_shifted;
     }
@@ -144,13 +160,9 @@ errors_t keyboard_driver_try_consume_event(keyboard_event_t* dst)
         keyboard_modifiers_type_t modifier = mapping_keycode_to_modifier[dst->keycode];
         if ( modifier != KEYBOARD_MODIFIERS_NONE )
         {
-            if ( dst->type == KEYBOARD_PRESSED )
+            if ( !( is_toggled_modifier(modifier) && dst->type == KEYBOARD_RELEASED ) )
             {
-                modifiers_state |= modifier;
-            }
-            else if ( dst->type == KEYBOARD_RELEASED )
-            {
-                modifiers_state &= ~modifier;
+                modifiers_state ^= modifier;
             }
         }
     }
