@@ -1,6 +1,7 @@
-#include "include/keyboard_manager.h"
 #include <keyboard_driver.h>
 #include <keyboard_types.h>
+
+#include "include/keyboard_manager.h"
 
 static keyboard_layout_t map_layout_type_to_layout[KEYBOARD_LAYOUT_COUNT];
 

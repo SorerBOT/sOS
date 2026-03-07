@@ -1,7 +1,8 @@
-#include <keyboard.h>
+#include <tty.h>
+#include <keyboard_types.h>
 #include <keyboard_driver.h>
 
-void keyboard_read_char(char* c)
+void tty_read_char(char* c)
 {
     keyboard_unit_t unit;
     for (;;)

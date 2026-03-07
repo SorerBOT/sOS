@@ -2,9 +2,8 @@
 #include <types.h>
 #include <console_io.h>
 #include <interrupts.h>
-#include <keyboard.h>
-#include "keyboard_manager/include/keyboard_manager.h"
-#include <keyboard_types.h>
+#include <tty.h>
+#include <keyboard_manager.h>
 
 void kernel()
 {
@@ -21,7 +20,7 @@ void kernel()
     for (;;)
     {
         char c;
-        keyboard_read_char(&c);
+        tty_read_char(&c);
         console_io_printf("%c", c);
         console_io_flush();
     }
