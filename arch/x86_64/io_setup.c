@@ -1,6 +1,7 @@
 #include <io_setup.h>
 #include <console_io.h>
 #include <ps2_keyboard_driver.h>
+#include <keyboard_manager.h>
 
 static inline void inputs_setup(void);
 static inline void outputs_setup(void);
@@ -12,6 +13,7 @@ static inline void inputs_setup(void)
         .data_port = 0x60
     };
     ps2_keyboard_driver_init(&settings);
+    keyboard_manager_set_layout(KEYBOARD_LAYOUT_US_QWERTY);
 }
 
 static inline void outputs_setup(void)
