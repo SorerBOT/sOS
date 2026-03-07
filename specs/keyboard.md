@@ -1,4 +1,5 @@
 # Keyboard Spec
+IGNORE THIS FOR NOW. ITS NOT ACCURATE ANYMORE. I'LL UPDATE IT ONE DAY
 This spec details the requirements of any keyboard driver implemented in the project, be it a ps2 driver, a USB driver, or whatever.  
 
 ## The General Idea
