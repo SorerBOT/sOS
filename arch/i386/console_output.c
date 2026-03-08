@@ -48,3 +48,8 @@ void console_output_flush()
 {
     console_output_report("console_output_flush: not supported in this architecture.\n", CONSOLE_OUTPUT_FAILURE);
 }
+
+void console_output_backspace(void)
+{
+    console_output_report("console_output_backspace: not supported in this architecture.\n", CONSOLE_OUTPUT_FAILURE);
+}

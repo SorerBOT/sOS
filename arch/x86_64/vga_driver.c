@@ -25,10 +25,11 @@
 
 #define VGA_DRIVER_SPACE_AND_DEFAULT_COLOR ((word) ((VGA_DRIVER_COLOR_DEFAULT << 8) | ((byte) ' ')))
 
-static inline void carriage_return();
-static inline void line_feed();
-static inline void shift_shadow_buffer();
-static inline void init_shadow_buffer();
+static inline void carriage_return(void);
+static inline void line_feed(void);
+static inline void back_space(void);
+static inline void shift_shadow_buffer(void);
+static inline void init_shadow_buffer(void);
 
 static void move_cursor(size_t shadow_line, size_t offset);
 static void print_char(byte color, char character);
@@ -38,12 +39,12 @@ static size_t offset = 0;
 static byte shadow_buffer[VGA_DRIVER_SHADOW_SIZE] = { 0 };
 static volatile uint8_t* buffer_address = (volatile uint8_t*) VGA_DRIVER_BUFFER_ADDRESS;
 
-static inline void carriage_return()
+static inline void carriage_return(void)
 {
     offset = 0;
 }
 
-static inline void line_feed()
+static inline void line_feed(void)
 {
     ++shadow_line;
     if (shadow_line >= VGA_DRIVER_SHADOW_HEIGHT)
@@ -53,7 +54,20 @@ static inline void line_feed()
     }
 }
 
-static void shift_shadow_buffer()
+static inline void back_space(void)
+{
+    if ( offset > 0 )
+    {
+        --offset;
+    }
+    else if ( shadow_line > 0 )
+    {
+        --shadow_line;
+        offset = VGA_DRIVER_WIDTH - 1;
+    }
+}
+
+static void shift_shadow_buffer(void)
 {
     byte* dst;
     byte* src;
@@ -68,13 +82,13 @@ static void shift_shadow_buffer()
     memset_word(last_line_word, VGA_DRIVER_SPACE_AND_DEFAULT_COLOR, VGA_DRIVER_LINE_SIZE / 2);
 }
 
-static inline void init_shadow_buffer()
+static inline void init_shadow_buffer(void)
 {
     memset_word(shadow_buffer, VGA_DRIVER_SPACE_AND_DEFAULT_COLOR, VGA_DRIVER_SHADOW_SIZE / 2);
 }
 
 
-void vga_driver_flush_shadow_buffer()
+void vga_driver_flush_shadow_buffer(void)
 {
     size_t writable_lines_count = VGA_DRIVER_HEIGHT - VGA_DRIVER_BLANK_LINES;
     size_t line_to_read_from = (shadow_line >= writable_lines_count)
@@ -107,6 +121,12 @@ static void move_cursor(size_t shadow_line, size_t offset)
 
 static void print_char(byte color, char character)
 {
+    if ( character == '\b' )
+    {
+        back_space();
+        return;
+    }
+
     if (character == '\n')
     {
         line_feed();

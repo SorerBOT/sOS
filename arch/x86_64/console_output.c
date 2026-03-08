@@ -82,3 +82,9 @@ void console_output_init(const console_output_init_settings_t* settings)
 
     vga_driver_init(&vga_settings);
 }
+
+void console_output_backspace(void)
+{
+    vga_driver_print_string_colored(VGA_DRIVER_COLOR_DEFAULT, VGA_DRIVER_BACKSPACE);
+    console_output_flush();
+}
