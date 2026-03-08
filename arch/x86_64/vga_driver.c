@@ -98,6 +98,7 @@ void vga_driver_flush_shadow_buffer(void)
     byte* address_to_read_from = ((byte*) shadow_buffer) + line_to_read_from * VGA_DRIVER_LINE_SIZE;
     size_t len = writable_lines_count * VGA_DRIVER_LINE_SIZE;
     memcpy_to_volatile(buffer_address, address_to_read_from, len);
+    move_cursor(shadow_line, offset);
 }
 
 static void move_cursor(size_t shadow_line, size_t offset)
@@ -133,7 +134,6 @@ static void print_char(byte color, char character)
         carriage_return();
 
         vga_driver_flush_shadow_buffer();
-        move_cursor(shadow_line, offset);
 
         return;
     }
@@ -166,7 +166,6 @@ void vga_driver_clear_colored(byte new_background_color)
     shadow_line = 0;
     offset = 0;
     vga_driver_flush_shadow_buffer();
-    move_cursor(shadow_line, offset);
 }
 
 void vga_driver_init(const vga_driver_settings_t* settings)

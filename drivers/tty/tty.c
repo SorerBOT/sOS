@@ -26,6 +26,8 @@ static inline void tty_read_char(char* c)
 errors_t tty_read_line(char* line_buffer, size_t buffer_size)
 {
     const char* end_of_buffer = line_buffer + buffer_size;
+    const char* start_of_buffer = line_buffer;
+
     keyboard_unit_t unit;
 
     for (; line_buffer < end_of_buffer - 1; )
@@ -51,9 +53,12 @@ errors_t tty_read_line(char* line_buffer, size_t buffer_size)
         {
             if ( unit.data.action.key == KEYBOARD_KEYCODE_BACKSPACE )
             {
-                console_output_backspace();
-                console_output_flush();
-                --line_buffer;
+                if  ( line_buffer > start_of_buffer )
+                {
+                    console_output_backspace();
+                    console_output_flush();
+                    --line_buffer;
+                }
             }
         }
     }
