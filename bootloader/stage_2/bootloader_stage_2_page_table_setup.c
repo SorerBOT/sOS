@@ -6,7 +6,7 @@ __asm__(".code32\n");
 #include <libc_partials/include/types.h>
 #include <libc_partials/include/string.h>
 
-#include <console_io.h>
+#include <console_output.h>
 
 #define KiB (1024)
 #define PAGE_SIZE (4 * KiB)
@@ -86,7 +86,7 @@ void PT_init_identity_map(PT_t* pt, int64_t pages_count)
 
 void PDT_init_identity_map(PDT_t* pdt, int64_t pages_count)
 {
-    console_io_report("mapping pages. can't print how many pages remaining.", CONSOLE_IO_SUCCESS);
+    console_output_report("mapping pages. can't print how many pages remaining.", CONSOLE_OUTPUT_SUCCESS);
 
 
     size_t created_pt_count = 0;
@@ -112,7 +112,7 @@ void PDPT_init_identity_map(PDPT_t* pdpt, int64_t pages_count)
 PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
 {
     int64_t pages_count = memory_size_to_map / PAGE_SIZE;
-    console_io_report("mapping pages. can't print how many pages remaining.", CONSOLE_IO_SUCCESS);
+    console_output_report("mapping pages. can't print how many pages remaining.", CONSOLE_OUTPUT_SUCCESS);
 
     PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
 
@@ -129,18 +129,18 @@ PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
 
 void page_table_setup()
 {
-    console_io_init_settings_t settings =
+    console_output_init_settings_t settings =
     {
         .initial_line = 14,
         .should_copy_existing_buffer = true
     };
 
-    console_io_init(&settings);
+    console_output_init(&settings);
 
-    console_io_report("entered 32-bit protected mode.", CONSOLE_IO_SUCCESS);
+    console_output_report("entered 32-bit protected mode.", CONSOLE_OUTPUT_SUCCESS);
     next_free_address_init();
 
     PML4T_t* pml4t = PML4T_init_identity_map(MEMORY_SIZE_TO_MAP);
 
-    console_io_report("successfully created the kernel's page table.", CONSOLE_IO_SUCCESS);
+    console_output_report("successfully created the kernel's page table.", CONSOLE_OUTPUT_SUCCESS);
 }

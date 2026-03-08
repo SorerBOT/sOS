@@ -181,12 +181,12 @@ INFO_JUMPING_TO_PROTECTED_MODE_MSG:
 %define LONG_MODE_MSR 0xC0000080
 %define KERNEL_ORG 0x10000
 
-%define CONSOLE_IO_FAILURE 0
-%define CONSOLE_IO_SUCCESS 1
+%define CONSOLE_OUTPUT_FAILURE 0
+%define CONSOLE_OUTPUT_SUCCESS 1
 
 %define ASCII_LINE_FEED 0x0a
 
-extern console_io_report
+extern console_output_report
 
 ; FOR THE TIME BEING, I DON'T CHECK WHETHER LONG MODE IS AVAILABLE.
 ; I KNOW THAT IT IS ON MY HARDWARE, AND I CARE MUCH MORE ABOUT MAKING
@@ -222,9 +222,9 @@ load_page_table:
     mov eax, [BASE_PAGE_TABLE_ADDRESS] 
     mov cr3, eax
 
-    push CONSOLE_IO_SUCCESS
+    push CONSOLE_OUTPUT_SUCCESS
     push SUCCESS_LOAD_PAGE_TABLE_MSG
-    call console_io_report
+    call console_output_report
     add esp, 8
 
     ret
@@ -235,9 +235,9 @@ enable_pae_paging:
     or eax, 1 << 5 ; THE PAE BIT IS THE SIXTH BIT
     mov cr4, eax
 
-    push CONSOLE_IO_SUCCESS
+    push CONSOLE_OUTPUT_SUCCESS
     push SUCCESS_ENABLE_PAE_PAGING_MSG
-    call console_io_report
+    call console_output_report
     add esp, 8
 
     ret
@@ -249,9 +249,9 @@ toggle_long_mode_paging:
     or eax, 1 << 8 ; LONG MODE PAGING BIT IS THE NINTH BIT
     wrmsr
 
-    push CONSOLE_IO_SUCCESS
+    push CONSOLE_OUTPUT_SUCCESS
     push SUCCESS_TOGGLE_LONG_MODE_PAGING_MSG
-    call console_io_report
+    call console_output_report
     add esp, 8
 
     ret

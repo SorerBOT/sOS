@@ -1,12 +1,11 @@
 #include <stdint.h>
 #include <stddef.h>
-#include <stdarg.h>
 #include <stdbool.h>
 
-#include <types.h>
-#include <string.h>
 #include <vga_driver.h>
-#include <cpu_io.h>
+
+#include <libc_partials/include/string.h>
+#include <libc_partials/include/types.h>
 
 #define VGA_DRIVER_BUFFER_ADDRESS 0xB8000
 #define VGA_DRIVER_LINE_SIZE (2 * VGA_DRIVER_WIDTH)
@@ -25,25 +24,24 @@
 
 #define VGA_DRIVER_SPACE_AND_DEFAULT_COLOR ((word) ((VGA_DRIVER_COLOR_DEFAULT << 8) | ((byte) ' ')))
 
-static inline void carriage_return();
-static inline void line_feed();
-static inline void shift_shadow_buffer();
-static inline void init_shadow_buffer();
-
-static void move_cursor(size_t shadow_line, size_t offset);
-static void print_char(byte color, char character);
+static inline void carriage_return(void);
+static inline void line_feed(void);
+static inline void shift_shadow_buffer(void);
+static inline void init_shadow_buffer(void);
+static inline void vga_driver_flush_shadow_buffer(void);
+static inline void print_char(byte color, char character);
 
 static size_t shadow_line = 0;
 static size_t offset = 0;
 static byte shadow_buffer[VGA_DRIVER_SHADOW_SIZE] = { 0 };
 static volatile uint8_t* buffer_address = (volatile uint8_t*) VGA_DRIVER_BUFFER_ADDRESS;
 
-static inline void carriage_return()
+static inline void carriage_return(void)
 {
     offset = 0;
 }
 
-static inline void line_feed()
+static inline void line_feed(void)
 {
     ++shadow_line;
     if (shadow_line >= VGA_DRIVER_SHADOW_HEIGHT)
@@ -53,67 +51,48 @@ static inline void line_feed()
     }
 }
 
-static void shift_shadow_buffer()
+static void shift_shadow_buffer(void)
 {
-    byte* dst;
-    byte* src;
-    for (size_t i = 1; i < VGA_DRIVER_SHADOW_HEIGHT; ++i)
+    byte* restrict dst;
+    byte* restrict src;
+    for (size_t i = 0; i < VGA_DRIVER_SHADOW_HEIGHT - 1; ++i)
     {
-        dst = shadow_buffer + (i-1) * VGA_DRIVER_LINE_SIZE;
-        src = shadow_buffer + (i) * VGA_DRIVER_LINE_SIZE;
-        memcpy(dst, src, VGA_DRIVER_LINE_SIZE);
+        dst = shadow_buffer + i * VGA_DRIVER_LINE_SIZE;
+        src = shadow_buffer + (i+1) * VGA_DRIVER_LINE_SIZE;
+        memcpy_from_volatile_to_volatile(dst, src, VGA_DRIVER_LINE_SIZE);
     }
 
     word* last_line_word = (word*) src;
-    memset_word(last_line_word, VGA_DRIVER_SPACE_AND_DEFAULT_COLOR, VGA_DRIVER_LINE_SIZE / 2);
+    memset_word(last_line_word, VGA_DRIVER_SPACE_AND_DEFAULT_COLOR, VGA_DRIVER_LINE_SIZE);
 }
 
-static inline void init_shadow_buffer()
+static inline void init_shadow_buffer(void)
 {
     memset_word(shadow_buffer, VGA_DRIVER_SPACE_AND_DEFAULT_COLOR, VGA_DRIVER_SHADOW_SIZE / 2);
 }
 
 
-void vga_driver_flush_shadow_buffer()
+
+static inline void vga_driver_flush_shadow_buffer(void)
 {
     size_t writable_lines_count = VGA_DRIVER_HEIGHT - VGA_DRIVER_BLANK_LINES;
     size_t line_to_read_from = (shadow_line >= writable_lines_count)
         ? shadow_line - writable_lines_count + 1
         : 0;
 
-    byte* address_to_read_from = ((byte*) shadow_buffer) + line_to_read_from * VGA_DRIVER_LINE_SIZE;
-    size_t len = writable_lines_count * VGA_DRIVER_LINE_SIZE;
-    memcpy_to_volatile(buffer_address, address_to_read_from, len);
+    byte* address_to_read_from = shadow_buffer + line_to_read_from * VGA_DRIVER_LINE_SIZE;
+    size_t len = VGA_DRIVER_SIZE;
+    memcpy_from_volatile_to_volatile(buffer_address, address_to_read_from, len);
 }
 
-static void move_cursor(size_t shadow_line, size_t offset)
+static inline void print_char(byte color, char character)
 {
-    size_t cursor_line = shadow_line;
-    if (shadow_line >= VGA_DRIVER_HEIGHT - VGA_DRIVER_BLANK_LINES)
-    {
-        cursor_line = VGA_DRIVER_HEIGHT - VGA_DRIVER_BLANK_LINES - 1;
-    }
-
-    word index = (word) VGA_DRIVER_GET_FLAT_INDEX(cursor_line, offset);
-    byte index_low = (byte) (index & 0xFF);
-    byte index_high = (byte) (index >> 8);
-
-    cpu_io_write_byte(VGA_DRIVER_PORT_COMMAND, VGA_DRIVER_COMMAND_SET_CURSOR_HIGH_BYTE);
-    cpu_io_write_byte(VGA_DRIVER_PORT_DATA, index_high);
-
-    cpu_io_write_byte(VGA_DRIVER_PORT_COMMAND, VGA_DRIVER_COMMAND_SET_CURSOR_LOW_BYTE);
-    cpu_io_write_byte(VGA_DRIVER_PORT_DATA, index_low);
-}
-
-static void print_char(byte color, char character)
-{
-    if (character == '\n')
+    if ( character == '\n' )
     {
         line_feed();
         carriage_return();
 
         vga_driver_flush_shadow_buffer();
-        move_cursor(shadow_line, offset);
 
         return;
     }
@@ -139,16 +118,6 @@ void vga_driver_print_string_colored(byte color, const char* string)
     }
 }
 
-void vga_driver_clear_colored(byte new_background_color)
-{
-    word space_and_color = (new_background_color << 8) | ((byte) ' ');
-    memset_word(shadow_buffer, space_and_color, VGA_DRIVER_SHADOW_SIZE / 2);
-    shadow_line = 0;
-    offset = 0;
-    vga_driver_flush_shadow_buffer();
-    move_cursor(shadow_line, offset);
-}
-
 void vga_driver_init(const vga_driver_settings_t* settings)
 {
     init_shadow_buffer();
@@ -156,6 +125,6 @@ void vga_driver_init(const vga_driver_settings_t* settings)
     shadow_line = settings->initial_line;
     if (settings->should_copy_vga_buffer)
     {
-        memcpy_from_volatile(shadow_buffer, buffer_address, VGA_DRIVER_SIZE);
+        memcpy_from_volatile_to_volatile(shadow_buffer, buffer_address, VGA_DRIVER_SIZE);
     }
 }
