@@ -15,13 +15,13 @@ enum
     ISR_GENERAL_PROTECTION_FAULT = 0x0D
 };
 
-static void isr_dump_registers(const isr_args_t* args);
-static void isr_handler_page_fault(const isr_args_t* args);
-static void isr_handler_general_protection_fault(const isr_args_t* args);
-static void isr_handler_pic_interrupts(const isr_args_t* args);
-static bool isr_is_pic_interrupt(qword isr_number);
+static void dump_registers(const isr_args_t* args);
+static void handler_page_fault(const isr_args_t* args);
+static void handler_general_protection_fault(const isr_args_t* args);
+static void handler_pic_interrupts(const isr_args_t* args);
+static bool is_pic_interrupt(qword isr_number);
 
-static void isr_dump_registers(const isr_args_t* args)
+static void dump_registers(const isr_args_t* args)
 {
     console_output_printf(
             "Registers dump:\n"
@@ -46,7 +46,7 @@ static void isr_dump_registers(const isr_args_t* args)
             "r14", args->general_registers.r12, "r15", args->general_registers.r13);
 }
 
-static void isr_handler_page_fault(const isr_args_t* args)
+static void handler_page_fault(const isr_args_t* args)
 {
     void* faulting_address;
     __asm__ volatile("mov %%cr2, %0" : "=r" (faulting_address));
@@ -64,7 +64,7 @@ static void isr_handler_page_fault(const isr_args_t* args)
             "Page Fault Occurred\n"
             "Faulting address: %p\n", faulting_address);
 
-    isr_dump_registers(args);
+    dump_registers(args);
 
     console_output_printf(
             "%27s:    %d\n"
@@ -90,7 +90,7 @@ static void isr_handler_page_fault(const isr_args_t* args)
     }
 }
 
-static void isr_handler_general_protection_fault(const isr_args_t* args)
+static void handler_general_protection_fault(const isr_args_t* args)
 {
     console_output_print_blue_screen("General Protection Fault Occurred\n");
     if ( args->error_code == 0 )
@@ -103,13 +103,13 @@ static void isr_handler_general_protection_fault(const isr_args_t* args)
     }
 }
 
-static bool isr_is_pic_interrupt(qword isr_number)
+static bool is_pic_interrupt(qword isr_number)
 {
     return ((isr_number >= IDT_OFFSET_PIC_MASTER && isr_number < IDT_OFFSET_PIC_MASTER + 8)
         || (isr_number >= IDT_OFFSET_PIC_SLAVE && isr_number < IDT_OFFSET_PIC_SLAVE + 8));
 }
 
-static void isr_handler_pic_interrupts(const isr_args_t* args)
+static void handler_pic_interrupts(const isr_args_t* args)
 {
     uint8_t irq_number;
     uint8_t isr_number = (uint8_t) args->isr_number;
@@ -132,6 +132,7 @@ static void isr_handler_pic_interrupts(const isr_args_t* args)
     if ( irq_number == 1 )
     {
         ps2_keyboard_driver_read_and_handle_scancode();
+        
     }
 
 
@@ -141,9 +142,9 @@ static void isr_handler_pic_interrupts(const isr_args_t* args)
 
 void isr_handler(isr_args_t* args)
 {
-    if ( isr_is_pic_interrupt(args->isr_number) )
+    if ( is_pic_interrupt(args->isr_number) )
     {
-        isr_handler_pic_interrupts(args);
+        handler_pic_interrupts(args);
         return;
     }
 
@@ -151,7 +152,7 @@ void isr_handler(isr_args_t* args)
     {
         case ISR_DIVIDE_BY_ZERO:
             console_output_print_blue_screen("Divide by zero occurred:\n");
-            isr_dump_registers(args);
+            dump_registers(args);
             while (1)
             {
                 __asm__ volatile("cli; hlt");
@@ -162,21 +163,21 @@ void isr_handler(isr_args_t* args)
             break;
         case ISR_DOUBLE_FAULT:
             console_output_print_blue_screen("Double fault occurred:\n");
-            isr_dump_registers(args);
+            dump_registers(args);
             while (1)
             {
                 __asm__ volatile("cli; hlt");
             }
             break;
         case ISR_PAGE_FAULT:
-            isr_handler_page_fault(args);
+            handler_page_fault(args);
             while (1)
             {
                 __asm__ volatile("cli; hlt");
             }
             break;
         case ISR_GENERAL_PROTECTION_FAULT:
-            isr_handler_general_protection_fault(args);
+            handler_general_protection_fault(args);
             while (1)
             {
                 __asm__ volatile("cli; hlt");
