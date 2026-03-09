@@ -23,5 +23,7 @@ void console_output_print_blue_screen(const char* restrict format, ...);
 void console_output_flush();
 void console_output_init(const console_output_init_settings_t* settings);
 void console_output_backspace(void);
+void console_output_print(const char* string);
+void console_output_println(const char* string);
 
 #endif /* CONSOLE_OUTPUT_H */

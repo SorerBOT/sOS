@@ -88,3 +88,13 @@ void console_output_backspace(void)
     vga_driver_print_string_colored(VGA_DRIVER_COLOR_DEFAULT, VGA_DRIVER_BACKSPACE);
     console_output_flush();
 }
+
+void console_output_print(const char* string)
+{
+    vga_driver_print_string_colored(VGA_DRIVER_COLOR_DEFAULT, string);
+}
+void console_output_println(const char* string)
+{
+    vga_driver_print_string_colored(VGA_DRIVER_COLOR_DEFAULT, string);
+    vga_driver_print_string_colored(VGA_DRIVER_COLOR_DEFAULT, "\n");
+}

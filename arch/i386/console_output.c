@@ -53,3 +53,14 @@ void console_output_backspace(void)
 {
     console_output_report("console_output_backspace: not supported in this architecture.\n", CONSOLE_OUTPUT_FAILURE);
 }
+
+void console_output_print(const char* string)
+{
+    console_output_report("console_output_print: not supported in this architecture.\n", CONSOLE_OUTPUT_FAILURE);
+
+}
+void console_output_println(const char* string)
+{
+    console_output_report("console_output_println: not supported in this architecture.\n", CONSOLE_OUTPUT_FAILURE);
+
+}
