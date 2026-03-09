@@ -6,24 +6,23 @@
 
 #define TTY_BUFFER_SIZE 256
 
-static inline void tty_read_char(char* c);
+static inline char* handle_unicode(char* line_buffer, size_t buffer_size,
+        const keyboard_unit_t* unit, const char* end_of_buffer,
+        const char* start_of_buffer);
+static inline char* handle_action_backspace(char* line_buffer, size_t buffer_size,
+        const keyboard_unit_t* unit, const char* end_of_buffer,
+        const char* start_of_buffer);
+static inline char* handle_action_backspace_word(char* line_buffer, size_t buffer_size,
+        const keyboard_unit_t* unit, const char* end_of_buffer,
+        const char* start_of_buffer);
+static inline char* handle_action_backspace_line(char* line_buffer, size_t buffer_size,
+        const keyboard_unit_t* unit, const char* end_of_buffer,
+        const char* start_of_buffer);
+static inline char* handle_unit(char* line_buffer, size_t buffer_size,
+        const keyboard_unit_t* unit, const char* end_of_buffer,
+        const char* start_of_buffer);
 
-static inline void tty_read_char(char* c)
-{
-    keyboard_unit_t unit;
-    for (;;)
-    {
-        keyboard_driver_consume_unit(&unit);
-
-        if ( unit.unit_type == KEYBOARD_UNIT_UNICODE )
-        {
-            *c = (char) unit.data.character;
-            break;
-        }
-    }
-}
-
-static char* handle_unicode(char* line_buffer, size_t buffer_size,
+static inline char* handle_unicode(char* line_buffer, size_t buffer_size,
         const keyboard_unit_t* unit, const char* end_of_buffer,
         const char* start_of_buffer)
 {
@@ -37,7 +36,7 @@ static char* handle_unicode(char* line_buffer, size_t buffer_size,
     return line_buffer;
 }
 
-static char* handle_action_backspace(char* line_buffer, size_t buffer_size,
+static inline char* handle_action_backspace(char* line_buffer, size_t buffer_size,
         const keyboard_unit_t* unit, const char* end_of_buffer,
         const char* start_of_buffer)
 {
@@ -51,7 +50,7 @@ static char* handle_action_backspace(char* line_buffer, size_t buffer_size,
     return line_buffer;
 }
 
-static char* handle_action_backspace_word(char* line_buffer, size_t buffer_size,
+static inline char* handle_action_backspace_word(char* line_buffer, size_t buffer_size,
         const keyboard_unit_t* unit, const char* end_of_buffer,
         const char* start_of_buffer)
 {
@@ -69,7 +68,7 @@ static char* handle_action_backspace_word(char* line_buffer, size_t buffer_size,
     return line_buffer;
 }
 
-static char* handle_action_backspace_line(char* line_buffer, size_t buffer_size,
+static inline char* handle_action_backspace_line(char* line_buffer, size_t buffer_size,
         const keyboard_unit_t* unit, const char* end_of_buffer,
         const char* start_of_buffer)
 {
@@ -82,7 +81,7 @@ static char* handle_action_backspace_line(char* line_buffer, size_t buffer_size,
     return line_buffer;
 }
 
-static char* handle_unit(char* line_buffer, size_t buffer_size,
+static inline char* handle_unit(char* line_buffer, size_t buffer_size,
         const keyboard_unit_t* unit, const char* end_of_buffer,
         const char* start_of_buffer)
 {
