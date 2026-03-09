@@ -57,7 +57,6 @@ static inline char* handle_action_backspace_word(char* line_buffer, size_t buffe
     for (; line_buffer > start_of_buffer;)
     {
         console_output_backspace();
-        console_output_flush();
         --line_buffer;
         if  ( *line_buffer == ' ' )
         {
@@ -65,6 +64,7 @@ static inline char* handle_action_backspace_word(char* line_buffer, size_t buffe
         }
     }
 
+    console_output_flush();
     return line_buffer;
 }
 
@@ -74,9 +74,9 @@ static inline char* handle_action_backspace_line(char* line_buffer, size_t buffe
 {
     for (; line_buffer > start_of_buffer; --line_buffer)
     {
-        console_output_backspace();
         console_output_flush();
     }
+    console_output_backspace();
 
     return line_buffer;
 }
