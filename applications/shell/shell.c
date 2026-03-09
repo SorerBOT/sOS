@@ -26,17 +26,33 @@ static inline errors_t command_parse(char* command, int* argc, const char** argv
 {
     *argc = 0;
 
-    bool is_right_after_space = true;
+    bool is_parameter_start = true;
+    bool is_in_quotes = false;
     for (; *command != '\0'; ++command )
     {
-        if ( *command == ' ' )
+        if ( *command == '\"' )
         {
-            is_right_after_space = true;
+            if ( is_in_quotes == true )
+            {
+                *command = '\0';
+            }
+            else
+            {
+                is_parameter_start = true;
+            }
+
+            is_in_quotes = !is_in_quotes;
+        }
+
+        else if ( *command == ' ' && !is_in_quotes )
+        {
+            is_parameter_start = true;
             *command = '\0';
         }
-        else if ( is_right_after_space )
+
+        else if ( is_parameter_start )
         {
-            is_right_after_space = false;
+            is_parameter_start = false;
             if ( *argc < argv_size )
             {
                 argv[(*argc)++] = command;
