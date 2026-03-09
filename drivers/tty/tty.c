@@ -143,9 +143,10 @@ errors_t tty_read_line(char* line_buffer, size_t buffer_size)
     return ERRORS_WRITE_NOT_ENOUGH_SPACE;
 }
 
-void tty_print_line(const char* line)
+void tty_print(const char* line)
 {
-    console_output_printf("%s\n", line);
+    console_output_printf("%s", line);
+    console_output_flush();
 }
 
 

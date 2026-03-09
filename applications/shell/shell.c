@@ -19,7 +19,8 @@ static inline errors_t command_parse(char* command, int* argc, const char** argv
 
 static inline void print_welcome(void)
 {
-    tty_print_line(SHELL_WELCOME_MSG);
+    tty_print(SHELL_WELCOME_MSG);
+    tty_print("\n");
 }
 
 static inline errors_t command_parse(char* command, int* argc, const char** argv, size_t argv_size)
@@ -84,7 +85,7 @@ static inline void command_execute(char* command)
     }
     else
     {
-        tty_print_line("SHELL error: not enough space in argv to execute command");
+        tty_print("SHELL error: not enough space in argv to execute command\n");
     }
 }
 
@@ -94,6 +95,7 @@ void shell_launch(void)
 
     for (;;)
     {
+        tty_print("sOS> ");
         tty_read_line(shell_buffer, SHELL_BUFFER_SIZE);
         command_execute(shell_buffer);
     }
