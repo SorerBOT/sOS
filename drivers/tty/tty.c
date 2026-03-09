@@ -69,6 +69,19 @@ static char* handle_action_backspace_word(char* line_buffer, size_t buffer_size,
     return line_buffer;
 }
 
+static char* handle_action_backspace_line(char* line_buffer, size_t buffer_size,
+        const keyboard_unit_t* unit, const char* end_of_buffer,
+        const char* start_of_buffer)
+{
+    for (; line_buffer > start_of_buffer; --line_buffer)
+    {
+        console_output_backspace();
+        console_output_flush();
+    }
+
+    return line_buffer;
+}
+
 static char* handle_unit(char* line_buffer, size_t buffer_size,
         const keyboard_unit_t* unit, const char* end_of_buffer,
         const char* start_of_buffer)
@@ -83,10 +96,16 @@ static char* handle_unit(char* line_buffer, size_t buffer_size,
         if ( unit->data.action.key == KEYBOARD_KEYCODE_BACKSPACE )
         {
             keyboard_modifiers_state_t control_l_or_option_l_mask = KEYBOARD_MODIFIERS_CONTROL_L | KEYBOARD_MODIFIERS_ALT_L;
+            keyboard_modifiers_state_t super_mask = KEYBOARD_MODIFIERS_SUPER_ANY;
 
             if ( unit->data.action.modifiers_state & control_l_or_option_l_mask )
             {
                 return handle_action_backspace_word(line_buffer, buffer_size, unit,
+                        end_of_buffer, start_of_buffer);
+            }
+            else if ( unit->data.action.modifiers_state & super_mask )
+            {
+                return handle_action_backspace_line(line_buffer, buffer_size, unit,
                         end_of_buffer, start_of_buffer);
             }
             else
