@@ -11,6 +11,7 @@ volatile void* memcpy_to_volatile(volatile void *dst, const void *restrict src, 
 void* memcpy_from_volatile(void *restrict dst, const volatile void * src, size_t n);
 
 size_t strlen(const char *s);
+int strcmp(const char *first, const char* second);
 
 
 #endif /* STRING_H */
