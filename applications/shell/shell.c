@@ -77,10 +77,9 @@ static inline void command_execute(char* command)
 
     if ( error == ERRORS_NONE )
     {
-        console_output_printf("Parsed command. Found: %d parameters, which are:\n", argc);
-        for ( size_t i = 0; i < argc; ++i )
+        if ( argc == 0 )
         {
-            console_output_printf("\t%lu) %s:\n", i, argv[i]);
+            return;
         }
     }
     else
