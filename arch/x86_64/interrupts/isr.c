@@ -12,21 +12,24 @@
 
 enum
 {
-    ISR_DIVIDE_BY_ZERO = 0x00,
-    ISR_BREAKPOINT = 0x03,
-    ISR_DOUBLE_FAULT = 0x08,
-    ISR_PAGE_FAULT = 0x0E,
-    ISR_GENERAL_PROTECTION_FAULT = 0x0D
+    ISR_DIVIDE_BY_ZERO              = 0x00,
+    ISR_BREAKPOINT                  = 0x03,
+    ISR_INVALID_OPCODE              = 0x06,
+    ISR_DOUBLE_FAULT                = 0x08,
+    ISR_PAGE_FAULT                  = 0x0E,
+    ISR_GENERAL_PROTECTION_FAULT    = 0x0D,
+    ISR_SYSCALL                     = 0x80
 };
 
-static void handle_context_switch(isr_args_t* args);
+static void handler_context_switch(isr_args_t* args);
 static void dump_registers(const isr_args_t* args);
 static void handler_page_fault(const isr_args_t* args);
 static void handler_general_protection_fault(const isr_args_t* args);
 static void handler_pic_interrupts(isr_args_t* args);
 static bool is_pic_interrupt(qword isr_number);
+static void handler_syscall(isr_args_t* args);
 
-static void handle_context_switch(isr_args_t* args)
+static void handler_context_switch(isr_args_t* args)
 {
     process_context_t current_context =
     {
@@ -58,35 +61,34 @@ static void handle_context_switch(isr_args_t* args)
 
     const process_context_t* new_context = process_manager_context_switch(next_process, current_context);
 
-    args->general_registers = (isr_registers_t)
-    {
-        .r15 = new_context->registers.r15,
-        .r14 = new_context->registers.r14,
-        .r13 = new_context->registers.r13,
-        .r12 = new_context->registers.r12,
-        .r11 = new_context->registers.r11,
-        .r10 = new_context->registers.r10,
-        .r9 = new_context->registers.r9,
-        .r8 = new_context->registers.r8,
-        .rsi = new_context->registers.rsi,
-        .rdx = new_context->registers.rdx,
-        .rcx = new_context->registers.rcx,
-        .rbx = new_context->registers.rbx,
-        .rax = new_context->registers.rax,
-        .rdi = new_context->registers.rdi
-    };
+    console_output_printf("PID: %lu, RIP: %p, RSP: %p, RBP: %p\n",
+            new_context->pid,
+            new_context->registers.rip,
+            new_context->registers.rsp, new_context->registers.rbp);
 
+    args->general_registers.r15 = new_context->registers.r15;
+    args->general_registers.r14 = new_context->registers.r14;
+    args->general_registers.r13 = new_context->registers.r13;
+    args->general_registers.r12 = new_context->registers.r12;
+    args->general_registers.r11 = new_context->registers.r11;
+    args->general_registers.r10 = new_context->registers.r10;
+    args->general_registers.r9 = new_context->registers.r9;
+    args->general_registers.r8 = new_context->registers.r8;
+    args->general_registers.rsi = new_context->registers.rsi;
+    args->general_registers.rdx = new_context->registers.rdx;
+    args->general_registers.rcx = new_context->registers.rcx;
+    args->general_registers.rbx = new_context->registers.rbx;
+    args->general_registers.rax = new_context->registers.rax;
+    args->general_registers.rdi = new_context->registers.rdi;
+    args->general_registers.rbp = new_context->registers.rbp;
     args->rip = new_context->registers.rip;
+    args->rsp = new_context->registers.rsp;
 
-    if ( new_context->registers.rsp != 0 )
-    {
-        args->rsp = new_context->registers.rsp;
-    }
-
-    if ( new_context->registers.rbp )
-    {
-        args->general_registers.rbp = new_context->registers.rbp;
-    }
+    console_output_printf("PID: %lu, RIP: %p, RSP: %p, RBP: %p\n",
+            new_context->pid,
+            args->rip,
+            args->rsp,
+            args->general_registers.rbp);
 }
 
 static void dump_registers(const isr_args_t* args)
@@ -94,15 +96,15 @@ static void dump_registers(const isr_args_t* args)
     process_id_t pid = process_manager_get_running_process_idx();
     console_output_printf(
             "Registers dump for process: %lu:\n"
-            "%3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n",
+            "%3s: %0x\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n",
             pid,
             "rip", args->rip,
             "cs", args->cs, "ss", args->ss,
@@ -207,7 +209,7 @@ static void handler_pic_interrupts(isr_args_t* args)
         bool is_c_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_C);
         if ( is_control_pressed && is_c_pressed )
         {
-            handle_context_switch(args);
+            handler_context_switch(args);
         }
     }
 
@@ -215,6 +217,9 @@ static void handler_pic_interrupts(isr_args_t* args)
     pic_send_EOI(irq_number);
 }
 
+static void handler_syscall(isr_args_t* args)
+{
+}
 
 void isr_handler(isr_args_t* args)
 {
@@ -254,6 +259,17 @@ void isr_handler(isr_args_t* args)
             break;
         case ISR_GENERAL_PROTECTION_FAULT:
             handler_general_protection_fault(args);
+            while (1)
+            {
+                __asm__ volatile("cli; hlt");
+            }
+            break;
+        case ISR_SYSCALL:
+            handler_syscall(args);
+            break;
+        case ISR_INVALID_OPCODE:
+            console_output_print_blue_screen("Invalid opcode:\n");
+            dump_registers(args);
             while (1)
             {
                 __asm__ volatile("cli; hlt");
