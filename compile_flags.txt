@@ -5,6 +5,7 @@
 -m64
 -ffreestanding
 -mno-red-zone
+-Ikernel/process_manager/include
 -Ilibc/include
 -Ilibc/sOS/include
 -Ibootloader/

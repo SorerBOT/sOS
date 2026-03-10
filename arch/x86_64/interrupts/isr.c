@@ -5,6 +5,10 @@
 #include <console_output.h>
 #include <cpu_io.h>
 #include <ps2_keyboard_driver.h>
+#include <keyboard_types.h>
+#include <keyboard_driver.h>
+#include <process_types.h>
+#include <process_manager.h>
 
 enum
 {
@@ -15,11 +19,67 @@ enum
     ISR_GENERAL_PROTECTION_FAULT = 0x0D
 };
 
+static void handle_context_switch(isr_args_t* args);
 static void dump_registers(const isr_args_t* args);
 static void handler_page_fault(const isr_args_t* args);
 static void handler_general_protection_fault(const isr_args_t* args);
-static void handler_pic_interrupts(const isr_args_t* args);
+static void handler_pic_interrupts(isr_args_t* args);
 static bool is_pic_interrupt(qword isr_number);
+
+static void handle_context_switch(isr_args_t* args)
+{
+    process_context_t current_context =
+    {
+        .registers =
+        {
+            .r15 = args->general_registers.r15,
+            .r14 = args->general_registers.r14,
+            .r13 = args->general_registers.r13,
+            .r12 = args->general_registers.r12,
+            .r11 = args->general_registers.r11,
+            .r10 = args->general_registers.r10,
+            .r9 = args->general_registers.r9,
+            .r8 = args->general_registers.r8,
+            .rbp = args->general_registers.rbp,
+            .rsp = args->rsp,
+            .rdi = args->general_registers.rdi,
+            .rsi = args->general_registers.rsi,
+            .rip = args->rip,
+            .rax = args->general_registers.rax,
+            .rbx = args->general_registers.rbx,
+            .rcx = args->general_registers.rcx,
+            .rdx = args->general_registers.rdx
+        }
+    };
+
+    process_id_t current_pid = process_manager_get_running_process_idx();
+    size_t processes_count = process_manager_get_processes_count();
+    process_id_t next_process = (current_pid + 1) % processes_count;
+
+    const process_context_t* new_context = process_manager_context_switch(next_process, current_context);
+
+    args->general_registers = (isr_registers_t)
+    {
+        .r15 = new_context->registers.r15,
+        .r14 = new_context->registers.r14,
+        .r13 = new_context->registers.r13,
+        .r12 = new_context->registers.r12,
+        .r11 = new_context->registers.r11,
+        .r10 = new_context->registers.r10,
+        .r9 = new_context->registers.r9,
+        .r8 = new_context->registers.r8,
+        //.rbp = new_context->registers.rbp,
+        .rsi = new_context->registers.rsi,
+        .rdx = new_context->registers.rdx,
+        .rcx = new_context->registers.rcx,
+        .rbx = new_context->registers.rbx,
+        .rax = new_context->registers.rax,
+        .rdi = new_context->registers.rdi
+    };
+
+    args->rip = new_context->registers.rip;
+    //args->rsp = new_context->registers.rsp;
+}
 
 static void dump_registers(const isr_args_t* args)
 {
@@ -109,7 +169,7 @@ static bool is_pic_interrupt(qword isr_number)
         || (isr_number >= IDT_OFFSET_PIC_SLAVE && isr_number < IDT_OFFSET_PIC_SLAVE + 8));
 }
 
-static void handler_pic_interrupts(const isr_args_t* args)
+static void handler_pic_interrupts(isr_args_t* args)
 {
     uint8_t irq_number;
     uint8_t isr_number = (uint8_t) args->isr_number;
@@ -132,7 +192,13 @@ static void handler_pic_interrupts(const isr_args_t* args)
     if ( irq_number == 1 )
     {
         ps2_keyboard_driver_read_and_handle_scancode();
-        
+
+        bool is_control_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_CONTROL_L);
+        bool is_c_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_C);
+        if ( is_control_pressed && is_c_pressed )
+        {
+            handle_context_switch(args);
+        }
     }
 
 
