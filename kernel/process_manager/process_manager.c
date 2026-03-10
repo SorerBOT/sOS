@@ -2,15 +2,19 @@
 #include <process_types.h>
 
 #include <console_output.h>
+#include <stdint.h>
 
 #define PROCESS_MANAGER_MAX_PROCESSES 32
 
 static process_context_t processes[PROCESS_MANAGER_MAX_PROCESSES];
-static size_t processes_count = 1;
+static size_t processes_count = 0;
 static process_id_t running_process_idx = 0;
+static bool is_running = false;
 
 void process_manager_launch_process(process_routine_t routine)
 {
+    console_output_printf("PID: %lu, rip: %p\n", processes_count, routine);
+
     process_context_t context =
     {
         .registers =
@@ -42,10 +46,21 @@ void process_manager_launch_process(process_routine_t routine)
 
 const process_context_t* process_manager_context_switch(process_id_t next_pid, process_context_t current_context)
 {
-    processes[running_process_idx] = current_context;
-    running_process_idx = next_pid;
+    if ( is_running )
+    {
+        console_output_printf("next PID: %lu\n", next_pid);
+        processes[running_process_idx] = current_context;
+        running_process_idx = next_pid;
 
-    return &processes[running_process_idx];
+        return &processes[running_process_idx];
+    }
+
+    else
+    {
+        is_running = true;
+        running_process_idx = 0;
+        return &processes[0];
+    }
 }
 
 process_id_t process_manager_get_running_process_idx(void)

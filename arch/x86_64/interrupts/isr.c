@@ -68,7 +68,6 @@ static void handle_context_switch(isr_args_t* args)
         .r10 = new_context->registers.r10,
         .r9 = new_context->registers.r9,
         .r8 = new_context->registers.r8,
-        //.rbp = new_context->registers.rbp,
         .rsi = new_context->registers.rsi,
         .rdx = new_context->registers.rdx,
         .rcx = new_context->registers.rcx,
@@ -78,13 +77,23 @@ static void handle_context_switch(isr_args_t* args)
     };
 
     args->rip = new_context->registers.rip;
-    //args->rsp = new_context->registers.rsp;
+
+    if ( new_context->registers.rsp != 0 )
+    {
+        args->rsp = new_context->registers.rsp;
+    }
+
+    if ( new_context->registers.rbp )
+    {
+        args->general_registers.rbp = new_context->registers.rbp;
+    }
 }
 
 static void dump_registers(const isr_args_t* args)
 {
+    process_id_t pid = process_manager_get_running_process_idx();
     console_output_printf(
-            "Registers dump:\n"
+            "Registers dump for process: %lu:\n"
             "%3s: %08x\n"
             "%3s: %08x        %3s: %08x\n"
             "%3s: %08x        %3s: %08x\n"
@@ -94,6 +103,7 @@ static void dump_registers(const isr_args_t* args)
             "%3s: %08x        %3s: %08x\n"
             "%3s: %08x        %3s: %08x\n"
             "%3s: %08x        %3s: %08x\n",
+            pid,
             "rip", args->rip,
             "cs", args->cs, "ss", args->ss,
             "rsp", args->rsp, "rbp", args->general_registers.rbp,
