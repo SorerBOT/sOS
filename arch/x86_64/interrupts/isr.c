@@ -27,7 +27,8 @@ static void handler_page_fault(const isr_args_t* args);
 static void handler_general_protection_fault(const isr_args_t* args);
 static void handler_pic_interrupts(isr_args_t* args);
 static bool is_pic_interrupt(qword isr_number);
-static void handler_syscall(isr_args_t* args);
+static inline word get_syscall_number(isr_args_t* args);
+static inline void handler_syscall(isr_args_t* args);
 
 static qword handler_context_switch(isr_args_t* args)
 {
@@ -164,8 +165,16 @@ static void handler_pic_interrupts(isr_args_t* args)
     pic_send_EOI(irq_number);
 }
 
-static void handler_syscall(isr_args_t* args)
+static inline word get_syscall_number(isr_args_t* args)
 {
+    word ah = (args->general_registers.rax >> 16);
+    return ah;
+}
+
+static inline void handler_syscall(isr_args_t* args)
+{
+    //word syscall_number = get_syscall_number(args);
+    console_output_printf("Executing syscall: %llx\n", args->general_registers.rsi);
 }
 
 qword isr_handler(isr_args_t* args)

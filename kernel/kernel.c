@@ -7,6 +7,7 @@
 #include <shell.h>
 #include <process_manager.h>
 #include <infinite_loop.h>
+#include <syscall.h>
 
 static void shell_launch_wrapper(void* _)
 {
@@ -22,6 +23,8 @@ static void kernel_internal(void* _)
 {
     console_output_report("started up the kernel process.", CONSOLE_OUTPUT_SUCCESS);
 
+
+    syscall_launch_process(shell_launch_wrapper);
     process_manager_launch_process(shell_launch_wrapper);
 
     while (1)
