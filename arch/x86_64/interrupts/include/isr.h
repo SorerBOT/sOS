@@ -34,6 +34,10 @@ typedef struct
     qword ss;
 } isr_args_t;
 
-void isr_handler(isr_args_t* args);
+/*
+ *  RETURNS: the new rsp, which is either just args, or 
+ *  the args of the process we want to switch to
+ */
+qword isr_handler(isr_args_t* args);
 
 #endif /* ISR_H */

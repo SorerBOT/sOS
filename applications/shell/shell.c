@@ -1,7 +1,8 @@
+#include <string.h>
 #include <tty.h>
 #include <shell.h>
 #include <types.h>
-#include <console_output.h>
+#include <infinite_loop.h>
 
 #define SHELL_ARGV_MAX_SIZE 16
 #define SHELL_BUFFER_SIZE 256
@@ -14,8 +15,9 @@
 char shell_buffer[SHELL_BUFFER_SIZE];
 
 static inline void print_welcome(void);
+static inline void command_execute_internal(int argc, char** argv);
 static inline void command_execute(char* command);
-static inline errors_t command_parse(char* command, int* argc, const char** argv, size_t argv_size);
+static inline errors_t command_parse(char* command, int* argc, char** argv, size_t argv_size);
 
 static inline void print_welcome(void)
 {
@@ -23,7 +25,7 @@ static inline void print_welcome(void)
     tty_print("\n");
 }
 
-static inline errors_t command_parse(char* command, int* argc, const char** argv, size_t argv_size)
+static inline errors_t command_parse(char* command, int* argc, char** argv, size_t argv_size)
 {
     *argc = 0;
 
@@ -68,10 +70,18 @@ static inline errors_t command_parse(char* command, int* argc, const char** argv
     return ERRORS_NONE;
 }
 
+static inline void command_execute_internal(int argc, char** argv)
+{
+    if ( strcmp( argv[0], "infinite_loop" ) == 0 )
+    {
+        infinite_loop_launch();
+    }
+}
+
 static inline void command_execute(char* command)
 {
     int argc = 0;
-    const char* argv[SHELL_ARGV_MAX_SIZE];
+    char* argv[SHELL_ARGV_MAX_SIZE];
 
     errors_t error = command_parse(command, &argc, argv, SHELL_ARGV_MAX_SIZE);
 
@@ -81,6 +91,8 @@ static inline void command_execute(char* command)
         {
             return;
         }
+
+        command_execute_internal(argc, argv);
     }
     else
     {

@@ -5,35 +5,61 @@
 #include <console_output.h>
 #include <cpu_io.h>
 #include <ps2_keyboard_driver.h>
+#include <keyboard_types.h>
+#include <keyboard_driver.h>
+#include <process_types.h>
+#include <process_manager.h>
 
 enum
 {
-    ISR_DIVIDE_BY_ZERO = 0x00,
-    ISR_BREAKPOINT = 0x03,
-    ISR_DOUBLE_FAULT = 0x08,
-    ISR_PAGE_FAULT = 0x0E,
-    ISR_GENERAL_PROTECTION_FAULT = 0x0D
+    ISR_DIVIDE_BY_ZERO              = 0x00,
+    ISR_BREAKPOINT                  = 0x03,
+    ISR_INVALID_OPCODE              = 0x06,
+    ISR_DOUBLE_FAULT                = 0x08,
+    ISR_PAGE_FAULT                  = 0x0E,
+    ISR_GENERAL_PROTECTION_FAULT    = 0x0D,
+    ISR_SYSCALL                     = 0x80
 };
 
+static qword handler_context_switch(isr_args_t* args);
 static void dump_registers(const isr_args_t* args);
 static void handler_page_fault(const isr_args_t* args);
 static void handler_general_protection_fault(const isr_args_t* args);
-static void handler_pic_interrupts(const isr_args_t* args);
+static void handler_pic_interrupts(isr_args_t* args);
 static bool is_pic_interrupt(qword isr_number);
+static void handler_syscall(isr_args_t* args);
+
+static qword handler_context_switch(isr_args_t* args)
+{
+    process_id_t current_pid = process_manager_get_running_process_idx();
+    size_t processes_count = process_manager_get_processes_count();
+    process_id_t next_process = (current_pid + 1) % processes_count;
+
+    process_context_t current_context =
+    {
+        .pid = current_pid,
+        .rsp = (qword) args
+    };
+
+    const process_context_t* new_context = process_manager_context_switch(next_process, current_context);
+    return (qword) new_context->rsp;
+}
 
 static void dump_registers(const isr_args_t* args)
 {
+    process_id_t pid = process_manager_get_running_process_idx();
     console_output_printf(
-            "Registers dump:\n"
-            "%3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n"
-            "%3s: %08x        %3s: %08x\n",
+            "Registers dump for process: %lu:\n"
+            "%3s: %0x\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n"
+            "%3s: %016llx        %3s: %016llx\n",
+            pid,
             "rip", args->rip,
             "cs", args->cs, "ss", args->ss,
             "rsp", args->rsp, "rbp", args->general_registers.rbp,
@@ -109,7 +135,7 @@ static bool is_pic_interrupt(qword isr_number)
         || (isr_number >= IDT_OFFSET_PIC_SLAVE && isr_number < IDT_OFFSET_PIC_SLAVE + 8));
 }
 
-static void handler_pic_interrupts(const isr_args_t* args)
+static void handler_pic_interrupts(isr_args_t* args)
 {
     uint8_t irq_number;
     uint8_t isr_number = (uint8_t) args->isr_number;
@@ -132,20 +158,28 @@ static void handler_pic_interrupts(const isr_args_t* args)
     if ( irq_number == 1 )
     {
         ps2_keyboard_driver_read_and_handle_scancode();
-        
     }
 
 
     pic_send_EOI(irq_number);
 }
 
+static void handler_syscall(isr_args_t* args)
+{
+}
 
-void isr_handler(isr_args_t* args)
+qword isr_handler(isr_args_t* args)
 {
     if ( is_pic_interrupt(args->isr_number) )
     {
         handler_pic_interrupts(args);
-        return;
+        bool is_control_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_CONTROL_L);
+        bool is_c_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_C);
+        if ( is_control_pressed && is_c_pressed )
+        {
+            return handler_context_switch(args);
+        }
+        return (qword) args;
     }
 
     switch ( args->isr_number )
@@ -183,5 +217,21 @@ void isr_handler(isr_args_t* args)
                 __asm__ volatile("cli; hlt");
             }
             break;
+        case ISR_SYSCALL:
+            handler_syscall(args);
+            break;
+        case ISR_INVALID_OPCODE:
+            console_output_print_blue_screen("Invalid opcode:\n");
+            dump_registers(args);
+            while (1)
+            {
+                __asm__ volatile("cli; hlt");
+            }
+            break;
+        default:
+            console_output_print_blue_screen("Unhandled interrupt: %llx received\n", args->isr_number);
+            break;
     }
+
+    return (qword) args;
 }

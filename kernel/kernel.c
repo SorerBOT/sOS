@@ -5,6 +5,30 @@
 #include <tty.h>
 #include <keyboard_manager.h>
 #include <shell.h>
+#include <process_manager.h>
+#include <infinite_loop.h>
+
+static void shell_launch_wrapper(void* _)
+{
+    shell_launch();
+}
+
+static void infinite_loop_launch_wrapper(void* _)
+{
+    infinite_loop_launch();
+}
+
+static void kernel_internal(void* _)
+{
+    console_output_report("started up the kernel process.", CONSOLE_OUTPUT_SUCCESS);
+
+    process_manager_launch_process(shell_launch_wrapper);
+
+    while (1)
+    {
+        __asm__ volatile("hlt");
+    }
+}
 
 void kernel()
 {
@@ -14,10 +38,13 @@ void kernel()
 
     interrupts_setup();
 
-    shell_launch();
+    console_output_printf("To context switch, press control + c\n");
+
+    process_manager_launch_process(kernel_internal);
 
     while (1)
     {
         __asm__ volatile("hlt");
     }
 }
+
