@@ -162,12 +162,6 @@ void isr_handler(isr_args_t* args)
     if ( is_pic_interrupt(args->isr_number) )
     {
         handler_pic_interrupts(args);
-        bool is_control_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_CONTROL_L);
-        bool is_c_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_C);
-        if ( is_control_pressed && is_c_pressed )
-        {
-            interrupts_context_switch();
-        }
     }
 
     switch ( args->isr_number )

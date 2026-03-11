@@ -6,17 +6,11 @@
 #include <keyboard_manager.h>
 #include <shell.h>
 #include <process_manager.h>
-#include <infinite_loop.h>
 #include <syscall_dispatcher.h>
 
 static void shell_launch_wrapper(void* _)
 {
     shell_launch();
-}
-
-static void infinite_loop_launch_wrapper(void* _)
-{
-    infinite_loop_launch();
 }
 
 static void kernel_internal(void* _)
