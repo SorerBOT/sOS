@@ -22,7 +22,6 @@ static void kernel_internal(void* _)
 {
     console_output_report("started up the kernel process.", CONSOLE_OUTPUT_SUCCESS);
 
-    process_manager_launch_process(infinite_loop_launch_wrapper);
     process_manager_launch_process(shell_launch_wrapper);
 
     while (1)
@@ -38,6 +37,8 @@ void kernel()
     console_output_report("entered 64-bit long mode.", CONSOLE_OUTPUT_SUCCESS);
 
     interrupts_setup();
+
+    console_output_printf("To context switch, press control + c\n");
 
     process_manager_launch_process(kernel_internal);
 

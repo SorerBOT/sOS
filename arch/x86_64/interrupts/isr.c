@@ -42,19 +42,7 @@ static qword handler_context_switch(isr_args_t* args)
     };
 
     const process_context_t* new_context = process_manager_context_switch(next_process, current_context);
-    console_output_printf("RSP: %p\n", new_context->rsp);
     return (qword) new_context->rsp;
-
-    //console_output_printf("PID: %lu, RIP: %p, RSP: %p, RBP: %p\n",
-    //        new_context->pid,
-    //        new_context->registers.rip,
-    //        new_context->registers.rsp, new_context->registers.rbp);
-
-    //console_output_printf("PID: %lu, RIP: %p, RSP: %p, RBP: %p\n",
-    //        new_context->pid,
-    //        args->rip,
-    //        args->rsp,
-    //        args->general_registers.rbp);
 }
 
 static void dump_registers(const isr_args_t* args)

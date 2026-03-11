@@ -17,7 +17,6 @@ static bool is_running = false;
 
 void process_manager_launch_process(process_routine_t routine)
 {
-    console_output_printf("PID: %lu, rip: %p\n", processes_count, routine);
     process_id_t new_process_idx = processes_count;
 
     void* stack_frame = (void*) (PROCESS_MANAGER_BASE_STACK_ADDRESS + 4096 * 2 * new_process_idx);
@@ -43,7 +42,6 @@ const process_context_t* process_manager_context_switch(process_id_t next_pid, p
 {
     if ( is_running )
     {
-        console_output_printf("next PID: %lu\n", next_pid);
         processes[running_process_idx] = current_context;
         running_process_idx = next_pid;
 
