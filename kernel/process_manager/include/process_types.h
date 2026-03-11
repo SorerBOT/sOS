@@ -9,7 +9,7 @@ typedef void(*process_routine_t)(void*);
 typedef struct
 {
     process_id_t pid;
-    qword rsp;
+    const void* rsp;
 } process_context_t;
 
 #endif /* PROCESS_TYPES_H */

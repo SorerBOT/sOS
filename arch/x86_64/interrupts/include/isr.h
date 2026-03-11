@@ -38,6 +38,6 @@ typedef struct
  *  RETURNS: the new rsp, which is either just args, or 
  *  the args of the process we want to switch to
  */
-qword isr_handler(isr_args_t* args);
+void isr_handler(isr_args_t* args);
 
 #endif /* ISR_H */

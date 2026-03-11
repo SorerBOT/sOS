@@ -9,6 +9,8 @@
 #include <keyboard_driver.h>
 #include <process_types.h>
 #include <process_manager.h>
+#include <syscall_handler.h>
+#include <interrupts.h>
 
 enum
 {
@@ -21,30 +23,12 @@ enum
     ISR_SYSCALL                     = 0x80
 };
 
-static qword handler_context_switch(isr_args_t* args);
 static void dump_registers(const isr_args_t* args);
 static void handler_page_fault(const isr_args_t* args);
 static void handler_general_protection_fault(const isr_args_t* args);
-static void handler_pic_interrupts(isr_args_t* args);
+static void handler_pic_interrupts(const isr_args_t* args);
 static bool is_pic_interrupt(qword isr_number);
-static inline word get_syscall_number(isr_args_t* args);
-static inline void handler_syscall(isr_args_t* args);
-
-static qword handler_context_switch(isr_args_t* args)
-{
-    process_id_t current_pid = process_manager_get_running_process_idx();
-    size_t processes_count = process_manager_get_processes_count();
-    process_id_t next_process = (current_pid + 1) % processes_count;
-
-    process_context_t current_context =
-    {
-        .pid = current_pid,
-        .rsp = (qword) args
-    };
-
-    const process_context_t* new_context = process_manager_context_switch(next_process, current_context);
-    return (qword) new_context->rsp;
-}
+static inline void handler_syscall(const isr_args_t* args);
 
 static void dump_registers(const isr_args_t* args)
 {
@@ -136,7 +120,7 @@ static bool is_pic_interrupt(qword isr_number)
         || (isr_number >= IDT_OFFSET_PIC_SLAVE && isr_number < IDT_OFFSET_PIC_SLAVE + 8));
 }
 
-static void handler_pic_interrupts(isr_args_t* args)
+static void handler_pic_interrupts(const isr_args_t* args)
 {
     uint8_t irq_number;
     uint8_t isr_number = (uint8_t) args->isr_number;
@@ -165,30 +149,19 @@ static void handler_pic_interrupts(isr_args_t* args)
     pic_send_EOI(irq_number);
 }
 
-static inline word get_syscall_number(isr_args_t* args)
+static inline void handler_syscall(const isr_args_t* args)
 {
-    word ah = (args->general_registers.rax >> 16);
-    return ah;
+    void* syscall_args = (void*) args->general_registers.rdi;
+    qword syscall_number = args->general_registers.rsi;
+
+    syscall_handler_handle(args, syscall_args, syscall_number);
 }
 
-static inline void handler_syscall(isr_args_t* args)
-{
-    //word syscall_number = get_syscall_number(args);
-    console_output_printf("Executing syscall: %llx\n", args->general_registers.rsi);
-}
-
-qword isr_handler(isr_args_t* args)
+void isr_handler(isr_args_t* args)
 {
     if ( is_pic_interrupt(args->isr_number) )
     {
         handler_pic_interrupts(args);
-        bool is_control_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_CONTROL_L);
-        bool is_c_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_C);
-        if ( is_control_pressed && is_c_pressed )
-        {
-            return handler_context_switch(args);
-        }
-        return (qword) args;
     }
 
     switch ( args->isr_number )
@@ -238,9 +211,7 @@ qword isr_handler(isr_args_t* args)
             }
             break;
         default:
-            console_output_print_blue_screen("Unhandled interrupt: %llx received\n", args->isr_number);
+            //console_output_print_blue_screen("Unhandled interrupt: %llx received\n", args->isr_number);
             break;
     }
-
-    return (qword) args;
 }

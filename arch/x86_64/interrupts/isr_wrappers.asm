@@ -1,4 +1,6 @@
 extern isr_handler
+extern interrupts_set_rsp
+extern interrupts_get_rsp
 
 align 16
 
@@ -309,15 +311,19 @@ isr_wrapper_common:
 
     cld                     ; sysV ABI requirement.
 
-    mov rbx, rsp            ; sysV ABI requires 16-byte stack alignment before
-    and rsp, -16            ; a function call. this just masks with 0b111111...0000
+    mov rdi, rsp
+    call interrupts_set_rsp ; setting rsp, if we want to context switch, we'll set it again in the ISR
+
+
+    and rsp, -16            ; sysV ABI requires 16-byte stack alignment before
+                            ; a function call. this just masks with 0b111111...0000
                             ; but I don't have to count the 1's
 
     call isr_handler
+    call interrupts_get_rsp
+    
     mov rsp, rax            ; this is either the original rsp, or the rsp of the process we need
                             ; to switch to
-
-    ;mov rsp, rbx            ; restoring the unaligned stack pointer
 
 ; RETRIEVING GENERAL PURPOSE REGISTERS & CLEARING ERROR CODE + INTERRUPT NUMBER FROM THE STACK
     pop r15

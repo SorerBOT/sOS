@@ -15,7 +15,7 @@ static size_t processes_count = 0;
 static process_id_t running_process_idx = 0;
 static bool is_running = false;
 
-void process_manager_launch_process(process_routine_t routine)
+process_id_t process_manager_launch_process(process_routine_t routine)
 {
     process_id_t new_process_idx = processes_count;
 
@@ -32,14 +32,20 @@ void process_manager_launch_process(process_routine_t routine)
     processes[new_process_idx] = (process_context_t)
     {
         .pid = new_process_idx,
-        .rsp = (qword) stack_frame 
+        .rsp = stack_frame 
     };
 
     ++processes_count;
+
+    return new_process_idx;
 }
 
-const process_context_t* process_manager_context_switch(process_id_t next_pid, process_context_t current_context)
+const process_context_t* process_manager_context_switch(process_context_t current_context)
 {
+    process_id_t current_pid = process_manager_get_running_process_idx();
+    size_t processes_count = process_manager_get_processes_count();
+    process_id_t next_pid = (current_pid + 1) % processes_count;
+
     if ( is_running )
     {
         processes[running_process_idx] = current_context;
