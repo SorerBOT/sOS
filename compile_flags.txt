@@ -6,6 +6,7 @@
 -ffreestanding
 -mno-red-zone
 -Ikernel/process_manager/include
+-Ikernel/syscall_handler/include
 -Ilibc/include
 -Ilibc/sOS/include
 -Ibootloader/

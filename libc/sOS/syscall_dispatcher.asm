@@ -1,7 +1,7 @@
 %define SOFTWARE_INT_SYSCALL 0x80
 
-global send_syscall
+global syscall_dispatcher_dispatch
 
-send_syscall:
+syscall_dispatcher_dispatch:
     int SOFTWARE_INT_SYSCALL
     ret
