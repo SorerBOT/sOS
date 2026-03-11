@@ -36,9 +36,4 @@ typedef struct
 
 void isr_handler(isr_args_t* args);
 
-
-
-
-
-
 #endif /* ISR_H */

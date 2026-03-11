@@ -1,10 +1,13 @@
-#include <interrupts.h>
-#include <types.h>
-#include <process_manager.h>
-#include <process_types.h>
-
 #include "include/idt.h"
 #include "include/pic.h"
+#include "include/isr.h"
+
+#include <types.h>
+#include <string.h>
+
+#include <interrupts.h>
+#include <process_manager.h>
+#include <process_types.h>
 
 static const void* rsp;
 
@@ -38,4 +41,16 @@ void interrupts_context_switch()
     const process_context_t* new_context = process_manager_context_switch(current_context);
 
     interrupts_set_rsp((const void*) new_context->rsp);
+}
+
+void interrupts_init_context(void* stack_frame, process_routine_t routine)
+{
+    isr_args_t* context = (isr_args_t*) stack_frame;
+   
+    memset(context, 0, sizeof(*context));
+    context->rip = (qword) routine;
+    context->rsp = (qword) stack_frame;
+    context->rflags = 0x202;
+    context->cs = 16;
+    context->ss = 8;
 }
