@@ -1,11 +1,10 @@
+#include "interrupts.h"
 #include <process_manager.h>
 #include <process_types.h>
 
 #include <console_output.h>
 #include <stdint.h>
 #include <string.h>
-
-#include "../../arch/x86_64/interrupts/include/isr.h"
 
 #define PROCESS_MANAGER_MAX_PROCESSES 32
 #define PROCESS_MANAGER_BASE_STACK_ADDRESS 0x40000000
@@ -20,14 +19,7 @@ process_id_t process_manager_launch_process(process_routine_t routine)
     process_id_t new_process_idx = processes_count;
 
     void* stack_frame = (void*) (PROCESS_MANAGER_BASE_STACK_ADDRESS + 4096 * 2 * new_process_idx);
-    isr_args_t* context = (isr_args_t*) stack_frame;
-   
-    memset(context, 0, sizeof(*context));
-    context->rip = (qword) routine;
-    context->rsp = (qword) stack_frame;
-    context->rflags = 0x202;
-    context->cs = 16;
-    context->ss = 8;
+    interrupts_init_context(stack_frame, routine);
 
     processes[new_process_idx] = (process_context_t)
     {
