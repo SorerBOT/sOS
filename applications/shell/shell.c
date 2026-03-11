@@ -74,7 +74,7 @@ static inline void command_execute_internal(int argc, char** argv)
 {
     if ( strcmp( argv[0], "infinite_loop" ) == 0 )
     {
-        infinite_loop_launch(argc, argv);
+        infinite_loop_launch();
     }
 }
 

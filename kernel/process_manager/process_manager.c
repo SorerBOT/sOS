@@ -3,8 +3,12 @@
 
 #include <console_output.h>
 #include <stdint.h>
+#include <string.h>
+
+#include "../../arch/x86_64/interrupts/include/isr.h"
 
 #define PROCESS_MANAGER_MAX_PROCESSES 32
+#define PROCESS_MANAGER_BASE_STACK_ADDRESS 0x40000000
 
 static process_context_t processes[PROCESS_MANAGER_MAX_PROCESSES];
 static size_t processes_count = 0;
@@ -14,34 +18,25 @@ static bool is_running = false;
 void process_manager_launch_process(process_routine_t routine)
 {
     console_output_printf("PID: %lu, rip: %p\n", processes_count, routine);
-
-    process_context_t context =
-    {
-        .registers =
-        {
-            .r15 = 0,
-            .r14 = 0,
-            .r13 = 0,
-            .r12 = 0,
-            .r11 = 0,
-            .r10 = 0,
-            .r9 = 0,
-            .r8 = 0,
-            .rbp = 0,
-            .rsp = 0,
-            .rdi = 0,
-            .rsi = 0,
-            .rip = (qword) routine,
-            .rax = 0,
-            .rbx = 0,
-            .rcx = 0,
-            .rdx = 0,
-        }
-    };
-
     process_id_t new_process_idx = processes_count;
 
-    processes[processes_count++] = context;
+    void* stack_frame = (void*) (PROCESS_MANAGER_BASE_STACK_ADDRESS + 4096 * 2 * new_process_idx);
+    isr_args_t* context = (isr_args_t*) stack_frame;
+   
+    memset(context, 0, sizeof(*context));
+    context->rip = (qword) routine;
+    context->rsp = (qword) stack_frame;
+    context->rflags = 0x202;
+    context->cs = 16;
+    context->ss = 8;
+
+    processes[new_process_idx] = (process_context_t)
+    {
+        .pid = new_process_idx,
+        .rsp = (qword) stack_frame 
+    };
+
+    ++processes_count;
 }
 
 const process_context_t* process_manager_context_switch(process_id_t next_pid, process_context_t current_context)

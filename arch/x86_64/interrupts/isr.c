@@ -21,7 +21,7 @@ enum
     ISR_SYSCALL                     = 0x80
 };
 
-static void handler_context_switch(isr_args_t* args);
+static qword handler_context_switch(isr_args_t* args);
 static void dump_registers(const isr_args_t* args);
 static void handler_page_fault(const isr_args_t* args);
 static void handler_general_protection_fault(const isr_args_t* args);
@@ -29,66 +29,32 @@ static void handler_pic_interrupts(isr_args_t* args);
 static bool is_pic_interrupt(qword isr_number);
 static void handler_syscall(isr_args_t* args);
 
-static void handler_context_switch(isr_args_t* args)
+static qword handler_context_switch(isr_args_t* args)
 {
-    process_context_t current_context =
-    {
-        .registers =
-        {
-            .r15 = args->general_registers.r15,
-            .r14 = args->general_registers.r14,
-            .r13 = args->general_registers.r13,
-            .r12 = args->general_registers.r12,
-            .r11 = args->general_registers.r11,
-            .r10 = args->general_registers.r10,
-            .r9 = args->general_registers.r9,
-            .r8 = args->general_registers.r8,
-            .rbp = args->general_registers.rbp,
-            .rsp = args->rsp,
-            .rdi = args->general_registers.rdi,
-            .rsi = args->general_registers.rsi,
-            .rip = args->rip,
-            .rax = args->general_registers.rax,
-            .rbx = args->general_registers.rbx,
-            .rcx = args->general_registers.rcx,
-            .rdx = args->general_registers.rdx
-        }
-    };
-
     process_id_t current_pid = process_manager_get_running_process_idx();
     size_t processes_count = process_manager_get_processes_count();
     process_id_t next_process = (current_pid + 1) % processes_count;
 
+    process_context_t current_context =
+    {
+        .pid = current_pid,
+        .rsp = (qword) args
+    };
+
     const process_context_t* new_context = process_manager_context_switch(next_process, current_context);
+    console_output_printf("RSP: %p\n", new_context->rsp);
+    return (qword) new_context->rsp;
 
-    console_output_printf("PID: %lu, RIP: %p, RSP: %p, RBP: %p\n",
-            new_context->pid,
-            new_context->registers.rip,
-            new_context->registers.rsp, new_context->registers.rbp);
+    //console_output_printf("PID: %lu, RIP: %p, RSP: %p, RBP: %p\n",
+    //        new_context->pid,
+    //        new_context->registers.rip,
+    //        new_context->registers.rsp, new_context->registers.rbp);
 
-    args->general_registers.r15 = new_context->registers.r15;
-    args->general_registers.r14 = new_context->registers.r14;
-    args->general_registers.r13 = new_context->registers.r13;
-    args->general_registers.r12 = new_context->registers.r12;
-    args->general_registers.r11 = new_context->registers.r11;
-    args->general_registers.r10 = new_context->registers.r10;
-    args->general_registers.r9 = new_context->registers.r9;
-    args->general_registers.r8 = new_context->registers.r8;
-    args->general_registers.rsi = new_context->registers.rsi;
-    args->general_registers.rdx = new_context->registers.rdx;
-    args->general_registers.rcx = new_context->registers.rcx;
-    args->general_registers.rbx = new_context->registers.rbx;
-    args->general_registers.rax = new_context->registers.rax;
-    args->general_registers.rdi = new_context->registers.rdi;
-    args->general_registers.rbp = new_context->registers.rbp;
-    args->rip = new_context->registers.rip;
-    args->rsp = new_context->registers.rsp;
-
-    console_output_printf("PID: %lu, RIP: %p, RSP: %p, RBP: %p\n",
-            new_context->pid,
-            args->rip,
-            args->rsp,
-            args->general_registers.rbp);
+    //console_output_printf("PID: %lu, RIP: %p, RSP: %p, RBP: %p\n",
+    //        new_context->pid,
+    //        args->rip,
+    //        args->rsp,
+    //        args->general_registers.rbp);
 }
 
 static void dump_registers(const isr_args_t* args)
@@ -204,13 +170,6 @@ static void handler_pic_interrupts(isr_args_t* args)
     if ( irq_number == 1 )
     {
         ps2_keyboard_driver_read_and_handle_scancode();
-
-        bool is_control_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_CONTROL_L);
-        bool is_c_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_C);
-        if ( is_control_pressed && is_c_pressed )
-        {
-            handler_context_switch(args);
-        }
     }
 
 
@@ -221,12 +180,18 @@ static void handler_syscall(isr_args_t* args)
 {
 }
 
-void isr_handler(isr_args_t* args)
+qword isr_handler(isr_args_t* args)
 {
     if ( is_pic_interrupt(args->isr_number) )
     {
         handler_pic_interrupts(args);
-        return;
+        bool is_control_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_CONTROL_L);
+        bool is_c_pressed = keyboard_driver_get_key_state(KEYBOARD_KEYCODE_C);
+        if ( is_control_pressed && is_c_pressed )
+        {
+            return handler_context_switch(args);
+        }
+        return (qword) args;
     }
 
     switch ( args->isr_number )
@@ -275,5 +240,10 @@ void isr_handler(isr_args_t* args)
                 __asm__ volatile("cli; hlt");
             }
             break;
+        default:
+            console_output_print_blue_screen("Unhandled interrupt: %llx received\n", args->isr_number);
+            break;
     }
+
+    return (qword) args;
 }

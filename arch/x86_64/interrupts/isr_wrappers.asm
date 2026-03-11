@@ -314,8 +314,10 @@ isr_wrapper_common:
                             ; but I don't have to count the 1's
 
     call isr_handler
+    mov rsp, rax            ; this is either the original rsp, or the rsp of the process we need
+                            ; to switch to
 
-    mov rsp, rbx            ; restoring the unaligned stack pointer
+    ;mov rsp, rbx            ; restoring the unaligned stack pointer
 
 ; RETRIEVING GENERAL PURPOSE REGISTERS & CLEARING ERROR CODE + INTERRUPT NUMBER FROM THE STACK
     pop r15

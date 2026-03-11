@@ -12,7 +12,7 @@ __asm__(".code32\n");
 #define PAGE_SIZE (4 * KiB)
 #define FLAGS 0b11
 
-#define MEMORY_SIZE_TO_MAP 0x40000000
+#define MEMORY_SIZE_TO_MAP 0x80000000
 #define BASE_PHYSICAL_ADDRESS 0x000000
 
 #define PAGES_IN_PT 512
