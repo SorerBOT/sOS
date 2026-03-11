@@ -7,6 +7,6 @@ typedef enum
     SYSCALL_COUNT
 } syscall_type_t;
 
-typedef void(*syscall_handler_t)(void*);
+typedef void(*syscall_handler_t)(const void*, const void*);
 
 #endif /* SYSCALL_TYPES */

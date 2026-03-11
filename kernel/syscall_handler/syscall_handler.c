@@ -3,21 +3,23 @@
 #include <console_output.h>
 #include <process_manager.h>
 #include <process_types.h>
+#include <interrupts.h>
 
 static syscall_handler_t handlers[SYSCALL_COUNT];
 
-static inline void launch_process(void* syscall_args)
+static inline void launch_process(const void* rsp, const void* syscall_args)
 {
     process_routine_t routine = (process_routine_t) syscall_args;
     process_manager_launch_process(routine);
+    interrupts_context_switch();
 }
 
-void syscall_handler_handle(void* syscall_args, qword syscall_number)
+void syscall_handler_handle(const void* rsp, void* syscall_args, qword syscall_number)
 {
     if ( syscall_number < SYSCALL_COUNT )
     {
         syscall_handler_t handler = handlers[syscall_number];
-        handler(syscall_args);
+        handler(rsp, syscall_args);
     }
     else
     {

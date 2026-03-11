@@ -23,7 +23,7 @@ static void kernel_internal(void* _)
 {
     console_output_report("started up the kernel process.", CONSOLE_OUTPUT_SUCCESS);
 
-    process_manager_launch_process(shell_launch_wrapper);
+    syscall_dispatcher_launch_process(shell_launch_wrapper);
 
     while (1)
     {
@@ -40,10 +40,6 @@ void kernel()
     interrupts_setup();
 
     syscall_dispatcher_launch_process(kernel_internal);
-
-
-    console_output_printf("To context switch, press control + c\n");
-    //process_manager_launch_process(kernel_internal);
 
     while (1)
     {

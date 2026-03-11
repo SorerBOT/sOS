@@ -3,7 +3,7 @@
 
 #include <types.h>
 
-void syscall_handler_handle(void* syscall_args, qword syscall_number);
+void syscall_handler_handle(const void* rsp, void* syscall_args, qword syscall_number);
 
 
 #endif /* SYSCALL_HANDLER_H */
