@@ -1,12 +1,15 @@
 #include <syscall_handler.h>
 #include <syscall_types.h>
 #include <console_output.h>
+#include <process_manager.h>
+#include <process_types.h>
 
 static syscall_handler_t handlers[SYSCALL_COUNT];
 
 static inline void launch_process(void* syscall_args)
 {
-    console_output_printf("Launching process ASD:ASDAS?D\n");
+    process_routine_t routine = (process_routine_t) syscall_args;
+    process_manager_launch_process(routine);
 }
 
 void syscall_handler_handle(void* syscall_args, qword syscall_number)
