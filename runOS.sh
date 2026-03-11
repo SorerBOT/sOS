@@ -79,4 +79,5 @@ qemu-system-x86_64 -drive format=raw,file="$BIN_DIR/$OS_IMG.bin" -display cocoa 
     -d int,cpu_reset \
     -D qemu.log \
     -no-reboot \
-    -no-shutdown
+    -no-shutdown \
+    -m 2G
