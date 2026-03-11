@@ -1,4 +1,4 @@
-#include "interrupts.h"
+#include <interrupts.h>
 #include <process_manager.h>
 #include <process_types.h>
 
