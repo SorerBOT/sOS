@@ -1,5 +1,5 @@
 WIP
-# bootloader
+# sOS
 This is a Legacy BIOS bootloader. The general goal is to slowly turn this into a self-hosting OS.
 
 
