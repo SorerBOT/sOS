@@ -3,15 +3,17 @@ WIP
 This is a small single-user kernel which boots using a Legacy BIOS bootloader I wrote myself. The general goal is to slowly turn this into a self-hosting OS which is optimised and tailored to my usecase: a single user machine, with only a few applications running at a time and much more RAM than required by those applications.
 
 ## Where are we ATM?
-* 64-bit Long Mode.
-* Functional textual VGA driver, including a custom printf function and scroll functionality.
-* Full printf spec (except floats, but including all the flags). Tested using Marco Paland testing suite, adapted to use my own testing framework (cunit.h)
+* Bootloader which boots into 64-bit Long Mode.
+* VGA driver, including a custom printf function and scroll functionality.
+* Full printf spec (except floats, but including all the flags). Tested using Marco Paland testing suite which I adapted to use my own testing framework (cunit.h)
 * Interrupts - 
     * IDT - written
     * ISRs for exceptions - written (at least for the most common exceptions)
     * PIC - re-programmed the PIC
     * IRQs handled: as of now only IRQ 1 is handled (keyboard IRQ)
-* Keyboard Driver - basic driver using a ring-buffer, but no control-keys implmeneted (yet).
+* Keyboard Driver - robust keyboard driver with two layers; one to handle hardware specific details like ps/2 scancodes, and another to handle a stream of keyboard events offering the client to receive the complete keyboard state, raw keyboard events and baked ones, with support for inserting custom keyboard layouts.
+* A syscall interface; implemented a process_launch syscall.
+* Basic context switching
 
 
 In greater detail, the bootloader already reaches 32-bit Long Mode, but it does not fully adhere to the MBR standard just yet. My aim is to rush-through stages, specifically 16-bit Real Mode (in which you can perform BIOS calls), and 32-bit Protected Mode, and only return to them once they would help me implement a new feature in Long Modes, this is because its my first bootloader/kernel and I feel like this is the most pedagogical approach, at least for me.  
