@@ -7,6 +7,7 @@
 #include <shell.h>
 #include <process_manager.h>
 #include <syscall_dispatcher.h>
+#include <memory_manager.h>
 
 static void shell_launch_wrapper(void* _)
 {
@@ -32,6 +33,9 @@ void kernel()
     console_output_report("entered 64-bit long mode.", CONSOLE_OUTPUT_SUCCESS);
 
     interrupts_setup();
+
+    memory_manager_setup();
+
 
     syscall_dispatcher_launch_process(kernel_internal);
 
