@@ -37,7 +37,7 @@ void kernel()
     memory_manager_setup();
 
 
-    //syscall_dispatcher_launch_process(kernel_internal);
+    syscall_dispatcher_launch_process(kernel_internal);
 
     while (1)
     {
