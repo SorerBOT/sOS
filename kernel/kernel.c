@@ -7,6 +7,7 @@
 #include <shell.h>
 #include <process_manager.h>
 #include <syscall_dispatcher.h>
+#include <memory_manager.h>
 
 static void shell_launch_wrapper(void* _)
 {
@@ -33,7 +34,10 @@ void kernel()
 
     interrupts_setup();
 
-    syscall_dispatcher_launch_process(kernel_internal);
+    memory_manager_setup();
+
+
+    //syscall_dispatcher_launch_process(kernel_internal);
 
     while (1)
     {
