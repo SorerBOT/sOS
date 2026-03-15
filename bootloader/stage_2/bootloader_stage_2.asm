@@ -13,9 +13,16 @@
 %define BIOS_INT_DISK 0x13
 %define BIOS_FUNC_DISK_READ 0x42
 
+%define BIOS_INT_MEMORY_MAP 0x15
+%define BIOS_FUNC_READ_MEMORY_MAP 0xE820
+
+
 %define STAGE_1_ORG 0x7C00
 
 %define SECTORS_PER_SEGMENT 128
+
+%define MEMORY_MAP_BASE 0x00000500
+%define MEMORY_MAP_ENTRY_SIZE 24
 
 [BITS 16]
 
@@ -28,9 +35,9 @@ extern update_gdt
 start:
     cli
 
-
     xor ax, ax
     mov ds, ax
+    mov es, ax
 
 
     mov ss, ax
@@ -42,6 +49,9 @@ start:
     call print_msg
 
 
+    mov [BOOT_DRIVE], dl
+
+    call detect_memory_map
     call load_kernel
     call enable_a20_fastgate
     call setup_gdt
@@ -53,9 +63,86 @@ start:
 
     jmp enable_and_jump_to_protected_mode
 
+memory_map_entries_count equ dword MEMORY_MAP_BASE
+detect_memory_map:
+    mov dword [memory_map_entries_count], 0
+    mov di, MEMORY_MAP_BASE + 4 ; ES must be 0. The address written to is: es:di
+    xor ebx, ebx                ; tells the BIOS to read from the start of the list
+
+.detect_memory_map_iteration:
+;   setup
+;   zero-ing the entry, we don't know how many bytes will be written into it
+    mov dword [di], 0
+    mov dword [di+4], 0
+    mov dword [di+8], 0
+    mov dword [di+12], 0
+    mov dword [di+16], 0
+    mov dword [di+20], 0
+
+    clc
+    mov edx, 0x534D4150 ; magic number
+    mov ecx, MEMORY_MAP_ENTRY_SIZE
+    mov eax, BIOS_FUNC_READ_MEMORY_MAP
+
+
+    int BIOS_INT_MEMORY_MAP
+    jc detect_memory_map_finished
+
+    mov dword esi, [memory_map_entries_count]
+    test esi, esi
+    jz .check_errors_first_iteration
+    jmp .check_errors_finished
+
+.check_errors_first_iteration:
+    cmp eax, 0x534D4150 ; magic number
+    jne detect_memory_map_failed
+
+.check_errors_finished:
+    inc dword [memory_map_entries_count]
+
+    test ebx, ebx
+    jz detect_memory_map_finished
+
+    mov si, SUCCESS_READ_MEMORY_MAP_ENTRY_FINISHED_MSG
+    call print_msg
+
+    add di, MEMORY_MAP_ENTRY_SIZE
+    jmp .detect_memory_map_iteration
+
+
+
+detect_memory_map_finished:
+    mov dword esi, [memory_map_entries_count]
+    test esi, esi
+    je detect_memory_map_failed_first_iteration
+
+    mov si, SUCCESS_READ_MEMORY_MAP_FINISHED_MSG
+    call print_msg
+
+    clc
+    xor eax, eax
+    xor ebx, ebx
+    xor ecx, ecx
+    xor edx, edx
+
+    ret
+
+
+detect_memory_map_failed_first_iteration:
+    mov si, FAIL_READ_MEMORY_MAP_FIRST_ITERATION_MSG
+    call print_msg
+    jmp error
+    
+detect_memory_map_failed:
+    mov si, FAIL_READ_MEMORY_MAP_MSG
+    call print_msg
+    jmp error
+
+    
 load_kernel:
     mov si, DAP
     mov ah, BIOS_FUNC_DISK_READ
+    mov dl, [BOOT_DRIVE]
     int BIOS_INT_DISK   ; First BIOS call to store stage 2 (16KiB) at 0x7E00.
     jc fail_read_disk   ; CF==1 means that an error has occurred.
 
@@ -115,6 +202,9 @@ enable_and_jump_to_protected_mode:
 
 
 align 4                     ; Just to be safe, align on 4-byte boundary
+BOOT_DRIVE:
+    db 0
+
 DAP:
     db 0x10                 ; Packet Size, this tells the BIOS what version of DAP struct we're using
     db 0x00                 ; Padding byte. Needs to be reset to 0 if ran in a loop
@@ -175,6 +265,17 @@ SUCCESS_SETUP_GDT_MSG:
 INFO_JUMPING_TO_PROTECTED_MODE_MSG:
     db REPORT_MSG_PREFIX, "jumping to protected mode.", CRLF, 0
 
+FAIL_READ_MEMORY_MAP_MSG:
+    db REPORT_FAILURE_PREFIX, "couldn't read memory map. BIOS function 0xE820 failed on non-first iteration.", CRLF, 0
+
+FAIL_READ_MEMORY_MAP_FIRST_ITERATION_MSG:
+    db REPORT_FAILURE_PREFIX, "couldn't read memory map. BIOS function 0xE820 failed on the first iteration.", CRLF, 0
+
+SUCCESS_READ_MEMORY_MAP_FINISHED_MSG:
+    db REPORT_SUCCESS_PREFIX, "finished reading memory map.", CRLF, 0
+
+SUCCESS_READ_MEMORY_MAP_ENTRY_FINISHED_MSG:
+    db REPORT_SUCCESS_PREFIX, "finished reading memory map entry.", CRLF, 0
 
 [BITS 32]
 
