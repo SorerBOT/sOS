@@ -14,6 +14,7 @@ This is a small single-user kernel which boots using a Legacy BIOS bootloader I 
 * Keyboard Driver - robust keyboard driver with two layers; one to handle hardware specific details like ps/2 scancodes, and another to handle a stream of keyboard events offering the client to receive the complete keyboard state, raw keyboard events and baked ones, with support for inserting custom keyboard layouts.
 * A syscall interface; implemented a process_launch syscall.
 * Basic context switching
+* Memory management: the bootloader queries the BIOS for the computer's memory ma memory map.
 
 
 ## OS Concepts I've learned, and some WHAT THE HECK line explanations
