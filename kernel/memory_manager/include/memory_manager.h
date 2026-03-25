@@ -3,7 +3,7 @@
 
 void memory_manager_setup(void);
 
-void memory_manager_frame_alloc(void);
+void* memory_manager_frame_alloc(void);
 
 void memory_manager_frame_free(void* ptr);
 
