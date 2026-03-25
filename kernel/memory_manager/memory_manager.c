@@ -60,23 +60,30 @@ void memory_manager_setup(void)
     }
 
 
-    //console_output_printf("Memory Map:\nEntries count: %lu\n", map->entries_count);
-    //for ( uint32_t i = 0; i < map->entries_count; ++i )
-    //{
-    //    console_output_printf("     * Base address: %llx\n"
-    //                          "     * Length: %llx\n"
-    //                          "     * Type: %llx\n"
-    //                          "     * Extended attributes: %llx\n",
-    //                          map->entries[i].base_address,
-    //                          map->entries[i].length,
-    //                          map->entries[i].type,
-    //                          map->entries[i].extended_attributes);
-    //}
+    console_output_printf("Memory Map:\nEntries count: %lu\n", map->entries_count);
+    for ( uint32_t i = 0; i < map->entries_count; ++i )
+    {
+        if ( map->entries[i].type != MEMORY_MANAGER_MAP_USABLE )
+        {
+            continue;
+        }
+
+        console_output_printf("     * Base address: %llx\n"
+                              "     * Length: %llx\n"
+                              "     * Type: %llx\n"
+                              "     * Extended attributes: %llx\n",
+                              map->entries[i].base_address,
+                              map->entries[i].length,
+                              map->entries[i].type,
+                              map->entries[i].extended_attributes);
+
+        break;
+    }
 }
 
 void* memory_manager_frame_alloc(void)
 {
-    if ( current_entry < map->entries_count )
+    for ( ; current_entry < map->entries_count; ++current_entry )
     {
         memory_manager_map_entry_t* entry = &map->entries[current_entry];
         if ( entry->type == MEMORY_MANAGER_MAP_USABLE )
