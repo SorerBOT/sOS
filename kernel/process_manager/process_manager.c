@@ -1,13 +1,13 @@
 #include <interrupts.h>
 #include <process_manager.h>
 #include <process_types.h>
+#include <memory_manager.h>
 
 #include <console_output.h>
 #include <stdint.h>
 #include <string.h>
 
 #define PROCESS_MANAGER_MAX_PROCESSES 32
-#define PROCESS_MANAGER_BASE_STACK_ADDRESS 0x40000000
 
 static process_context_t processes[PROCESS_MANAGER_MAX_PROCESSES];
 static size_t processes_count = 0;
@@ -18,7 +18,7 @@ process_id_t process_manager_launch_process(process_routine_t routine)
 {
     process_id_t new_process_idx = processes_count;
 
-    void* stack_frame = (void*) (PROCESS_MANAGER_BASE_STACK_ADDRESS + 4096 * 2 * new_process_idx);
+    void* stack_frame = memory_manager_frame_alloc();
     interrupts_init_context(stack_frame, routine);
 
     processes[new_process_idx] = (process_context_t)
