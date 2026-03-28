@@ -31,7 +31,9 @@ typedef enum
 static memory_manager_map_t* map = (memory_manager_map_t*) MEMORY_MANAGER_MAP_BASE;
 static size_t current_entry = 0;
 
-void memory_manager_setup(void)
+static inline void sanitize_memory_map(void);
+
+static inline void sanitize_memory_map(void)
 {
     for ( size_t i = 0; i < map->entries_count; ++i )
     {
@@ -58,7 +60,11 @@ void memory_manager_setup(void)
             }
         }
     }
+}
 
+void memory_manager_setup(void)
+{
+    sanitize_memory_map();
 
     console_output_printf("Memory Map:\nEntries count: %lu\n", map->entries_count);
     for ( uint32_t i = 0; i < map->entries_count; ++i )
