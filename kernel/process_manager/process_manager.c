@@ -18,8 +18,10 @@ process_id_t process_manager_launch_process(process_routine_t routine)
 {
     process_id_t new_process_idx = processes_count;
 
-    void* stack_frame = memory_manager_frame_alloc();
-    interrupts_init_context(stack_frame, routine);
+    byte* stack_frame_bottom = memory_manager_frame_alloc();
+    console_output_printf("stack frame bottom = %p\n", stack_frame_bottom);
+    byte* stack_frame = (stack_frame_bottom + MEMORY_MANAGER_FRAME_SIZE - 1);
+    stack_frame = interrupts_init_context((void*)stack_frame, routine);
 
     processes[new_process_idx] = (process_context_t)
     {

@@ -35,6 +35,8 @@ void kernel()
     interrupts_setup();
 
     memory_manager_setup();
+    dword* buggy_address = (dword*)(0x7FCFFF00);
+    *buggy_address = 0xdeadbeef;
 
 
     syscall_dispatcher_launch_process(kernel_internal);

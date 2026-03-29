@@ -3,7 +3,7 @@
 #include <console_output.h>
 
 #define MEMORY_MANAGER_MAP_BASE 0x00000500
-#define MEMORY_MANAGER_FRAME_SIZE 0x200000
+#define MEMORY_MANAGER_MAX_FRAMES ((MEMORY_MANAGER_FRAME_SIZE - sizeof(memory_manager_allocator_data_t)) / sizeof(memory_manager_frame_t))
 
 typedef struct
 {
@@ -28,10 +28,23 @@ typedef enum
     MEMORY_MANAGER_MAP_BAD_MEMORY = 5
 } memory_manager_map_entry_type_t;
 
+typedef struct
+{
+    void* address;
+} memory_manager_frame_t;
+
+typedef struct
+{
+    size_t frames_count;
+    memory_manager_frame_t frames[];
+} __attribute__((packed))memory_manager_allocator_data_t;
+
 static memory_manager_map_t* map = (memory_manager_map_t*) MEMORY_MANAGER_MAP_BASE;
 static size_t current_entry = 0;
+static memory_manager_allocator_data_t* allocator_data = NULL;
 
 static inline void sanitize_memory_map(void);
+static inline void* get_next_frame(void);
 
 static inline void sanitize_memory_map(void)
 {
@@ -62,32 +75,7 @@ static inline void sanitize_memory_map(void)
     }
 }
 
-void memory_manager_setup(void)
-{
-    sanitize_memory_map();
-
-    console_output_printf("Memory Map:\nEntries count: %lu\n", map->entries_count);
-    for ( uint32_t i = 0; i < map->entries_count; ++i )
-    {
-        if ( map->entries[i].type != MEMORY_MANAGER_MAP_USABLE )
-        {
-            continue;
-        }
-
-        console_output_printf("     * Base address: %llx\n"
-                              "     * Length: %llx\n"
-                              "     * Type: %llx\n"
-                              "     * Extended attributes: %llx\n",
-                              map->entries[i].base_address,
-                              map->entries[i].length,
-                              map->entries[i].type,
-                              map->entries[i].extended_attributes);
-
-        break;
-    }
-}
-
-void* memory_manager_frame_alloc(void)
+static inline void* get_next_frame(void)
 {
     for ( ; current_entry < map->entries_count; ++current_entry )
     {
@@ -96,9 +84,10 @@ void* memory_manager_frame_alloc(void)
         {
             if ( entry->length >= MEMORY_MANAGER_FRAME_SIZE )
             {
+                qword frame_address = entry->base_address;
                 entry->base_address += MEMORY_MANAGER_FRAME_SIZE;
                 entry->length -= MEMORY_MANAGER_FRAME_SIZE;
-                return (void*) entry->base_address;
+                return (void*) frame_address;
             }
         }
     }
@@ -106,4 +95,74 @@ void* memory_manager_frame_alloc(void)
     return NULL;
 }
 
-//void memory_manager_frame_free(void* ptr);
+void memory_manager_setup(void)
+{
+    sanitize_memory_map();
+    //console_output_printf("Memory Map:\nEntries count: %lu\n", map->entries_count);
+    //for ( uint32_t i = 0; i < map->entries_count; ++i )
+    //{
+    //    if ( map->entries[i].type != MEMORY_MANAGER_MAP_USABLE )
+    //    {
+    //        continue;
+    //    }
+
+    //    console_output_printf("     * Base address: %llx\n"
+    //                          "     * Length: %llx\n"
+    //                          "     * Type: %llx\n"
+    //                          "     * Extended attributes: %llx\n",
+    //                          map->entries[i].base_address,
+    //                          map->entries[i].length,
+    //                          map->entries[i].type,
+    //                          map->entries[i].extended_attributes);
+
+    //}
+
+    allocator_data = get_next_frame();
+
+    if ( allocator_data == NULL )
+    {
+        console_output_print_blue_screen("Failed to allocate memory for memory manager.\n");
+    }
+
+    allocator_data->frames_count = 0;
+
+    for ( ; allocator_data->frames_count < MEMORY_MANAGER_MAX_FRAMES; )
+    {
+        void* current_frame_address = get_next_frame();
+
+        if ( current_frame_address == NULL )
+        {
+            break;
+        }
+
+        else
+        {
+            allocator_data->frames[allocator_data->frames_count++] = (memory_manager_frame_t)
+            {
+                .address = current_frame_address
+            };
+        }
+    }
+}
+
+void* memory_manager_frame_alloc(void)
+{
+    if ( allocator_data->frames_count == 0 )
+    {
+        return NULL;
+    }
+
+    else
+    {
+        void* address = allocator_data->frames[--allocator_data->frames_count].address;
+        return address;
+    }
+}
+
+void memory_manager_frame_free(void* ptr)
+{
+    allocator_data->frames[allocator_data->frames_count++] = (memory_manager_frame_t)
+    {
+        .address = ptr
+    };
+}

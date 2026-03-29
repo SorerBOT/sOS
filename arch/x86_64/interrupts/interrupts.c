@@ -43,14 +43,17 @@ void interrupts_context_switch()
     interrupts_set_rsp((const void*) new_context->rsp);
 }
 
-void interrupts_init_context(void* stack_frame, process_routine_t routine)
+void* interrupts_init_context(void* stack_frame, process_routine_t routine)
 {
-    isr_args_t* context = (isr_args_t*) stack_frame;
+    isr_args_t* context = (isr_args_t*) (((byte*)stack_frame) - 5 * sizeof(isr_args_t) - 1);
    
     memset(context, 0, sizeof(*context));
+
     context->rip = (qword) routine;
     context->rsp = (qword) stack_frame;
     context->rflags = 0x202;
     context->cs = 16;
     context->ss = 8;
+
+    return context;
 }

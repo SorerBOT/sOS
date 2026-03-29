@@ -4,6 +4,9 @@
 #include <types.h>
 #include <infinite_loop.h>
 
+#include <memory_manager.h>
+#include <console_output.h>
+
 #define SHELL_ARGV_MAX_SIZE 16
 #define SHELL_BUFFER_SIZE 256
 #define SHELL_WELCOME_MSG (                                                   \
@@ -75,6 +78,44 @@ static inline void command_execute_internal(int argc, char** argv)
     if ( strcmp( argv[0], "infinite_loop" ) == 0 )
     {
         infinite_loop_launch();
+        return;
+    }
+
+    if ( strcmp( argv[0], "alloc_frame" ) == 0 )
+    {
+        dword* frame = memory_manager_frame_alloc();
+        frame = memory_manager_frame_alloc();
+        if ( frame == NULL )
+        {
+            tty_print("Unexpected error: failed to allocate memory.\n");
+            return;
+        }
+
+        for ( size_t i = 0; i < (2 * 1024 * 1024 / sizeof(frame[0])); ++i )
+        {
+            frame[i] = 0xcafebabe;
+        }
+
+        memory_manager_frame_free(frame);
+
+        frame = memory_manager_frame_alloc();
+        if ( frame == NULL )
+        {
+            tty_print("Unexpected error: failed to allocate memory.\n");
+            return;
+        }
+
+        console_output_printf("frame = %p\n", frame);
+
+        for ( size_t i = 0; i < (2 * 1024 * 1024 / sizeof(frame[0])); ++i )
+        {
+            if ( frame[i] != 0xcafebabe )
+            {
+                tty_print("Unexpected error: restored frame does not contain 0xcafebabe.\n");
+                return;
+            }
+        }
+        tty_print("Successfully passed frame allocator test.\n");
     }
 }
 
