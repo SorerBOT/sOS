@@ -3,7 +3,6 @@
 #include <console_output.h>
 
 #define PMM_MAP_BASE 0x00000500
-#define PMM_MAX_FRAMES ((PMM_FRAME_SIZE - (sizeof(pmm_allocator_stack_t) + sizeof(pmm_allocator_bitmap_t))) / (sizeof(pmm_frame_t) + sizeof(bool)))
 
 typedef struct
 {
@@ -30,7 +29,7 @@ typedef enum
 
 typedef struct
 {
-    void* address;
+    void* base_address;
 } pmm_frame_t;
 
 typedef struct
@@ -47,11 +46,13 @@ typedef struct
 
 static pmm_map_t* map = (pmm_map_t*) PMM_MAP_BASE;
 static size_t current_entry = 0;
-static pmm_allocator_stack_t* allocator_data = NULL;
+static pmm_allocator_bitmap_t* allocator_bitmap = NULL;
+static pmm_allocator_stack_t* allocator_stack = NULL;
 
 static inline void sanitize_memory_map(void);
 static inline void* get_next_frame(void);
 static inline void* get_highest_address(void);
+static inline size_t get_frame_index(void* base_address);
 
 static inline void sanitize_memory_map(void)
 {
@@ -118,16 +119,64 @@ static inline void* get_highest_address(void)
     return (void*) highest_address;
 }
 
+static inline size_t get_frame_index(void* base_address)
+{
+    if ( ((qword)base_address) & (PMM_FRAME_SIZE - 1) )
+    {
+        console_output_print_blue_screen("Unaligned physical frame at address: %p\n", base_address);
+        return 0; // didn't want to use __builtin_unreachable.
+    }
+
+    else
+    {
+        return ((qword)base_address) / PMM_FRAME_SIZE;
+    }
+}
+
 void pmm_setup(void)
 {
     sanitize_memory_map();
 
-    void* highest_address = get_highest_address();
-    console_output_printf("Highest address: %p\n", highest_address);
-    while (1)
+    allocator_bitmap = get_next_frame();
+    if ( allocator_bitmap == NULL )
     {
-        __asm__("hlt");
+        console_output_print_blue_screen("Failed to allocate memory for memory manager.\n");
     }
+
+    void* highest_address = get_highest_address();
+    void* current_address = 0;
+
+    for ( ; current_address < highest_address; current_address += PMM_FRAME_SIZE )
+    {
+        allocator_bitmap->frames_is_allocated[allocator_bitmap->frames_count++] = true;
+    }
+
+    allocator_stack = (pmm_allocator_stack_t*) (((byte*)allocator_bitmap) + sizeof(*allocator_bitmap) + allocator_bitmap->frames_count * sizeof(*allocator_bitmap->frames_is_allocated));
+    allocator_stack->frames_count = 0;
+    for ( ;; )
+    {
+        qword allocator_frame_offset = (qword)(((byte*)&allocator_stack->frames[allocator_stack->frames_count]) - ((byte*)&allocator_bitmap));
+        if ( allocator_frame_offset + sizeof(*allocator_stack->frames)  >= PMM_FRAME_SIZE )
+        {
+            break;
+        }
+
+        void* current_frame_address = get_next_frame();
+
+        if ( current_frame_address == NULL )
+        {
+            break;
+        }
+
+        else
+        {
+            allocator_stack->frames[allocator_stack->frames_count++] = (pmm_frame_t)
+            {
+                .base_address = current_frame_address
+            };
+        }
+    }
+
     //console_output_printf("Memory Map:\nEntries count: %lu\n", map->entries_count);
     //for ( uint32_t i = 0; i < map->entries_count; ++i )
     //{
@@ -146,53 +195,26 @@ void pmm_setup(void)
     //                          map->entries[i].extended_attributes);
 
     //}
-
-    allocator_data = get_next_frame();
-
-    if ( allocator_data == NULL )
-    {
-        console_output_print_blue_screen("Failed to allocate memory for memory manager.\n");
-    }
-
-    allocator_data->frames_count = 0;
-
-    for ( ; allocator_data->frames_count < PMM_MAX_FRAMES; )
-    {
-        void* current_frame_address = get_next_frame();
-
-        if ( current_frame_address == NULL )
-        {
-            break;
-        }
-
-        else
-        {
-            allocator_data->frames[allocator_data->frames_count++] = (pmm_frame_t)
-            {
-                .address = current_frame_address
-            };
-        }
-    }
 }
 
 void* pmm_frame_alloc(void)
 {
-    if ( allocator_data->frames_count == 0 )
+    if ( allocator_stack->frames_count == 0 )
     {
         return NULL;
     }
 
     else
     {
-        void* address = allocator_data->frames[--allocator_data->frames_count].address;
+        void* address = allocator_stack->frames[--allocator_stack->frames_count].base_address;
         return address;
     }
 }
 
 void pmm_frame_free(void* ptr)
 {
-    allocator_data->frames[allocator_data->frames_count++] = (pmm_frame_t)
+    allocator_stack->frames[allocator_stack->frames_count++] = (pmm_frame_t)
     {
-        .address = ptr
+        .base_address = ptr
     };
 }
