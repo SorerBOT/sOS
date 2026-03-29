@@ -83,7 +83,6 @@ static inline void command_execute_internal(int argc, char** argv)
     if ( strcmp( argv[0], "alloc_frame" ) == 0 )
     {
         dword* frame = pmm_frame_alloc();
-        frame = pmm_frame_alloc();
         if ( frame == NULL )
         {
             tty_print("Unexpected error: failed to allocate memory.\n");
@@ -112,6 +111,7 @@ static inline void command_execute_internal(int argc, char** argv)
                 return;
             }
         }
+        pmm_frame_free(frame);
         tty_print("Successfully passed frame allocator test.\n");
     }
 }
