@@ -3,7 +3,6 @@
 #include <process_types.h>
 #include <pmm.h>
 
-#include <console_output.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -19,7 +18,6 @@ process_id_t process_manager_launch_process(process_routine_t routine)
     process_id_t new_process_idx = processes_count;
 
     byte* stack_frame_bottom = pmm_frame_alloc();
-    console_output_printf("stack frame bottom = %p\n", stack_frame_bottom);
     byte* stack_frame = (stack_frame_bottom + PMM_FRAME_SIZE - 1);
     stack_frame = interrupts_init_context((void*)stack_frame, routine);
 

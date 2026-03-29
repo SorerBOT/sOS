@@ -5,7 +5,6 @@
 #include <infinite_loop.h>
 
 #include <pmm.h>
-#include <console_output.h>
 
 #define SHELL_ARGV_MAX_SIZE 16
 #define SHELL_BUFFER_SIZE 256
@@ -104,8 +103,6 @@ static inline void command_execute_internal(int argc, char** argv)
             tty_print("Unexpected error: failed to allocate memory.\n");
             return;
         }
-
-        console_output_printf("frame = %p\n", frame);
 
         for ( size_t i = 0; i < (2 * 1024 * 1024 / sizeof(frame[0])); ++i )
         {
