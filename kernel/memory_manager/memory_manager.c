@@ -163,4 +163,8 @@ void* memory_manager_frame_alloc(void)
 
 void memory_manager_frame_free(void* ptr)
 {
+    allocator_data->frames[allocator_data->frames_count++] = (memory_manager_frame_t)
+    {
+        .address = ptr
+    };
 }
