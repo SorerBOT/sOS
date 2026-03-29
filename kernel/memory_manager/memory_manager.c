@@ -3,7 +3,6 @@
 #include <console_output.h>
 
 #define MEMORY_MANAGER_MAP_BASE 0x00000500
-#define MEMORY_MANAGER_FRAME_SIZE 0x200000
 #define MEMORY_MANAGER_MAX_FRAMES ((MEMORY_MANAGER_FRAME_SIZE - sizeof(memory_manager_allocator_data_t)) / sizeof(memory_manager_frame_t))
 
 typedef struct
@@ -85,9 +84,10 @@ static inline void* get_next_frame(void)
         {
             if ( entry->length >= MEMORY_MANAGER_FRAME_SIZE )
             {
+                qword frame_address = entry->base_address;
                 entry->base_address += MEMORY_MANAGER_FRAME_SIZE;
                 entry->length -= MEMORY_MANAGER_FRAME_SIZE;
-                return (void*) entry->base_address;
+                return (void*) frame_address;
             }
         }
     }
@@ -97,8 +97,25 @@ static inline void* get_next_frame(void)
 
 void memory_manager_setup(void)
 {
-
     sanitize_memory_map();
+    //console_output_printf("Memory Map:\nEntries count: %lu\n", map->entries_count);
+    //for ( uint32_t i = 0; i < map->entries_count; ++i )
+    //{
+    //    if ( map->entries[i].type != MEMORY_MANAGER_MAP_USABLE )
+    //    {
+    //        continue;
+    //    }
+
+    //    console_output_printf("     * Base address: %llx\n"
+    //                          "     * Length: %llx\n"
+    //                          "     * Type: %llx\n"
+    //                          "     * Extended attributes: %llx\n",
+    //                          map->entries[i].base_address,
+    //                          map->entries[i].length,
+    //                          map->entries[i].type,
+    //                          map->entries[i].extended_attributes);
+
+    //}
 
     allocator_data = get_next_frame();
 
@@ -126,26 +143,6 @@ void memory_manager_setup(void)
             };
         }
     }
-
-    //console_output_printf("Memory Map:\nEntries count: %lu\n", map->entries_count);
-    //for ( uint32_t i = 0; i < map->entries_count; ++i )
-    //{
-    //    if ( map->entries[i].type != MEMORY_MANAGER_MAP_USABLE )
-    //    {
-    //        continue;
-    //    }
-
-    //    console_output_printf("     * Base address: %llx\n"
-    //                          "     * Length: %llx\n"
-    //                          "     * Type: %llx\n"
-    //                          "     * Extended attributes: %llx\n",
-    //                          map->entries[i].base_address,
-    //                          map->entries[i].length,
-    //                          map->entries[i].type,
-    //                          map->entries[i].extended_attributes);
-
-    //    break;
-    //}
 }
 
 void* memory_manager_frame_alloc(void)
@@ -157,7 +154,8 @@ void* memory_manager_frame_alloc(void)
 
     else
     {
-        return allocator_data->frames[--allocator_data->frames_count].address;
+        void* address = allocator_data->frames[--allocator_data->frames_count].address;
+        return address;
     }
 }
 
