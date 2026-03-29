@@ -3,7 +3,7 @@
 #include <console_output.h>
 
 #define PMM_MAP_BASE 0x00000500
-#define PMM_MAX_FRAMES ((PMM_FRAME_SIZE - sizeof(pmm_allocator_data_t)) / sizeof(pmm_frame_t))
+#define PMM_MAX_FRAMES ((PMM_FRAME_SIZE - (sizeof(pmm_allocator_stack_t) + sizeof(pmm_allocator_bitmap_t))) / (sizeof(pmm_frame_t) + sizeof(bool)))
 
 typedef struct
 {
@@ -37,14 +37,21 @@ typedef struct
 {
     size_t frames_count;
     pmm_frame_t frames[];
-} __attribute__((packed))pmm_allocator_data_t;
+} __attribute__((packed)) pmm_allocator_stack_t;
+
+typedef struct
+{
+    size_t frames_count;
+    bool frames_is_allocated[];
+} __attribute__((packed)) pmm_allocator_bitmap_t;
 
 static pmm_map_t* map = (pmm_map_t*) PMM_MAP_BASE;
 static size_t current_entry = 0;
-static pmm_allocator_data_t* allocator_data = NULL;
+static pmm_allocator_stack_t* allocator_data = NULL;
 
 static inline void sanitize_memory_map(void);
 static inline void* get_next_frame(void);
+static inline void* get_highest_address(void);
 
 static inline void sanitize_memory_map(void)
 {
@@ -95,9 +102,32 @@ static inline void* get_next_frame(void)
     return NULL;
 }
 
+static inline void* get_highest_address(void)
+{
+    qword highest_address = 0;
+
+    for ( size_t i = 0; i < map->entries_count; ++i )
+    {
+        qword current_address = map->entries[i].base_address + map->entries[i].length;
+        if ( current_address > highest_address + 1 )
+        {
+            highest_address = current_address - 1;
+        }
+    }
+
+    return (void*) highest_address;
+}
+
 void pmm_setup(void)
 {
     sanitize_memory_map();
+
+    void* highest_address = get_highest_address();
+    console_output_printf("Highest address: %p\n", highest_address);
+    while (1)
+    {
+        __asm__("hlt");
+    }
     //console_output_printf("Memory Map:\nEntries count: %lu\n", map->entries_count);
     //for ( uint32_t i = 0; i < map->entries_count; ++i )
     //{
