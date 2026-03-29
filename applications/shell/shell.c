@@ -4,7 +4,7 @@
 #include <types.h>
 #include <infinite_loop.h>
 
-#include <memory_manager.h>
+#include <pmm.h>
 #include <console_output.h>
 
 #define SHELL_ARGV_MAX_SIZE 16
@@ -83,8 +83,8 @@ static inline void command_execute_internal(int argc, char** argv)
 
     if ( strcmp( argv[0], "alloc_frame" ) == 0 )
     {
-        dword* frame = memory_manager_frame_alloc();
-        frame = memory_manager_frame_alloc();
+        dword* frame = pmm_frame_alloc();
+        frame = pmm_frame_alloc();
         if ( frame == NULL )
         {
             tty_print("Unexpected error: failed to allocate memory.\n");
@@ -96,9 +96,9 @@ static inline void command_execute_internal(int argc, char** argv)
             frame[i] = 0xcafebabe;
         }
 
-        memory_manager_frame_free(frame);
+        pmm_frame_free(frame);
 
-        frame = memory_manager_frame_alloc();
+        frame = pmm_frame_alloc();
         if ( frame == NULL )
         {
             tty_print("Unexpected error: failed to allocate memory.\n");

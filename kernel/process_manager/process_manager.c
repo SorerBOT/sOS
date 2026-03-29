@@ -1,7 +1,7 @@
 #include <interrupts.h>
 #include <process_manager.h>
 #include <process_types.h>
-#include <memory_manager.h>
+#include <pmm.h>
 
 #include <console_output.h>
 #include <stdint.h>
@@ -18,9 +18,9 @@ process_id_t process_manager_launch_process(process_routine_t routine)
 {
     process_id_t new_process_idx = processes_count;
 
-    byte* stack_frame_bottom = memory_manager_frame_alloc();
+    byte* stack_frame_bottom = pmm_frame_alloc();
     console_output_printf("stack frame bottom = %p\n", stack_frame_bottom);
-    byte* stack_frame = (stack_frame_bottom + MEMORY_MANAGER_FRAME_SIZE - 1);
+    byte* stack_frame = (stack_frame_bottom + PMM_FRAME_SIZE - 1);
     stack_frame = interrupts_init_context((void*)stack_frame, routine);
 
     processes[new_process_idx] = (process_context_t)
