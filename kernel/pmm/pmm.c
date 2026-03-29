@@ -81,7 +81,24 @@ static inline void sanitize_memory_map(void)
             }
         }
     }
+
+    for ( size_t i = 0; i < map->entries_count; ++i )
+    {
+        pmm_map_entry_t* entry = &map->entries[i];
+
+        qword remainder = entry->base_address & (PMM_FRAME_SIZE - 1);
+        qword bytes_to_align = PMM_FRAME_SIZE - remainder;
+        if ( remainder > 0 )
+        {
+            if ( entry->length >= bytes_to_align )
+            {
+                entry->base_address += bytes_to_align;
+                entry->length -= bytes_to_align;
+            }
+        }
+    }
 }
+
 
 static inline void* get_next_frame(void)
 {
@@ -155,7 +172,7 @@ void pmm_setup(void)
     allocator_stack->frames_count = 0;
     for ( ;; )
     {
-        qword allocator_frame_offset = (qword)(((byte*)&allocator_stack->frames[allocator_stack->frames_count]) - ((byte*)&allocator_bitmap));
+        qword allocator_frame_offset = (qword)(((byte*)&allocator_stack->frames[allocator_stack->frames_count]) - ((byte*)allocator_bitmap));
         if ( allocator_frame_offset + sizeof(*allocator_stack->frames)  >= PMM_FRAME_SIZE )
         {
             break;
@@ -174,6 +191,15 @@ void pmm_setup(void)
             {
                 .base_address = current_frame_address
             };
+
+            size_t frame_index = get_frame_index(current_frame_address);
+            if ( frame_index > allocator_bitmap->frames_count )
+            {
+                console_output_print_blue_screen("Frame index: %llu is greater exceeds existing frames\n", frame_index);
+                break;
+            }
+
+            allocator_bitmap->frames_is_allocated[frame_index] = false;
         }
     }
 
@@ -206,15 +232,23 @@ void* pmm_frame_alloc(void)
 
     else
     {
-        void* address = allocator_stack->frames[--allocator_stack->frames_count].base_address;
-        return address;
+        return allocator_stack->frames[--allocator_stack->frames_count].base_address;
     }
 }
 
 void pmm_frame_free(void* ptr)
 {
-    allocator_stack->frames[allocator_stack->frames_count++] = (pmm_frame_t)
+    size_t frame_index = get_frame_index(ptr);
+    if ( allocator_bitmap->frames_is_allocated[frame_index] == true )
     {
-        .base_address = ptr
-    };
+        allocator_stack->frames[allocator_stack->frames_count++] = (pmm_frame_t)
+        {
+            .base_address = ptr
+        };
+    }
+
+    else
+    {
+        console_output_print_blue_screen("Trying to free a frame that is not allocated with index: %llu.\n", frame_index);
+    }
 }
