@@ -232,7 +232,10 @@ void* pmm_frame_alloc(void)
 
     else
     {
-        return allocator_stack->frames[--allocator_stack->frames_count].base_address;
+        void* address = allocator_stack->frames[--allocator_stack->frames_count].base_address;
+        size_t frame_index = get_frame_index(address);
+        allocator_bitmap->frames_is_allocated[frame_index] = true;
+        return address;
     }
 }
 
@@ -241,6 +244,7 @@ void pmm_frame_free(void* ptr)
     size_t frame_index = get_frame_index(ptr);
     if ( allocator_bitmap->frames_is_allocated[frame_index] == true )
     {
+        allocator_bitmap->frames_is_allocated[frame_index] = false;
         allocator_stack->frames[allocator_stack->frames_count++] = (pmm_frame_t)
         {
             .base_address = ptr
