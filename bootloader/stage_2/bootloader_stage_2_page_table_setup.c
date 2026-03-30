@@ -116,7 +116,7 @@ void page_table_setup()
 {
     console_output_init_settings_t settings =
     {
-        .initial_line = 14,
+        .initial_line = 21,
         .should_copy_existing_buffer = true
     };
 
