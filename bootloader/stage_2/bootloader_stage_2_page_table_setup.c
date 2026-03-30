@@ -88,34 +88,10 @@ PML4T_t* PML4T_init_identity_map()
             pdpt->pdts[j] |= PAGE_TABLE_ENTRY_FLAGS;
         }
         pml4t->pdpts[i] |= PAGE_TABLE_ENTRY_FLAGS;
+        pml4t->pdpts[i + PML4T_HIGHER_HALF_OFFSET] = pml4t->pdpts[i];
     }
 
     return pml4t;
-}
-
-void PML4T_init_higher_half_kernel(PML4T_t* pml4t)
-{
-    size_t created_pages_count = 0;
-    for ( size_t i = PML4T_HIGHER_HALF_OFFSET; created_pages_count < PAGES_TO_CREATE_COUNT; ++i )
-    {
-        pml4t->pdpts[i] = get_next_free_address();
-        PDPT_t* pdpt = (PDPT_t*)(uint32_t)pml4t->pdpts[i];
-
-        for ( size_t j = 0; created_pages_count < PAGES_TO_CREATE_COUNT; ++j )
-        {
-            pdpt->pdts[j] = get_next_free_address();
-            PDT_t* pdt = (PDT_t*)(uint32_t)pdpt->pdts[j];
-
-            for ( size_t k = 0; k < ENTRIES_IN_LEVEL && created_pages_count < PAGES_TO_CREATE_COUNT; ++k, ++created_pages_count )
-            {
-                PDPT_t* lower_half_pdpt = (PDPT_t*)(uint32_t)(pml4t->pdpts[i - PML4T_HIGHER_HALF_OFFSET] & ~PAGE_TABLE_ENTRY_FLAGS);
-                PDT_t* lower_half_pdt = (PDT_t*)(uint32_t)(lower_half_pdpt->pdts[j] & ~PAGE_TABLE_ENTRY_FLAGS);
-                pdt->frames[k] = lower_half_pdt->frames[k];
-            }
-            pdpt->pdts[j] |= PAGE_TABLE_ENTRY_FLAGS;
-        }
-        pml4t->pdpts[i] |= PAGE_TABLE_ENTRY_FLAGS;
-    }
 }
 
 void page_table_setup()
@@ -131,7 +107,6 @@ void page_table_setup()
     next_free_address_init();
 
     PML4T_t* pml4t = PML4T_init_identity_map();
-    PML4T_init_higher_half_kernel(pml4t);
 
     console_output_report("successfully created the kernel's page table.", CONSOLE_OUTPUT_SUCCESS);
 }
