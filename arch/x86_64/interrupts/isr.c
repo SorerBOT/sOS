@@ -73,11 +73,7 @@ static void handler_page_fault(const isr_args_t* args)
 
     console_output_print_blue_screen(
             "Page Fault Occurred\n"
-            "Faulting address: %p\n", faulting_address);
-
-    dump_registers(args);
-
-    console_output_printf(
+            "Faulting address: %p\n"
             "%27s:    %d\n"
             "%27s:    %d\n"
             "%27s:    %d\n"
@@ -86,6 +82,7 @@ static void handler_page_fault(const isr_args_t* args)
             "%27s:    %d\n"
             "%27s:    %d\n"
             "%27s:    %d\n",
+            faulting_address,
             "is_present", is_present,
             "is_write", is_write,
             "is_user", is_user,
@@ -95,10 +92,7 @@ static void handler_page_fault(const isr_args_t* args)
             "is_shadow_stack", is_shadow_stack,
             "is_software_guard_extension", is_software_guard_extension);
 
-    while (1)
-    {
-        __asm__ volatile("cli; hlt");
-    }
+    dump_registers(args);
 }
 
 static void handler_general_protection_fault(const isr_args_t* args)
