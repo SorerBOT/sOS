@@ -12,7 +12,8 @@ __asm__(".code32\n");
 #define MiB (1024 * (KiB))
 #define PAGE_SIZE (2 * (MiB))
 #define PAGE_TABLE_ENTRY_SIZE (4 * (KiB))
-#define FLAGS 0b11
+#define PAGE_TABLE_ENTRY_FLAGS 0b11
+#define FRAME_FLAGS 0b10000011
 #define ENTRIES_IN_LEVEL 512
 
 #define MEMORY_SIZE_TO_MAP 0x80000000
@@ -81,9 +82,12 @@ PML4T_t* PML4T_init_identity_map()
 
             for ( size_t k = 0; k < ENTRIES_IN_LEVEL && created_pages_count < PAGES_TO_CREATE_COUNT; ++k, ++created_pages_count )
             {
-                pdt->frames[k] = get_next_physical_address();
+                pdt->frames[k] = get_next_physical_address() | FRAME_FLAGS;
             }
+
+            pdpt->pdts[j] |= PAGE_TABLE_ENTRY_FLAGS;
         }
+        pml4t->pdpts[i] |= PAGE_TABLE_ENTRY_FLAGS;
     }
 
     return pml4t;
@@ -104,11 +108,13 @@ void PML4T_init_higher_half_kernel(PML4T_t* pml4t)
 
             for ( size_t k = 0; k < ENTRIES_IN_LEVEL && created_pages_count < PAGES_TO_CREATE_COUNT; ++k, ++created_pages_count )
             {
-                PDPT_t* lower_half_pdpt = (PDPT_t*)(uint32_t)pml4t->pdpts[i - PML4T_HIGHER_HALF_OFFSET];
-                PDT_t* lower_half_pdt = (PDT_t*)(uint32_t)lower_half_pdpt->pdts[j];
+                PDPT_t* lower_half_pdpt = (PDPT_t*)(uint32_t)(pml4t->pdpts[i - PML4T_HIGHER_HALF_OFFSET] & ~PAGE_TABLE_ENTRY_FLAGS);
+                PDT_t* lower_half_pdt = (PDT_t*)(uint32_t)(lower_half_pdpt->pdts[j] & ~PAGE_TABLE_ENTRY_FLAGS);
                 pdt->frames[k] = lower_half_pdt->frames[k];
             }
+            pdpt->pdts[j] |= PAGE_TABLE_ENTRY_FLAGS;
         }
+        pml4t->pdpts[i] |= PAGE_TABLE_ENTRY_FLAGS;
     }
 }
 
@@ -129,4 +135,10 @@ void page_table_setup()
     PML4T_init_higher_half_kernel(pml4t);
 
     console_output_report("successfully created the kernel's page table.", CONSOLE_OUTPUT_SUCCESS);
+    while (1)
+    {
+        __asm__("hlt");
+    }
 }
+
+
