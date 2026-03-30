@@ -112,6 +112,7 @@ static void handler_general_protection_fault(const isr_args_t* args)
     {
         console_output_printf("Segment violation error at segment %llu\n", args->error_code);
     }
+    dump_registers(args);
 }
 
 static bool is_pic_interrupt(qword isr_number)
