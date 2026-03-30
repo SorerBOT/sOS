@@ -70,12 +70,12 @@ PML4T_t* PML4T_init_identity_map()
 {
     PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
     size_t created_pages_count = 0;
-    for ( size_t i = 0; created_pages_count < PAGES_TO_CREATE_COUNT; ++i )
+    for ( size_t i = 0; i < ENTRIES_IN_LEVEL && created_pages_count < PAGES_TO_CREATE_COUNT; ++i )
     {
         pml4t->pdpts[i] = get_next_free_address();
         PDPT_t* pdpt = (PDPT_t*)(uint32_t)pml4t->pdpts[i];
 
-        for ( size_t j = 0; created_pages_count < PAGES_TO_CREATE_COUNT; ++j )
+        for ( size_t j = 0; j < ENTRIES_IN_LEVEL && created_pages_count < PAGES_TO_CREATE_COUNT; ++j )
         {
             pdpt->pdts[j] = get_next_free_address();
             PDT_t* pdt = (PDT_t*)(uint32_t)pdpt->pdts[j];
