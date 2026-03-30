@@ -87,9 +87,9 @@ static inline void sanitize_memory_map(void)
         pmm_map_entry_t* entry = &map->entries[i];
 
         qword remainder = entry->base_address & (PMM_FRAME_SIZE - 1);
-        qword bytes_to_align = PMM_FRAME_SIZE - remainder;
         if ( remainder > 0 )
         {
+            qword bytes_to_align = PMM_FRAME_SIZE - remainder;
             if ( entry->length >= bytes_to_align )
             {
                 entry->base_address += bytes_to_align;
@@ -126,6 +126,11 @@ static inline void* get_highest_address(void)
 
     for ( size_t i = 0; i < map->entries_count; ++i )
     {
+        if ( map->entries[i].type != PMM_MAP_USABLE )
+        {
+            continue;
+        }
+
         qword current_address = map->entries[i].base_address + map->entries[i].length;
         if ( current_address > highest_address + 1 )
         {
@@ -154,16 +159,17 @@ void pmm_setup(void)
 {
     sanitize_memory_map();
 
+    void* highest_address = get_highest_address();
+    void* current_address = 0;
+
     allocator_bitmap = get_next_frame();
     if ( allocator_bitmap == NULL )
     {
         console_output_print_blue_screen("Failed to allocate memory for memory manager.\n");
     }
+    allocator_bitmap->frames_count = 0;
 
-    void* highest_address = get_highest_address();
-    void* current_address = 0;
-
-    for ( ; current_address < highest_address; current_address += PMM_FRAME_SIZE )
+    for ( ; (qword)current_address < (qword)highest_address; current_address += PMM_FRAME_SIZE )
     {
         allocator_bitmap->frames_is_allocated[allocator_bitmap->frames_count++] = true;
     }
