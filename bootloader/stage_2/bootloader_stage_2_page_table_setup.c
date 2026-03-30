@@ -8,19 +8,19 @@ __asm__(".code32\n");
 
 #include <console_output.h>
 
-#define KiB (1024)
-#define MiB (1024 * (KiB))
-#define PAGE_SIZE (2 * (MiB))
-#define PAGE_TABLE_ENTRY_SIZE (4 * (KiB))
+#define KiB (1024ULL)
+#define MiB (1024ULL * (KiB))
+#define GiB (1024ULL * (MiB))
+#define PAGE_SIZE (2ULL * (MiB))
+#define PAGE_TABLE_ENTRY_SIZE (4ULL * (KiB))
 #define PAGE_TABLE_ENTRY_FLAGS 0b11
 #define FRAME_FLAGS 0b10000011
 #define ENTRIES_IN_LEVEL 512
 
-#define MEMORY_SIZE_TO_MAP 0x80000000
-#define BASE_PHYSICAL_ADDRESS 0x000000
-#define BASE_HIGHER_HALF_ADDRESS 0xFFFF800000000000
+#define MEMORY_SIZE_TO_MAP (16ULL * (GiB))
+#define BASE_PHYSICAL_ADDRESS 0x000000ULL
+//#define BASE_HIGHER_HALF_ADDRESS 0xFFFF800000000000
 #define PAGES_TO_CREATE_COUNT ((MEMORY_SIZE_TO_MAP) / (PAGE_SIZE))
-
 #define PML4T_HIGHER_HALF_OFFSET 256
 
 typedef uint64_t lm_pointer;
@@ -61,7 +61,7 @@ lm_pointer get_next_free_address()
 lm_pointer get_next_physical_address()
 {
     lm_pointer temp = next_physical_address;
-    next_physical_address += PAGE_TABLE_ENTRY_SIZE;
+    next_physical_address += PAGE_SIZE;
     return temp;
 }
 
@@ -125,20 +125,15 @@ void page_table_setup()
         .initial_line = 21,
         .should_copy_existing_buffer = true
     };
-
     console_output_init(&settings);
-
     console_output_report("entered 32-bit protected mode.", CONSOLE_OUTPUT_SUCCESS);
+
     next_free_address_init();
 
     PML4T_t* pml4t = PML4T_init_identity_map();
     PML4T_init_higher_half_kernel(pml4t);
 
     console_output_report("successfully created the kernel's page table.", CONSOLE_OUTPUT_SUCCESS);
-    while (1)
-    {
-        __asm__("hlt");
-    }
 }
 
 
