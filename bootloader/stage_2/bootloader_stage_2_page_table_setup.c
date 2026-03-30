@@ -9,47 +9,36 @@ __asm__(".code32\n");
 #include <console_output.h>
 
 #define KiB (1024)
-#define PAGE_SIZE (4 * KiB)
+#define MiB (1024 * (KiB))
+#define PAGE_SIZE (2 * (MiB))
+#define PAGE_TABLE_ENTRY_SIZE (4 * (KiB))
 #define FLAGS 0b11
+#define ENTRIES_IN_LEVEL 512
 
 #define MEMORY_SIZE_TO_MAP 0x80000000
 #define BASE_PHYSICAL_ADDRESS 0x000000
+#define BASE_HIGHER_HALF_ADDRESS 0xFFFF800000000000
+#define PAGES_TO_CREATE_COUNT ((MEMORY_SIZE_TO_MAP) / (PAGE_SIZE))
 
-#define PAGES_IN_PT 512
-#define PAGES_IN_PDT (PAGES_IN_PT * 512)
-#define PAGES_IN_PDPT (PAGES_IN_PDT * 512)
+#define PML4T_HIGHER_HALF_OFFSET 256
 
 typedef uint64_t lm_pointer;
 
 typedef struct
 {
-    byte data[PAGE_SIZE];
-} Frame_t;
-
-typedef struct
-{
-    Frame_t* mapped_frame_physical_address;
-} Page_t;
-
-typedef struct
-{
-    lm_pointer pages[PAGE_SIZE / sizeof(lm_pointer)];
-} PT_t;
-
-typedef struct
-{
-    lm_pointer pts[PAGE_SIZE / sizeof(lm_pointer)];
+    lm_pointer frames[ENTRIES_IN_LEVEL];
 } PDT_t;
 
 typedef struct
 {
-    lm_pointer pdts[PAGE_SIZE / sizeof(lm_pointer)];
+    lm_pointer pdts[ENTRIES_IN_LEVEL];
 } PDPT_t;
 
 typedef struct
 {
-    lm_pointer pdpts[PAGE_SIZE / sizeof(lm_pointer)];
+    lm_pointer pdpts[ENTRIES_IN_LEVEL];
 } PML4T_t;
+
 
 extern dword BASE_PAGE_TABLE_ADDRESS;
 lm_pointer next_free_address = 0xDEADBEEF;
@@ -62,69 +51,65 @@ void next_free_address_init()
 
 lm_pointer get_next_free_address()
 {
-    memset((void*)(uint32_t)next_free_address, 0, PAGE_SIZE);
+    memset((void*)(uint32_t)next_free_address, 0, PAGE_TABLE_ENTRY_SIZE);
     lm_pointer temp = next_free_address;
-    next_free_address += PAGE_SIZE;
+    next_free_address += PAGE_TABLE_ENTRY_SIZE;
     return temp;
 }
 
 lm_pointer get_next_physical_address()
 {
     lm_pointer temp = next_physical_address;
-    next_physical_address += PAGE_SIZE;
+    next_physical_address += PAGE_TABLE_ENTRY_SIZE;
     return temp;
 }
 
-void PT_init_identity_map(PT_t* pt, int64_t pages_count)
+
+PML4T_t* PML4T_init_identity_map()
 {
-    size_t created_pages_count = 0;
-    for (; pages_count > 0 && created_pages_count < 512; --pages_count, ++created_pages_count)
-    {
-        pt->pages[created_pages_count] = (get_next_physical_address() | FLAGS);
-    }
-}
-
-void PDT_init_identity_map(PDT_t* pdt, int64_t pages_count)
-{
-    console_output_report("mapping pages. can't print how many pages remaining.", CONSOLE_OUTPUT_SUCCESS);
-
-
-    size_t created_pt_count = 0;
-    for (; pages_count > 0 && created_pt_count < 512; pages_count -= PAGES_IN_PT, ++created_pt_count)
-    {
-        pdt->pts[created_pt_count] = get_next_free_address();
-        PT_init_identity_map((PT_t*)(uint32_t)pdt->pts[created_pt_count], pages_count);
-        pdt->pts[created_pt_count] |= FLAGS;
-    }
-}
-
-void PDPT_init_identity_map(PDPT_t* pdpt, int64_t pages_count)
-{
-    size_t created_pdt_count = 0;
-    for (; pages_count > 0 && created_pdt_count < 512; pages_count -= PAGES_IN_PDT, ++created_pdt_count)
-    {
-        pdpt->pdts[created_pdt_count] = get_next_free_address();
-        PDT_init_identity_map((PDT_t*)(uint32_t)pdpt->pdts[created_pdt_count], pages_count);
-        pdpt->pdts[created_pdt_count] |= FLAGS;
-    }
-}
-
-PML4T_t* PML4T_init_identity_map(size_t memory_size_to_map)
-{
-    int64_t pages_count = memory_size_to_map / PAGE_SIZE;
-    console_output_report("mapping pages. can't print how many pages remaining.", CONSOLE_OUTPUT_SUCCESS);
-
     PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
-
-    size_t created_pdpt_count = 0;
-    for (; pages_count > 0 && created_pdpt_count < 512; pages_count -= PAGES_IN_PDPT, ++created_pdpt_count)
+    size_t created_pages_count = 0;
+    for ( size_t i = 0; created_pages_count < PAGES_TO_CREATE_COUNT; ++i )
     {
-        pml4t->pdpts[created_pdpt_count] = get_next_free_address();
-        PDPT_init_identity_map((PDPT_t*)(uint32_t)pml4t->pdpts[created_pdpt_count], pages_count);
-        pml4t->pdpts[created_pdpt_count] |= FLAGS;
+        pml4t->pdpts[i] = get_next_free_address();
+        PDPT_t* pdpt = (PDPT_t*)(uint32_t)pml4t->pdpts[i];
+
+        for ( size_t j = 0; created_pages_count < PAGES_TO_CREATE_COUNT; ++j )
+        {
+            pdpt->pdts[j] = get_next_free_address();
+            PDT_t* pdt = (PDT_t*)(uint32_t)pdpt->pdts[j];
+
+            for ( size_t k = 0; k < ENTRIES_IN_LEVEL && created_pages_count < PAGES_TO_CREATE_COUNT; ++k, ++created_pages_count )
+            {
+                pdt->frames[k] = get_next_physical_address();
+            }
+        }
     }
 
     return pml4t;
+}
+
+void PML4T_init_higher_half_kernel(PML4T_t* pml4t)
+{
+    size_t created_pages_count = 0;
+    for ( size_t i = PML4T_HIGHER_HALF_OFFSET; created_pages_count < PAGES_TO_CREATE_COUNT; ++i )
+    {
+        pml4t->pdpts[i] = get_next_free_address();
+        PDPT_t* pdpt = (PDPT_t*)(uint32_t)pml4t->pdpts[i];
+
+        for ( size_t j = 0; created_pages_count < PAGES_TO_CREATE_COUNT; ++j )
+        {
+            pdpt->pdts[j] = get_next_free_address();
+            PDT_t* pdt = (PDT_t*)(uint32_t)pdpt->pdts[j];
+
+            for ( size_t k = 0; k < ENTRIES_IN_LEVEL && created_pages_count < PAGES_TO_CREATE_COUNT; ++k, ++created_pages_count )
+            {
+                PDPT_t* lower_half_pdpt = (PDPT_t*)(uint32_t)pml4t->pdpts[i - PML4T_HIGHER_HALF_OFFSET];
+                PDT_t* lower_half_pdt = (PDT_t*)(uint32_t)lower_half_pdpt->pdts[j];
+                pdt->frames[k] = lower_half_pdt->frames[k];
+            }
+        }
+    }
 }
 
 void page_table_setup()
@@ -140,7 +125,8 @@ void page_table_setup()
     console_output_report("entered 32-bit protected mode.", CONSOLE_OUTPUT_SUCCESS);
     next_free_address_init();
 
-    PML4T_t* pml4t = PML4T_init_identity_map(MEMORY_SIZE_TO_MAP);
+    PML4T_t* pml4t = PML4T_init_identity_map();
+    PML4T_init_higher_half_kernel(pml4t);
 
     console_output_report("successfully created the kernel's page table.", CONSOLE_OUTPUT_SUCCESS);
 }
