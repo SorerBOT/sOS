@@ -14,7 +14,7 @@ typedef struct _slab_allocator_t
 } slab_allocator_t;
 
 
-slab_allocator_t* slab_allocator_init(size_t entry_size);
-void* slab_allocator_alloc(slab_allocator_t* allocator);
+void* slab_allocator_init(size_t entry_size);
+void* slab_allocator_alloc(void* _allocator);
 
 #endif /* SLAB_ALLOCATOR_H */

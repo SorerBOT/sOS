@@ -5,7 +5,7 @@
 
 #define SLAB_ALLOCATOR_BITS_IN_QWORD (8 * sizeof(qword))
 
-slab_allocator_t* slab_allocator_init(size_t entry_size)
+void* slab_allocator_init(size_t entry_size)
 {
     byte* frame = pmm_frame_alloc();
 
@@ -36,8 +36,10 @@ slab_allocator_t* slab_allocator_init(size_t entry_size)
     return allocator;
 }
 
-void* slab_allocator_alloc(slab_allocator_t* allocator)
+void* slab_allocator_alloc(void* _allocator)
 {
+    slab_allocator_t* allocator = _allocator;
+
     for ( size_t i = 0; i < allocator->capacity / SLAB_ALLOCATOR_BITS_IN_QWORD; ++i )
     {
         qword bitmap_i = allocator->bitmap[i];
