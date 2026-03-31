@@ -36,7 +36,7 @@ void* slab_allocator_init(size_t entry_size)
     return allocator;
 }
 
-void* slab_allocator_alloc(void* _allocator)
+void* slab_allocator_allocate(void* _allocator)
 {
     slab_allocator_t* allocator = _allocator;
 
@@ -61,6 +61,8 @@ void* slab_allocator_alloc(void* _allocator)
             return (byte*)allocator->base_address + allocator->entry_size * entry_idx;
         }
     }
+
+    console_output_print_blue_screen("slab allocator ran out of space\n");
 
     return NULL;
 }

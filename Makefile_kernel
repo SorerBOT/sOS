@@ -6,7 +6,7 @@ ARCH_DIR=arch
 LIBC_DIR=libc
 BIN_DIR=bin
 
-INCLUDE_FLAGS = -Ikernel/slab_allocator/include -Ikernel/pmm/include -Ikernel/process_manager/include -Ikernel/syscall_handler/include -Ilibc/include -Ilibc/sOS/include -Idrivers/$(ARCH)/include -Idrivers/input/include -Idrivers/tty/include -Iarch/$(ARCH)/include -Iarch/common/include -Iapplications/include
+INCLUDE_FLAGS = -Ikernel/slab_allocator/include -Ikernel/vmm/include -Ikernel/pmm/include -Ikernel/process_manager/include -Ikernel/syscall_handler/include -Ilibc/include -Ilibc/sOS/include -Idrivers/$(ARCH)/include -Idrivers/input/include -Idrivers/tty/include -Iarch/$(ARCH)/include -Iarch/common/include -Iapplications/include
 CFLAGS = -std=c99 -ffreestanding -mno-red-zone -m64 -g $(INCLUDE_FLAGS)
 
 BIN_64_BIT_DIR=$(BIN_DIR)/64-bit
