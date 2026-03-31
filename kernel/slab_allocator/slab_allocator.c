@@ -48,8 +48,15 @@ void* slab_allocator_alloc(slab_allocator_t* allocator)
                 continue;
             }
 
+            size_t entry_idx = (i * SLAB_ALLOCATOR_BITS_IN_QWORD + j);
+
+            if ( entry_idx >= allocator->capacity )
+            {
+                break;
+            }
+
             allocator->bitmap[i] |= 0b1 << j;
-            return (byte*)allocator->base_address + allocator->entry_size * (i * SLAB_ALLOCATOR_BITS_IN_QWORD + j);
+            return (byte*)allocator->base_address + allocator->entry_size * entry_idx;
         }
     }
 
