@@ -5,6 +5,11 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#define KiB 1024
+#define MiB (1024 * KiB)
+#define GiB (1024 * MiB)
+#define TiB (1024 * GiB)
+
 typedef enum
 {
     ERRORS_NONE,
