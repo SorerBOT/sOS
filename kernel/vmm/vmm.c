@@ -1,6 +1,7 @@
 #include <vmm.h>
 #include <pmm.h>
 #include <string.h>
+#include <slab_allocator.h>
 
 /* I don't really like this. */
 #define VMM_IS_PRESENT(address) (((qword)address) & 0x1)
@@ -39,9 +40,21 @@
                                 | VMM_FLAG_ACCESSED | VMM_FLAG_DIRTY | VMM_FLAG_PAGE_SIZE_HUGE      \
                                 | VMM_FLAG_GLOBAL | VMM_FLAG_EXECUTE_ALLOW)
 
+#define VMM_PAGE_TABLE_SIZE (4 * KiB)
+
+static void* slab_allocator = NULL;
+
+void vmm_setup(void)
+{
+    if ( slab_allocator == NULL )
+    {
+        slab_allocator = slab_allocator_init(VMM_PAGE_TABLE_SIZE);
+    }
+}
+
 PML4T_t* vmm_create_page_table(void)
 {
-    PML4T_t* pml4t = pmm_frame_alloc();
+    PML4T_t* pml4t = slab_allocator_allocate(slab_allocator);
 
     if ( pml4t == NULL )
     {
@@ -53,33 +66,47 @@ PML4T_t* vmm_create_page_table(void)
     return pml4t;
 }
 
+
+
+
 void* vmm_page_allocate(PML4T_t* pml4t)
 {
-    void* frame = pmm_frame_alloc();
-
-    if ( frame == NULL )
-    {
-        return NULL;
-    }
-
     for ( size_t i = 0; i < VMM_ENTRIES_COUNT_IN_LEVEL; ++i )
     {
         if ( VMM_IS_PRESENT(pml4t->pdpts[i]) == false )
         {
-            //pml4t->pdpts
+            PDPT_t* pdpt = slab_allocator_allocate(slab_allocator);
+            pml4t->pdpts[i] = (PDPT_t*)(((qword)pdpt) | VMM_FLAGS_USER_TABLE);
         }
 
         for ( size_t j = 0; j < VMM_ENTRIES_COUNT_IN_LEVEL; ++j )
         {
-            if ( VMM_IS_PRESENT(pml4t->pdpts[i]->pdts[j]) == true )
+            PDPT_t* pdpt_clean = (PDPT_t*)((qword)pml4t->pdpts[i] & ~VMM_FLAGS_USER_TABLE);
+            if ( VMM_IS_PRESENT(pdpt_clean->pdts[j]) == false )
             {
-                continue;
+                PDT_t* pdt = slab_allocator_allocate(slab_allocator);
+                pml4t->pdpts[i]->pdts[j] = (PDT_t*)(((qword)pdt) | VMM_FLAGS_USER_TABLE);
             }
 
-            pml4t->pdpts[i]->pdts[j] = (void*)(((qword)frame) | VMM_FLAGS_USER_PAGE);
-            return (void*)1;
+            else
+            {
+                for ( size_t k = 0; k < VMM_ENTRIES_COUNT_IN_LEVEL; ++k )
+                {
+                    PDT_t* pdt_clean = (PDT_t*)(((qword)pml4t->pdpts[i]->pdts[j]) & ~VMM_FLAGS_USER_TABLE);
+                    if ( VMM_IS_PRESENT(pdt_clean->frames[k]) )
+                    {
+                        continue;
+                    }
+
+                    void* frame = pmm_frame_alloc();
+                    pml4t->pdpts[i]->pdts[j] = (void*)(((qword)frame) | VMM_FLAGS_USER_PAGE);
+                    return (void*)1;
+                }
+            }
         }
     }
+
+    return NULL;
 }
 
 

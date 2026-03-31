@@ -62,5 +62,7 @@ void* slab_allocator_allocate(void* _allocator)
         }
     }
 
+    console_output_print_blue_screen("slab allocator ran out of space\n");
+
     return NULL;
 }
