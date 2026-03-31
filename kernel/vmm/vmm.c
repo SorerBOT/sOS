@@ -2,8 +2,11 @@
 #include <pmm.h>
 #include <string.h>
 #include <slab_allocator.h>
+#include <console_output.h>
 
 /* I don't really like this. */
+#define VMM_KERNEL_PML4T_BASE 0x1000000
+#define VMM_PML4T_HIGH_HALF_OFFSET 256
 #define VMM_IS_PRESENT(address) (((qword)address) & 0x1)
 #define VMM_FLAG_PRESENT                    (0b1ULL)
 #define VMM_FLAG_READ_WRITE                 (0b1ULL >> 1)
@@ -43,6 +46,7 @@
 #define VMM_PAGE_TABLE_SIZE (4 * KiB)
 
 static void* slab_allocator = NULL;
+static PML4T_t* kernel_pml4t = (PML4T_t*) VMM_KERNEL_PML4T_BASE;
 
 void vmm_setup(void)
 {
@@ -63,13 +67,15 @@ PML4T_t* vmm_create_page_table(void)
 
     memset(pml4t, 0, sizeof(PML4T_t));
 
+    for ( size_t i = VMM_PML4T_HIGH_HALF_OFFSET; i < VMM_ENTRIES_COUNT_IN_LEVEL; ++i )
+    {
+        pml4t->pdpts[i] = kernel_pml4t->pdpts[i];
+    }
+
     return pml4t;
 }
 
-
-
-
-void* vmm_page_allocate(PML4T_t* pml4t)
+void vmm_page_allocate(PML4T_t* pml4t)
 {
     for ( size_t i = 0; i < VMM_ENTRIES_COUNT_IN_LEVEL; ++i )
     {
@@ -100,13 +106,12 @@ void* vmm_page_allocate(PML4T_t* pml4t)
 
                     void* frame = pmm_frame_alloc();
                     pml4t->pdpts[i]->pdts[j] = (void*)(((qword)frame) | VMM_FLAGS_USER_PAGE);
-                    return (void*)1;
                 }
             }
         }
     }
 
-    return NULL;
+    console_output_print_blue_screen("Failed to allocate frame to page table.");
 }
 
 

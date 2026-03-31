@@ -25,7 +25,7 @@ typedef struct
 
 PML4T_t* vmm_create_page_table(void);
 void vmm_setup(void);
-void* vmm_page_allocate(PML4T_t* pml4t);
+void vmm_page_allocate(PML4T_t* pml4t);
 void vmm_page_free(PML4T_t* pml4t);
 
 
