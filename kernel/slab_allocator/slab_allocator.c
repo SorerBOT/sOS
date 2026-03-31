@@ -26,5 +26,10 @@ slab_allocator_t* slab_allocator_init(size_t entry_size)
         .items_count = 0
     };
 
+    for ( size_t i = 0; i < capacity; i += 8 )
+    {
+        allocator->bitmap[i] = 0;
+    }
+
     return allocator;
 }
