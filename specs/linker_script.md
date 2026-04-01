@@ -39,3 +39,11 @@ int main(void)
     return 0;
 }
 ```
+
+The results were:
+```
+Address 2 GiB from the end: ffff80000000
+PML4T entry idx: 511
+PDPT entry idx: 510
+PDT entry idx: 0
+```
