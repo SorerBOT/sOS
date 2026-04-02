@@ -6,7 +6,7 @@
 
 /* I don't really like this. */
 #define VMM_KERNEL_PML4T_BASE 0x1000000
-#define VMM_PML4T_HIGH_HALF_OFFSET 256
+#define VMM_PML4T_HIGHER_HALF_OFFSET 256
 #define VMM_IS_PRESENT(address) (((qword)address) & 0x1)
 #define VMM_FLAG_PRESENT                    (0b1ULL)
 #define VMM_FLAG_READ_WRITE                 (0b1ULL >> 1)
@@ -67,7 +67,7 @@ PML4T_t* vmm_create_page_table(void)
 
     memset(pml4t, 0, sizeof(PML4T_t));
 
-    for ( size_t i = VMM_PML4T_HIGH_HALF_OFFSET; i < VMM_ENTRIES_COUNT_IN_LEVEL; ++i )
+    for ( size_t i = VMM_PML4T_HIGHER_HALF_OFFSET; i < VMM_ENTRIES_COUNT_IN_LEVEL; ++i )
     {
         pml4t->pdpts[i] = kernel_pml4t->pdpts[i];
     }
