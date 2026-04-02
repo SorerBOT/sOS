@@ -5,6 +5,7 @@
 #include <infinite_loop.h>
 
 #include <pmm.h>
+#include <vmm.h>
 
 #define SHELL_ARGV_MAX_SIZE 16
 #define SHELL_BUFFER_SIZE 256
@@ -82,7 +83,7 @@ static inline void command_execute_internal(int argc, char** argv)
 
     if ( strcmp( argv[0], "alloc_frame" ) == 0 )
     {
-        dword* frame = pmm_frame_alloc();
+        dword* frame = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pmm_frame_alloc());
         if ( frame == NULL )
         {
             tty_print("Unexpected error: failed to allocate memory.\n");
