@@ -103,13 +103,13 @@ PML4T_t* PML4T_init_map()
     // setting the kernel binary page
     if ( pml4t->pdpts[511] == 0x0000 )
     {
-        pml4t->pdpts[511] = get_next_free_address();
+        pml4t->pdpts[511] = get_next_free_address() | PAGE_TABLE_ENTRY_FLAGS;
     }
 
     PDPT_t* kernel_binary_pdpt = (PDPT_t*)(((uint32_t) pml4t->pdpts[511]) & ~PAGE_TABLE_ENTRY_FLAGS);
     if ( kernel_binary_pdpt->pdts[510] == 0x0000 )
     {
-        kernel_binary_pdpt->pdts[510] = get_next_free_address();
+        kernel_binary_pdpt->pdts[510] = get_next_free_address() | PAGE_TABLE_ENTRY_FLAGS;
     }
     PDT_t* kernel_binary_pdt = (PDT_t*)(((uint32_t) kernel_binary_pdpt->pdts[510]) & ~PAGE_TABLE_ENTRY_FLAGS);
     kernel_binary_pdt->frames[0] = 0x0000 | FRAME_FLAGS;
