@@ -5,8 +5,8 @@
 #include <pmm.h>
 
 #define VMM_KERNEL_MAP_VIRTUAL_OFFSET 0xFFFF800000000000
-#define VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(physical_address) (((qword)(physical_address)) + VMM_KERNEL_MAP_VIRTUAL_OFFSET)
-#define VMM_TRANSLATE_KERNEL_MAP_TO_PHYSICAL(kernel_map_address) (((qword)(kernel_map_address)) - VMM_KERNEL_MAP_VIRTUAL_OFFSET)
+#define VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(physical_address) ((void*)(((qword)(physical_address)) + VMM_KERNEL_MAP_VIRTUAL_OFFSET))
+#define VMM_TRANSLATE_KERNEL_MAP_TO_PHYSICAL(kernel_map_address) ((void*)(((qword)(kernel_map_address)) - VMM_KERNEL_MAP_VIRTUAL_OFFSET))
 
 void vmm_setup(void);
 void* vmm_create_page_table(void);
