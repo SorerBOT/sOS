@@ -1,3 +1,4 @@
+#include "console_output.h"
 #include <string.h>
 #include <tty.h>
 #include <shell.h>
@@ -90,14 +91,16 @@ static inline void command_execute_internal(int argc, char** argv)
             return;
         }
 
+        console_output_printf("frame address: %p\n", frame);
+
         for ( size_t i = 0; i < (2 * 1024 * 1024 / sizeof(frame[0])); ++i )
         {
             frame[i] = 0xcafebabe;
         }
 
-        pmm_frame_free(frame);
+        pmm_frame_free(VMM_TRANSLATE_KERNEL_MAP_TO_PHYSICAL(frame));
 
-        frame = pmm_frame_alloc();
+        frame = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pmm_frame_alloc());
         if ( frame == NULL )
         {
             tty_print("Unexpected error: failed to allocate memory.\n");
@@ -112,7 +115,7 @@ static inline void command_execute_internal(int argc, char** argv)
                 return;
             }
         }
-        pmm_frame_free(frame);
+        pmm_frame_free(VMM_TRANSLATE_KERNEL_MAP_TO_PHYSICAL(frame));
         tty_print("Successfully passed frame allocator test.\n");
     }
 }
