@@ -4,6 +4,9 @@
 #include <slab_allocator.h>
 #include <console_output.h>
 
+#define VMM_PAGE_SIZE PMM_FRAME_SIZE
+#define VMM_ENTRIES_COUNT_IN_LEVEL 512
+
 /* I don't really like this. */
 #define VMM_KERNEL_PML4T_BASE 0x1000000
 #define VMM_PML4T_HIGHER_HALF_OFFSET 256
@@ -45,6 +48,21 @@
 
 #define VMM_PAGE_TABLE_SIZE (4 * KiB)
 
+typedef struct
+{
+    void* frames[VMM_ENTRIES_COUNT_IN_LEVEL];
+} PDT_t;
+
+typedef struct
+{
+    PDT_t* pdts[VMM_ENTRIES_COUNT_IN_LEVEL];
+} PDPT_t;
+
+typedef struct
+{
+    PDPT_t* pdpts[VMM_ENTRIES_COUNT_IN_LEVEL];
+} PML4T_t;
+
 static void* slab_allocator = NULL;
 static PML4T_t* kernel_pml4t = (PML4T_t*) VMM_KERNEL_PML4T_BASE;
 
@@ -56,7 +74,7 @@ void vmm_setup(void)
     }
 }
 
-PML4T_t* vmm_create_page_table(void)
+void* vmm_create_page_table(void)
 {
     PML4T_t* pml4t = slab_allocator_allocate(slab_allocator);
 
@@ -75,8 +93,9 @@ PML4T_t* vmm_create_page_table(void)
     return pml4t;
 }
 
-void vmm_page_allocate(PML4T_t* pml4t)
+void vmm_page_allocate(void* _pml4t)
 {
+    PML4T_t* pml4t = _pml4t;
     for ( size_t i = 0; i < VMM_ENTRIES_COUNT_IN_LEVEL; ++i )
     {
         if ( VMM_IS_PRESENT(pml4t->pdpts[i]) == false )
@@ -114,5 +133,8 @@ void vmm_page_allocate(PML4T_t* pml4t)
     console_output_print_blue_screen("Failed to allocate frame to page table.");
 }
 
-
-void vmm_page_free(PML4T_t* pml4t);
+void vmm_page_free(void* _pml4t)
+{
+    PML4T_t* pml4t = _pml4t;
+    console_output_print_blue_screen("vmm_page_free is not implemented");
+}
