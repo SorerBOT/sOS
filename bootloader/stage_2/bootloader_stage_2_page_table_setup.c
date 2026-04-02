@@ -23,6 +23,11 @@ __asm__(".code32\n");
 #define PAGES_TO_CREATE_COUNT ((MEMORY_SIZE_TO_MAP) / (PAGE_SIZE))
 #define PML4T_HIGHER_HALF_OFFSET 256
 
+#define MAKE_PAGE_TABLE_ENTRY(entry) (((uint32_t)entry) | PAGE_TABLE_ENTRY_FLAGS)
+#define STRIP_PAGE_TABLE_ENTRY(entry_with_flags) ((void*)(((uint32_t)entry_with_flags) & ~PAGE_TABLE_ENTRY_FLAGS))
+#define MAKE_FRAME(frame) (((uint32_t)frame) | FRAME_FLAGS)
+#define STRIP_FRAME(frame_with_flags) ((void*)(((uint32_t)frame_with_flags) & ~FRAME_FLAGS))
+
 typedef uint64_t lm_pointer;
 
 typedef struct
@@ -66,30 +71,49 @@ lm_pointer get_next_physical_address()
 }
 
 
-PML4T_t* PML4T_init_identity_map()
+/*
+ * Inits the:
+ *  1. identity map
+ *  2. kernel map (of the entire memory)
+ *  3. kernel binary page
+ */
+PML4T_t* PML4T_init_map()
 {
     PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
+    memset(pml4t, 0, sizeof(PML4T_t));
+
     size_t created_pages_count = 0;
     for ( size_t i = 0; i < ENTRIES_IN_LEVEL && created_pages_count < PAGES_TO_CREATE_COUNT; ++i )
     {
-        pml4t->pdpts[i] = get_next_free_address();
-        PDPT_t* pdpt = (PDPT_t*)(uint32_t)pml4t->pdpts[i];
+        pml4t->pdpts[i] = MAKE_PAGE_TABLE_ENTRY(get_next_free_address());
+        PDPT_t* pdpt = STRIP_PAGE_TABLE_ENTRY(pml4t->pdpts[i]);
 
         for ( size_t j = 0; j < ENTRIES_IN_LEVEL && created_pages_count < PAGES_TO_CREATE_COUNT; ++j )
         {
-            pdpt->pdts[j] = get_next_free_address();
-            PDT_t* pdt = (PDT_t*)(uint32_t)pdpt->pdts[j];
+            pdpt->pdts[j] = MAKE_PAGE_TABLE_ENTRY(get_next_free_address());
+            PDT_t* pdt = STRIP_PAGE_TABLE_ENTRY(pdpt->pdts[j]);
 
             for ( size_t k = 0; k < ENTRIES_IN_LEVEL && created_pages_count < PAGES_TO_CREATE_COUNT; ++k, ++created_pages_count )
             {
-                pdt->frames[k] = get_next_physical_address() | FRAME_FLAGS;
+                pdt->frames[k] = MAKE_FRAME(get_next_physical_address());
             }
-
-            pdpt->pdts[j] |= PAGE_TABLE_ENTRY_FLAGS;
         }
-        pml4t->pdpts[i] |= PAGE_TABLE_ENTRY_FLAGS;
         pml4t->pdpts[i + PML4T_HIGHER_HALF_OFFSET] = pml4t->pdpts[i];
     }
+
+    // setting the kernel binary page
+    if ( pml4t->pdpts[511] == 0x0000 )
+    {
+        pml4t->pdpts[511] = MAKE_PAGE_TABLE_ENTRY(get_next_free_address());
+    }
+
+    PDPT_t* kernel_binary_pdpt = STRIP_PAGE_TABLE_ENTRY(pml4t->pdpts[511]);
+    if ( kernel_binary_pdpt->pdts[510] == 0x0000 )
+    {
+        kernel_binary_pdpt->pdts[510] = MAKE_PAGE_TABLE_ENTRY(get_next_free_address());
+    }
+    PDT_t* kernel_binary_pdt = STRIP_PAGE_TABLE_ENTRY(kernel_binary_pdpt->pdts[510]);
+    kernel_binary_pdt->frames[0] = MAKE_FRAME(0x0000);
 
     return pml4t;
 }
@@ -106,7 +130,7 @@ void page_table_setup()
 
     next_free_address_init();
 
-    PML4T_t* pml4t = PML4T_init_identity_map();
+    PML4T_t* pml4t = PML4T_init_map();
 
     console_output_report("successfully created the kernel's page table.", CONSOLE_OUTPUT_SUCCESS);
 }
