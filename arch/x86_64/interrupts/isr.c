@@ -23,14 +23,14 @@ enum
     ISR_SYSCALL                     = 0x80
 };
 
-static void dump_registers(const isr_args_t* args);
-static void handler_page_fault(const isr_args_t* args);
-static void handler_general_protection_fault(const isr_args_t* args);
-static void handler_pic_interrupts(const isr_args_t* args);
-static bool is_pic_interrupt(qword isr_number);
+static inline void dump_registers(const isr_args_t* args);
+static inline void handler_page_fault(const isr_args_t* args);
+static inline void handler_general_protection_fault(const isr_args_t* args);
+static inline void handler_pic_interrupts(const isr_args_t* args);
+static inline bool is_pic_interrupt(qword isr_number);
 static inline void handler_syscall(const isr_args_t* args);
 
-static void dump_registers(const isr_args_t* args)
+static inline void dump_registers(const isr_args_t* args)
 {
     process_id_t pid = process_manager_get_running_process_idx();
     console_output_printf(
@@ -57,7 +57,7 @@ static void dump_registers(const isr_args_t* args)
             "r14", args->general_registers.r12, "r15", args->general_registers.r13);
 }
 
-static void handler_page_fault(const isr_args_t* args)
+static inline void handler_page_fault(const isr_args_t* args)
 {
     void* faulting_address;
     __asm__ volatile("mov %%cr2, %0" : "=r" (faulting_address));
@@ -95,7 +95,7 @@ static void handler_page_fault(const isr_args_t* args)
     dump_registers(args);
 }
 
-static void handler_general_protection_fault(const isr_args_t* args)
+static inline void handler_general_protection_fault(const isr_args_t* args)
 {
     console_output_print_blue_screen("General Protection Fault Occurred\n");
     if ( args->error_code == 0 )
@@ -109,13 +109,13 @@ static void handler_general_protection_fault(const isr_args_t* args)
     dump_registers(args);
 }
 
-static bool is_pic_interrupt(qword isr_number)
+static inline bool is_pic_interrupt(qword isr_number)
 {
     return ((isr_number >= IDT_OFFSET_PIC_MASTER && isr_number < IDT_OFFSET_PIC_MASTER + 8)
         || (isr_number >= IDT_OFFSET_PIC_SLAVE && isr_number < IDT_OFFSET_PIC_SLAVE + 8));
 }
 
-static void handler_pic_interrupts(const isr_args_t* args)
+static inline void handler_pic_interrupts(const isr_args_t* args)
 {
     uint8_t irq_number;
     uint8_t isr_number = (uint8_t) args->isr_number;
