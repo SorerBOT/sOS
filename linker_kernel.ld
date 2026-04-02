@@ -1,5 +1,4 @@
 ENTRY(kernel_start)
-OUTPUT_FORMAT(binary)
 STARTUP(bin/64-bit/asm/kernel/kernel_start.o)
 
 KERNEL_BASE_ADDRESS_PHYSICAL = 0x10000;
