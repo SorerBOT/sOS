@@ -42,7 +42,7 @@ int main(void)
 
 The results were:
 ```
-Address 2 GiB from the end: ffff80000000
+Address 2 GiB from the end: 0xFFFF80000000
 PML4T entry idx: 511
 PDPT entry idx: 510
 PDT entry idx: 0
