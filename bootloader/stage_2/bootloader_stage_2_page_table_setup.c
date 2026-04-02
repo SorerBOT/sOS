@@ -98,8 +98,8 @@ PML4T_t* PML4T_init_map()
     }
 
     // setting the kernel binary page
-    PDPT_t* kernel_binary_pdpt = (PDPT_t*)(uint32_t)pml4t->pdpts[511];
-    PDT_t* kernel_binary_pdt = (PDT_t*)(uint32_t) kernel_binary_pdpt->pdts[510];
+    PDPT_t* kernel_binary_pdpt = (PDPT_t*)(((uint32_t)pml4t->pdpts[511]) & ~PAGE_TABLE_ENTRY_FLAGS);
+    PDT_t* kernel_binary_pdt = (PDT_t*)(((uint32_t) kernel_binary_pdpt->pdts[510]) & ~PAGE_TABLE_ENTRY_FLAGS);
     kernel_binary_pdt->frames[0] = 0x0000 | FRAME_FLAGS;
 
     return pml4t;
