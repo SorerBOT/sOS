@@ -2,12 +2,13 @@
 #include <pmm.h>
 #include <types.h>
 #include <console_output.h>
+#include <vmm.h>
 
 #define SLAB_ALLOCATOR_BITS_IN_QWORD (8 * sizeof(qword))
 
 void* slab_allocator_init(size_t entry_size)
 {
-    byte* frame = pmm_frame_alloc();
+    byte* frame = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pmm_frame_alloc());
 
     if ( frame == NULL )
     {
