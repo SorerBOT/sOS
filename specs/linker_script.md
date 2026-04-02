@@ -16,10 +16,10 @@ Then we use the remainder to find the PDPT entry. We apply the same logic to fin
 
 int main(void)
 {
-    uint64_t max_address = 0x0000FFFFFFFFFFFF;
+    uint64_t max_offset_in_higher_half = 0x0000FFFFFFFFFFFF;
     uint64_t GiB = 1024 * 1024 * 1024;
-    uint64_t address = max_address - 2 * GiB + 1;
-    uint64_t address_temp = address;
+    uint64_t offset = max_offset_in_higher_half - 2 * GiB + 1;
+    uint64_t offset_temp = offset;
 
 
     uint64_t pdt_entry_memory_size = 2 * 1024 * 1024;
@@ -27,14 +27,14 @@ int main(void)
     uint64_t pml4t_entry_memory_size = 512 * pdpt_entry_memory_size;
 
 
-    uint64_t pml4t_entry_idx = address_temp / pml4t_entry_memory_size;
-    address_temp -= pml4t_entry_idx * pml4t_entry_memory_size;
-    uint64_t pdpt_entry_idx = address_temp / pdpt_entry_memory_size;
-    address_temp -= pdpt_entry_idx * pdpt_entry_memory_size;
-    uint64_t pdt_entry_idx = address_temp / pdt_entry_memory_size;
-    address_temp -= pdt_entry_idx * pdt_entry_memory_size;
+    uint64_t pml4t_entry_idx = offset_temp / pml4t_entry_memory_size;
+    offset_temp -= pml4t_entry_idx * pml4t_entry_memory_size;
+    uint64_t pdpt_entry_idx = offset_temp / pdpt_entry_memory_size;
+    offset_temp -= pdpt_entry_idx * pdpt_entry_memory_size;
+    uint64_t pdt_entry_idx = offset_temp / pdt_entry_memory_size;
+    offset_temp -= pdt_entry_idx * pdt_entry_memory_size;
     
-    printf("Address 2 GiB from the end: %llx\nPML4T entry idx: %llu\nPDPT entry idx: %llu\nPDT entry idx: %llu\n", address, pml4t_entry_idx, pdpt_entry_idx, pdt_entry_idx);
+    printf("Offset 2 GiB from the end: %llx\nPML4T entry idx: %llu\nPDPT entry idx: %llu\nPDT entry idx: %llu\n", offset, pml4t_entry_idx, pdpt_entry_idx, pdt_entry_idx);
 
     return 0;
 }
@@ -42,7 +42,7 @@ int main(void)
 
 The results were:
 ```
-Address 2 GiB from the end: 0xFFFF80000000
+Offset 2 GiB from the end: 0xFFFF80000000
 PML4T entry idx: 511
 PDPT entry idx: 510
 PDT entry idx: 0

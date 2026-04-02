@@ -66,7 +66,13 @@ lm_pointer get_next_physical_address()
 }
 
 
-PML4T_t* PML4T_init_identity_map()
+/*
+ * Inits the:
+ *  1. identity map
+ *  2. kernel map (of the entire memory)
+ *  3. kernel binary page
+ */
+PML4T_t* PML4T_init_map()
 {
     PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
     size_t created_pages_count = 0;
@@ -91,6 +97,11 @@ PML4T_t* PML4T_init_identity_map()
         pml4t->pdpts[i + PML4T_HIGHER_HALF_OFFSET] = pml4t->pdpts[i];
     }
 
+    // setting the kernel binary page
+    PDPT_t* kernel_binary_pdpt = (PDPT_t*)(uint32_t)pml4t->pdpts[511];
+    PDT_t* kernel_binary_pdt = (PDT_t*)(uint32_t) kernel_binary_pdpt->pdts[510];
+    kernel_binary_pdt->frames[0] = 0XFFFFFFFF80000000 | FRAME_FLAGS;
+
     return pml4t;
 }
 
@@ -106,7 +117,7 @@ void page_table_setup()
 
     next_free_address_init();
 
-    PML4T_t* pml4t = PML4T_init_identity_map();
+    PML4T_t* pml4t = PML4T_init_map();
 
     console_output_report("successfully created the kernel's page table.", CONSOLE_OUTPUT_SUCCESS);
 }
