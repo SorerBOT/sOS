@@ -75,6 +75,8 @@ lm_pointer get_next_physical_address()
 PML4T_t* PML4T_init_map()
 {
     PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
+    memset(pml4t, 0, sizeof(PML4T_t));
+
     size_t created_pages_count = 0;
     for ( size_t i = 0; i < ENTRIES_IN_LEVEL && created_pages_count < PAGES_TO_CREATE_COUNT; ++i )
     {
@@ -93,12 +95,22 @@ PML4T_t* PML4T_init_map()
 
             pdpt->pdts[j] |= PAGE_TABLE_ENTRY_FLAGS;
         }
+
         pml4t->pdpts[i] |= PAGE_TABLE_ENTRY_FLAGS;
         pml4t->pdpts[i + PML4T_HIGHER_HALF_OFFSET] = pml4t->pdpts[i];
     }
 
     // setting the kernel binary page
-    PDPT_t* kernel_binary_pdpt = (PDPT_t*)(((uint32_t)pml4t->pdpts[511]) & ~PAGE_TABLE_ENTRY_FLAGS);
+    if ( pml4t->pdpts[511] == 0x0000 )
+    {
+        pml4t->pdpts[511] = get_next_free_address();
+    }
+
+    PDPT_t* kernel_binary_pdpt = (PDPT_t*)(((uint32_t) pml4t->pdpts[511]) & ~PAGE_TABLE_ENTRY_FLAGS);
+    if ( kernel_binary_pdpt->pdts[510] == 0x0000 )
+    {
+        kernel_binary_pdpt->pdts[510] = get_next_free_address();
+    }
     PDT_t* kernel_binary_pdt = (PDT_t*)(((uint32_t) kernel_binary_pdpt->pdts[510]) & ~PAGE_TABLE_ENTRY_FLAGS);
     kernel_binary_pdt->frames[0] = 0x0000 | FRAME_FLAGS;
 
