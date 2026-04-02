@@ -1,8 +1,9 @@
 #include <types.h>
 #include <pmm.h>
 #include <console_output.h>
+#include <vmm.h>
 
-#define PMM_MAP_BASE 0x00000500
+#define PMM_MAP_BASE VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(0x00000500)
 
 typedef struct
 {
