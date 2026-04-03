@@ -113,19 +113,16 @@ void vmm_page_allocate(void* _pml4t)
                 pml4t->pdpts[i]->pdts[j] = (PDT_t*)(((qword)pdt) | VMM_FLAGS_USER_TABLE);
             }
 
-            else
+            PDT_t* pdt_clean = (PDT_t*)(((qword)pml4t->pdpts[i]->pdts[j]) & ~VMM_FLAGS_USER_TABLE);
+            for ( size_t k = 0; k < VMM_ENTRIES_COUNT_IN_LEVEL; ++k )
             {
-                for ( size_t k = 0; k < VMM_ENTRIES_COUNT_IN_LEVEL; ++k )
+                if ( VMM_IS_PRESENT(pdt_clean->frames[k]) )
                 {
-                    PDT_t* pdt_clean = (PDT_t*)(((qword)pml4t->pdpts[i]->pdts[j]) & ~VMM_FLAGS_USER_TABLE);
-                    if ( VMM_IS_PRESENT(pdt_clean->frames[k]) )
-                    {
-                        continue;
-                    }
-
-                    void* frame = pmm_frame_alloc();
-                    pml4t->pdpts[i]->pdts[j] = (void*)(((qword)frame) | VMM_FLAGS_USER_PAGE);
+                    continue;
                 }
+
+                void* frame = pmm_frame_alloc();
+                pml4t->pdpts[i]->pdts[j] = (void*)(((qword)frame) | VMM_FLAGS_USER_PAGE);
             }
         }
     }
