@@ -93,7 +93,7 @@ void* vmm_create_page_table(void)
     return pml4t;
 }
 
-void vmm_page_allocate(void* _pml4t)
+void vmm_page_bind_to_frame(void* _pml4t, void* frame)
 {
     PML4T_t* pml4t = _pml4t;
     for ( size_t i = 0; i < VMM_ENTRIES_COUNT_IN_LEVEL; ++i )
@@ -120,14 +120,24 @@ void vmm_page_allocate(void* _pml4t)
                 {
                     continue;
                 }
-
-                void* frame = pmm_frame_alloc();
                 pml4t->pdpts[i]->pdts[j] = (void*)(((qword)frame) | VMM_FLAGS_USER_PAGE);
             }
         }
     }
 
-    console_output_print_blue_screen("Failed to allocate frame to page table.");
+    console_output_print_blue_screen("Failed to bind frame to page table.");
+}
+
+void vmm_page_allocate(void* _pml4t)
+{
+    void* frame = pmm_frame_alloc();
+
+    if ( frame == NULL )
+    {
+        console_output_print_blue_screen("Failed to allocate physical frame.");
+    }
+
+    vmm_page_bind_to_frame(_pml4t, frame);
 }
 
 void vmm_page_free(void* _pml4t)

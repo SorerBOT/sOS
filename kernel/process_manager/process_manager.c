@@ -2,6 +2,7 @@
 #include <process_manager.h>
 #include <process_types.h>
 #include <pmm.h>
+#include <vmm.h>
 
 #include <stdint.h>
 #include <string.h>
@@ -17,6 +18,8 @@ process_id_t process_manager_launch_process(process_routine_t routine)
 {
     process_id_t new_process_idx = processes_count;
 
+    void* page_table = vmm_create_page_table();
+    vmm_page_allocate(page_table);
     byte* stack_frame_bottom = pmm_frame_alloc();
     byte* stack_frame = (stack_frame_bottom + PMM_FRAME_SIZE - 1);
     stack_frame = interrupts_init_context((void*)stack_frame, routine);

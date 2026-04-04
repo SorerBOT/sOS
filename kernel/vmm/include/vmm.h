@@ -10,6 +10,7 @@
 
 void vmm_setup(void);
 void* vmm_create_page_table(void);
+void vmm_page_bind_to_frame(void* _pml4t, void* frame);
 void vmm_page_allocate(void* _pml4t);
 void vmm_page_free(void* _pml4t);
 
