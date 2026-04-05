@@ -32,13 +32,13 @@ const void* interrupts_get_rsp(void)
 
 void interrupts_context_switch()
 {
-    process_context_t current_context =
+    process_control_block_t current_control_block =
     {
         .pid = process_manager_get_running_process_idx(),
         .rsp = rsp
     };
 
-    const process_context_t* new_context = process_manager_context_switch(current_context);
+    const process_control_block_t* new_context = process_manager_context_switch(current_control_block);
 
     interrupts_set_rsp((const void*) new_context->rsp);
 }
