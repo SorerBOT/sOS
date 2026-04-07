@@ -8,6 +8,7 @@
 #include <process_manager.h>
 #include <syscall_dispatcher.h>
 #include <pmm.h>
+#include <vmm.h>
 
 static void shell_launch_wrapper(void* _)
 {
@@ -35,6 +36,8 @@ void kernel()
     interrupts_setup();
 
     pmm_setup();
+    vmm_setup();
+
     dword* buggy_address = (dword*)(0x7FCFFF00);
     *buggy_address = 0xdeadbeef;
 
