@@ -23,7 +23,7 @@ void syscall_handler_handle(const void* rsp, void* syscall_args, qword syscall_n
     }
     else
     {
-        console_output_printf("Invalid syscall number\n");
+        console_output_printf("Invalid syscall number: %llu\n", syscall_number);
     }
 }
 

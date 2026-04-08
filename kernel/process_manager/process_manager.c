@@ -20,11 +20,11 @@ process_id_t process_manager_launch_process(process_routine_t routine)
 
     void* page_table = vmm_create_page_table();
     byte* stack_physical_frame = pmm_frame_alloc();
-    vmm_page_bind_to_frame(page_table, stack_physical_frame);
+    vmm_page_bind_to_frame(page_table, page_table);
 
     byte* stack_kernel_map = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(stack_physical_frame);
     void* stack_bottom = (stack_kernel_map + PMM_FRAME_SIZE - 1);
-    void* process_context = interrupts_init_context((void*)stack_bottom, routine);
+    void* process_context = interrupts_init_context((void*)stack_bottom, page_table, routine);
 
     processes[new_process_idx] = (process_control_block_t)
     {

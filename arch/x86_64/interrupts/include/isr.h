@@ -20,11 +20,12 @@ typedef struct
     qword rbx;
     qword rax;
     qword rdi;
-} isr_registers_t;
+} isr_general_registers_t;
 
 typedef struct
 {
-    isr_registers_t general_registers;
+    qword cr3;
+    isr_general_registers_t general_registers;
     qword isr_number;
     qword error_code;
     qword rip;

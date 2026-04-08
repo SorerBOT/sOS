@@ -302,6 +302,11 @@ isr_wrapper_common:
     push r14
     push r15
 
+;   PUSHING CONTROL REGISTERS
+    mov rax, cr3
+    push rax
+
+
     lea rdi, [rsp]          ; upon receiving an interrupt the CPU pushes some data onto the stack
                             ; I obviously push more info (general registers, error code, isr_number)
                             ; that I want to use in my isr handler and so I want to send it to the
@@ -325,7 +330,11 @@ isr_wrapper_common:
     mov rsp, rax            ; this is either the original rsp, or the rsp of the process we need
                             ; to switch to
 
-; RETRIEVING GENERAL PURPOSE REGISTERS & CLEARING ERROR CODE + INTERRUPT NUMBER FROM THE STACK
+;   RETRIEVING CONTROL REGISTERS
+    pop rax
+    mov cr3, rax
+
+;   RETRIEVING GENERAL PURPOSE REGISTERS
     pop r15
     pop r14
     pop r13
@@ -342,6 +351,7 @@ isr_wrapper_common:
     pop rax
     pop rdi
 
-    add rsp, EXTRA_STACK_SIZE   ; accounting for the error code, and the interrupt number that we puhsed onto the stack
+;   CLEARING ERROR CODE + INTERRUPT NUMBER FROM THE STACK
+    add rsp, EXTRA_STACK_SIZE
 
     iretq
