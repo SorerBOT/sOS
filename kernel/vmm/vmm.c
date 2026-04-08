@@ -126,6 +126,10 @@ void vmm_page_bind_to_frame(void* _pml4t, void* frame)
     }
 
     console_output_print_blue_screen("Failed to bind frame to page table.");
+    while (1)
+    {
+        __asm__("hlt");
+    }
 }
 
 void vmm_page_allocate(void* _pml4t)
@@ -135,6 +139,10 @@ void vmm_page_allocate(void* _pml4t)
     if ( frame == NULL )
     {
         console_output_print_blue_screen("Failed to allocate physical frame.");
+        while (1)
+        {
+            __asm__("hlt");
+        }
     }
 
     vmm_page_bind_to_frame(_pml4t, frame);
@@ -144,4 +152,8 @@ void vmm_page_free(void* _pml4t)
 {
     PML4T_t* pml4t = _pml4t;
     console_output_print_blue_screen("vmm_page_free is not implemented");
+    while (1)
+    {
+        __asm__("hlt");
+    }
 }

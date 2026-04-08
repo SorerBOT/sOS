@@ -6,6 +6,8 @@
 
 #define SLAB_ALLOCATOR_BITS_IN_QWORD (8 * sizeof(qword))
 
+static size_t allocations_count = 0;
+
 void* slab_allocator_init(size_t entry_size)
 {
     byte* frame = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pmm_frame_alloc());
@@ -13,6 +15,10 @@ void* slab_allocator_init(size_t entry_size)
     if ( frame == NULL )
     {
         console_output_print_blue_screen("Failed to allocate memory for slab allocator\n");
+        while (1)
+        {
+            __asm__("hlt");
+        }
     }
 
     byte* base_address = frame + 4 * KiB;
@@ -39,6 +45,7 @@ void* slab_allocator_init(size_t entry_size)
 
 void* slab_allocator_allocate(void* _allocator)
 {
+    ++allocations_count;
     slab_allocator_t* allocator = _allocator;
 
     for ( size_t i = 0; i < allocator->capacity / SLAB_ALLOCATOR_BITS_IN_QWORD; ++i )
@@ -64,6 +71,10 @@ void* slab_allocator_allocate(void* _allocator)
     }
 
     console_output_print_blue_screen("slab allocator ran out of space\n");
+    while (1)
+    {
+        __asm__("hlt");
+    }
 
     return NULL;
 }

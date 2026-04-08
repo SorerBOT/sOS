@@ -147,6 +147,10 @@ static inline size_t get_frame_index(void* base_address)
     if ( ((qword)base_address) & (PMM_FRAME_SIZE - 1) )
     {
         console_output_print_blue_screen("Unaligned physical frame at address: %p\n", base_address);
+        while (1)
+        {
+            __asm__("hlt");
+        }
         return 0; // didn't want to use __builtin_unreachable.
     }
 
@@ -167,6 +171,10 @@ void pmm_setup(void)
     if ( allocator_bitmap == NULL )
     {
         console_output_print_blue_screen("Failed to allocate memory for memory manager.\n");
+        while (1)
+        {
+            __asm__("hlt");
+        }
     }
     allocator_bitmap->frames_count = 0;
 
@@ -203,6 +211,10 @@ void pmm_setup(void)
             if ( frame_index > allocator_bitmap->frames_count )
             {
                 console_output_print_blue_screen("Frame index: %llu is greater exceeds existing frames\n", frame_index);
+                while (1)
+                {
+                    __asm__("hlt");
+                }
                 break;
             }
 
@@ -261,5 +273,9 @@ void pmm_frame_free(void* ptr)
     else
     {
         console_output_print_blue_screen("Trying to free a frame that is not allocated with index: %llu.\n", frame_index);
+        while (1)
+        {
+            __asm__("hlt");
+        }
     }
 }
