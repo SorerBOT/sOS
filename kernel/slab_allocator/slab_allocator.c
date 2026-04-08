@@ -6,8 +6,6 @@
 
 #define SLAB_ALLOCATOR_BITS_IN_QWORD (8 * sizeof(qword))
 
-static size_t allocations_count = 0;
-
 void* slab_allocator_init(size_t entry_size)
 {
     byte* frame = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pmm_frame_alloc());
@@ -45,7 +43,6 @@ void* slab_allocator_init(size_t entry_size)
 
 void* slab_allocator_allocate(void* _allocator)
 {
-    ++allocations_count;
     slab_allocator_t* allocator = _allocator;
 
     for ( size_t i = 0; i < allocator->capacity / SLAB_ALLOCATOR_BITS_IN_QWORD; ++i )
