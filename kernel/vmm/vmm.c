@@ -120,7 +120,9 @@ void vmm_page_bind_to_frame(void* _pml4t, void* frame)
                 {
                     continue;
                 }
+
                 pml4t->pdpts[i]->pdts[j] = (void*)(((qword)frame) | VMM_FLAGS_USER_PAGE);
+                return;
             }
         }
     }
