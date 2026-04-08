@@ -45,11 +45,6 @@ void console_output_print_blue_screen(const char* restrict format, ...)
     va_end(ap);
 
     vga_driver_flush_shadow_buffer(); // just in case the user didn't add \n
-
-    while (1)
-    {
-        __asm__("hlt");
-    }
 }
 
 void console_output_flush()
