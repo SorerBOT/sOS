@@ -64,7 +64,7 @@ typedef struct
 } PML4T_t;
 
 static void* slab_allocator = NULL;
-static PML4T_t* kernel_pml4t = (PML4T_t*) VMM_KERNEL_PML4T_BASE;
+static const PML4T_t* kernel_pml4t = (PML4T_t*) VMM_KERNEL_PML4T_BASE;
 
 void vmm_setup(void)
 {
