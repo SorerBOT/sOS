@@ -1,6 +1,6 @@
-#include <stddef.h>
-#include <libc_partials/include/types.h>
-#include <console_output.h>
+#include <gdt.h>
+#include <types.h>
+#include <vmm.h>
 
 #define STRIP_FLAGS(limit_top_plus_flags) ((limit_top_plus_flags) & 0b1111)
 #define APPEND_FLAGS(stripped, flags) ((stripped) | (flags))
@@ -23,7 +23,7 @@
  * +----------------------------+----------------------------+
  */
 
-typedef struct __attribute__((packed))
+typedef struct
 {
     word limit_bottom;
     word base_bottom;
@@ -31,34 +31,47 @@ typedef struct __attribute__((packed))
     byte access_byte;
     byte limit_top_plus_flags;
     byte base_top;
-} GDT_descriptor_t;
+} __attribute__((packed)) GDT_descriptor_t;
 
 // this is a 6-byte struct, using packed to prevent padding
-typedef struct __attribute__((packed))
+typedef struct
 {
     word size;
     GDT_descriptor_t* descriptors;
-} GDT_header_t;
+} __attribute__((packed)) GDT_header_t;
 
-extern GDT_header_t GDT_HEADER;
-
-void update_gdt()
+static GDT_descriptor_t gdt[3] =
 {
-    size_t descriptors_count = (GDT_HEADER.size + 1) / sizeof(GDT_descriptor_t);
-    byte long_mode_flags = 0b10100000; // Granularity ON, Size Flags: OFF, Long mode Flag: ON, Reserved: OFF.
-    for (size_t i = 0; i < descriptors_count; ++i)
+    (GDT_descriptor_t) {0},
+    (GDT_descriptor_t)
     {
-        GDT_descriptor_t* descriptor = &GDT_HEADER.descriptors[i];
-
-        if ( !IS_EXECUTABLE(descriptor) )
-        {
-            continue;
-        }
-
-        byte stripped = STRIP_FLAGS(descriptor->limit_top_plus_flags);
-        byte with_new_flags = APPEND_FLAGS(stripped, long_mode_flags);
-        descriptor->limit_top_plus_flags = with_new_flags;
+        .limit_bottom = 0xFFFF,
+        .base_bottom = 0x0000, // ignored
+        .base_middle = 0x00, // ignored
+        .access_byte = 0b10010010,
+        .limit_top_plus_flags = 0b11000000 | 0b00001111,
+        .base_top = 0x00 // ignored
+    },
+    (GDT_descriptor_t)
+    {
+        .limit_bottom = 0xFFFF,
+        .base_bottom = 0x0000, // ignored
+        .base_middle = 0x00, // ignored
+        .access_byte = 0b10011010,
+        .limit_top_plus_flags = 0b10100000 | 0b00001111,
+        .base_top = 0x00 // ignored
     }
+};
 
-    console_output_report("updated GDT table.", CONSOLE_OUTPUT_SUCCESS);
+static GDT_header_t gdt_header =
+{
+    .descriptors = gdt,
+    .size = sizeof(gdt) - 1
+};
+
+extern void gdt_load(const GDT_header_t* gdt_header);
+
+void gdt_setup(void)
+{
+    gdt_load(&gdt_header);
 }

@@ -111,10 +111,10 @@ void vmm_page_bind_to_frame(void* _pml4t, void* frame)
             if ( VMM_IS_PRESENT(pdpt_clean_kernel_map->pdts[j]) == false )
             {
                 PDT_t* pdt_physical = VMM_TRANSLATE_KERNEL_MAP_TO_PHYSICAL(slab_allocator_allocate(slab_allocator));
-                pml4t->pdpts[i]->pdts[j] = (PDT_t*)(((qword)pdt_physical) | VMM_FLAGS_USER_TABLE);
+                pdpt_clean_kernel_map->pdts[j] = (PDT_t*)(((qword)pdt_physical) | VMM_FLAGS_USER_TABLE);
             }
 
-            byte* pdt_clean_physical = (byte*)(((qword)pml4t->pdpts[i]->pdts[j]) & ~VMM_FLAGS_USER_TABLE);
+            byte* pdt_clean_physical = (byte*)(((qword)pdpt_clean_kernel_map->pdts[j]) & ~VMM_FLAGS_USER_TABLE);
             PDT_t* pdt_clean_kernel_map = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pdt_clean_physical);
             for ( size_t k = 0; k < VMM_ENTRIES_COUNT_IN_LEVEL; ++k )
             {
@@ -123,7 +123,7 @@ void vmm_page_bind_to_frame(void* _pml4t, void* frame)
                     continue;
                 }
 
-                pml4t->pdpts[i]->pdts[j] = (void*)(((qword)frame) | VMM_FLAGS_USER_PAGE);
+                pdt_clean_kernel_map->frames[k] = (void*)(((qword)frame) | VMM_FLAGS_USER_PAGE);
                 return;
             }
         }

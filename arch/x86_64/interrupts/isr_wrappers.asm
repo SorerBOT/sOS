@@ -332,7 +332,7 @@ isr_wrapper_common:
 
 ;   RETRIEVING CONTROL REGISTERS
     pop rax
-    ;mov cr3, rax
+    mov cr3, rax
 
 ;   RETRIEVING GENERAL PURPOSE REGISTERS
     pop r15

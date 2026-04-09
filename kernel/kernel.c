@@ -9,6 +9,7 @@
 #include <syscall_dispatcher.h>
 #include <pmm.h>
 #include <vmm.h>
+#include <gdt.h>
 
 static void shell_launch_wrapper(void* _)
 {
@@ -31,6 +32,9 @@ void kernel()
 {
     io_setup();
     console_output_report("entered 64-bit long mode.", CONSOLE_OUTPUT_SUCCESS);
+
+    gdt_setup();
+    console_output_report("finished settting up the kernel GDT.", CONSOLE_OUTPUT_SUCCESS);
 
     interrupts_setup();
     console_output_report("finished settting up interrupts.", CONSOLE_OUTPUT_SUCCESS);
