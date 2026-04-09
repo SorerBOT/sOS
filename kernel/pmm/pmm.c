@@ -50,6 +50,9 @@ static size_t current_entry = 0;
 static pmm_allocator_bitmap_t* allocator_bitmap = NULL;
 static pmm_allocator_stack_t* allocator_stack = NULL;
 
+extern char kernel_base_physical_address;
+extern char kernel_end_physical_address;
+
 static inline void sanitize_memory_map(void);
 static inline void* get_next_frame(void);
 static inline void* get_highest_address(void);
@@ -57,6 +60,9 @@ static inline size_t get_frame_index(void* base_address);
 
 static inline void sanitize_memory_map(void)
 {
+    /*
+     * Remove repeating and overlapping memory maps
+     */
     for ( size_t i = 0; i < map->entries_count; ++i )
     {
         pmm_map_entry_t* entry_i = &map->entries[i];
@@ -83,6 +89,9 @@ static inline void sanitize_memory_map(void)
         }
     }
 
+    /*
+     * Make sure frames are PMM_FRAME_SIZE (2MiB) aligned
+     */
     for ( size_t i = 0; i < map->entries_count; ++i )
     {
         pmm_map_entry_t* entry = &map->entries[i];
@@ -106,15 +115,23 @@ static inline void* get_next_frame(void)
     for ( ; current_entry < map->entries_count; ++current_entry )
     {
         pmm_map_entry_t* entry = &map->entries[current_entry];
-        if ( entry->type == PMM_MAP_USABLE )
+        if ( entry->type != PMM_MAP_USABLE )
         {
-            if ( entry->length >= PMM_FRAME_SIZE )
+            continue;
+        }
+
+        while ( entry->length >= PMM_FRAME_SIZE )
+        {
+            if ( kernel_base_physical_address >= entry->base_address && kernel_base_physical_address < entry->base_address + PMM_FRAME_SIZE )
             {
-                qword frame_address = entry->base_address;
                 entry->base_address += PMM_FRAME_SIZE;
                 entry->length -= PMM_FRAME_SIZE;
-                return (void*) frame_address;
+                continue;
             }
+            qword frame_address = entry->base_address;
+            entry->base_address += PMM_FRAME_SIZE;
+            entry->length -= PMM_FRAME_SIZE;
+            return (void*) frame_address;
         }
     }
 
