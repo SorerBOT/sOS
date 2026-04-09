@@ -13,11 +13,11 @@ This is a small single-user kernel which boots using a Legacy BIOS bootloader I 
     * IRQs handled: as of now only IRQ 1 is handled (keyboard IRQ)
 * Keyboard Driver - robust keyboard driver with two layers; one to handle hardware specific details like ps/2 scancodes, and another to handle a stream of keyboard events offering the client to receive the complete keyboard state, raw keyboard events and baked ones, with support for inserting custom keyboard layouts.
 * A syscall interface; implemented a process_launch syscall.
-* Basic context switching
+* Basic Context Switching - able to switch between two processes, including swapping out the page tables.
 * Memory management:
    * The bootloader fetches the computer's memory map (using Legacy BIOS functions).
    * PMM - fully functional and very efficient Physical Memory Manager, including of course a Physical Memory Allocator (a stack + bitmap allocator, using 2MiB huge pages).
-   * VMM - able to create and modify page tables, including a copy of the higher half of the kernel's page table.
+   * VMM - able to create and modify page tables, including a copy of the higher half of the kernel's page table and the kernel's binary.
 
 
 ## OS Concepts I've learned, and some WHAT THE HECK line explanations
