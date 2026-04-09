@@ -82,6 +82,9 @@ PML4T_t* PML4T_init_map()
     PML4T_t* pml4t = (PML4T_t*)(uint32_t) get_next_free_address();
     memset(pml4t, 0, sizeof(PML4T_t));
 
+    /*
+     * Setting up the identity map
+     */
     size_t created_pages_count = 0;
     for ( size_t i = 0; i < ENTRIES_IN_LEVEL && created_pages_count < PAGES_TO_CREATE_COUNT; ++i )
     {
@@ -98,10 +101,19 @@ PML4T_t* PML4T_init_map()
                 pdt->frames[k] = MAKE_FRAME(get_next_physical_address());
             }
         }
+    }
+
+    /*
+     * Setting up the kernel map
+     */
+    for ( size_t i = 0; i + PML4T_HIGHER_HALF_OFFSET < ENTRIES_IN_LEVEL; ++i )
+    {
         pml4t->pdpts[i + PML4T_HIGHER_HALF_OFFSET] = pml4t->pdpts[i];
     }
 
-    // setting the kernel binary page
+    /*
+     * Setting up the kernel binary page 
+     */
     if ( pml4t->pdpts[511] == 0x0000 )
     {
         pml4t->pdpts[511] = MAKE_PAGE_TABLE_ENTRY(get_next_free_address());

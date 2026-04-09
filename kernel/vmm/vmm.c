@@ -8,7 +8,7 @@
 #define VMM_ENTRIES_COUNT_IN_LEVEL 512
 
 /* I don't really like this. */
-#define VMM_KERNEL_PML4T_BASE 0x1000000
+#define VMM_KERNEL_PML4T_BASE (VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(0x1000000))
 #define VMM_PML4T_HIGHER_HALF_OFFSET 256
 #define VMM_IS_PRESENT(address) (((qword)address) & 0x1)
 #define VMM_FLAG_PRESENT                    (0b1ULL)
@@ -64,7 +64,7 @@ typedef struct
 } PML4T_t;
 
 static void* slab_allocator = NULL;
-static PML4T_t* kernel_pml4t = (PML4T_t*) VMM_KERNEL_PML4T_BASE;
+static const PML4T_t* kernel_pml4t = (PML4T_t*) VMM_KERNEL_PML4T_BASE;
 
 void vmm_setup(void)
 {
@@ -93,48 +93,71 @@ void* vmm_create_page_table(void)
     return pml4t;
 }
 
-void vmm_page_allocate(void* _pml4t)
+void vmm_page_bind_to_frame(void* _pml4t, void* frame)
 {
     PML4T_t* pml4t = _pml4t;
     for ( size_t i = 0; i < VMM_ENTRIES_COUNT_IN_LEVEL; ++i )
     {
         if ( VMM_IS_PRESENT(pml4t->pdpts[i]) == false )
         {
-            PDPT_t* pdpt = slab_allocator_allocate(slab_allocator);
-            pml4t->pdpts[i] = (PDPT_t*)(((qword)pdpt) | VMM_FLAGS_USER_TABLE);
+            byte* pdpt_physical = VMM_TRANSLATE_KERNEL_MAP_TO_PHYSICAL(slab_allocator_allocate(slab_allocator));
+            pml4t->pdpts[i] = (PDPT_t*)(((qword)pdpt_physical) | VMM_FLAGS_USER_TABLE);
         }
 
         for ( size_t j = 0; j < VMM_ENTRIES_COUNT_IN_LEVEL; ++j )
         {
-            PDPT_t* pdpt_clean = (PDPT_t*)((qword)pml4t->pdpts[i] & ~VMM_FLAGS_USER_TABLE);
-            if ( VMM_IS_PRESENT(pdpt_clean->pdts[j]) == false )
+            byte* pdpt_clean_physical = (byte*)((qword)pml4t->pdpts[i] & ~VMM_FLAGS_USER_TABLE);
+            PDPT_t* pdpt_clean_kernel_map = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pdpt_clean_physical);
+            if ( VMM_IS_PRESENT(pdpt_clean_kernel_map->pdts[j]) == false )
             {
-                PDT_t* pdt = slab_allocator_allocate(slab_allocator);
-                pml4t->pdpts[i]->pdts[j] = (PDT_t*)(((qword)pdt) | VMM_FLAGS_USER_TABLE);
+                PDT_t* pdt_physical = VMM_TRANSLATE_KERNEL_MAP_TO_PHYSICAL(slab_allocator_allocate(slab_allocator));
+                pml4t->pdpts[i]->pdts[j] = (PDT_t*)(((qword)pdt_physical) | VMM_FLAGS_USER_TABLE);
             }
 
-            else
+            byte* pdt_clean_physical = (byte*)(((qword)pml4t->pdpts[i]->pdts[j]) & ~VMM_FLAGS_USER_TABLE);
+            PDT_t* pdt_clean_kernel_map = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pdt_clean_physical);
+            for ( size_t k = 0; k < VMM_ENTRIES_COUNT_IN_LEVEL; ++k )
             {
-                for ( size_t k = 0; k < VMM_ENTRIES_COUNT_IN_LEVEL; ++k )
+                if ( VMM_IS_PRESENT(pdt_clean_kernel_map->frames[k]) )
                 {
-                    PDT_t* pdt_clean = (PDT_t*)(((qword)pml4t->pdpts[i]->pdts[j]) & ~VMM_FLAGS_USER_TABLE);
-                    if ( VMM_IS_PRESENT(pdt_clean->frames[k]) )
-                    {
-                        continue;
-                    }
-
-                    void* frame = pmm_frame_alloc();
-                    pml4t->pdpts[i]->pdts[j] = (void*)(((qword)frame) | VMM_FLAGS_USER_PAGE);
+                    continue;
                 }
+
+                pml4t->pdpts[i]->pdts[j] = (void*)(((qword)frame) | VMM_FLAGS_USER_PAGE);
+                return;
             }
         }
     }
 
-    console_output_print_blue_screen("Failed to allocate frame to page table.");
+    console_output_print_blue_screen("Failed to bind frame to page table.");
+    while (1)
+    {
+        __asm__("hlt");
+    }
+}
+
+void vmm_page_allocate(void* _pml4t)
+{
+    void* frame = pmm_frame_alloc();
+
+    if ( frame == NULL )
+    {
+        console_output_print_blue_screen("Failed to allocate physical frame.");
+        while (1)
+        {
+            __asm__("hlt");
+        }
+    }
+
+    vmm_page_bind_to_frame(_pml4t, frame);
 }
 
 void vmm_page_free(void* _pml4t)
 {
     PML4T_t* pml4t = _pml4t;
     console_output_print_blue_screen("vmm_page_free is not implemented");
+    while (1)
+    {
+        __asm__("hlt");
+    }
 }

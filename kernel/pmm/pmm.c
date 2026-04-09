@@ -2,8 +2,9 @@
 #include <pmm.h>
 #include <console_output.h>
 #include <vmm.h>
+#include <interval.h>
 
-#define PMM_MAP_BASE VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(0x00000500)
+#define PMM_MAP_BASE (VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(0x00000500))
 
 typedef struct
 {
@@ -50,6 +51,9 @@ static size_t current_entry = 0;
 static pmm_allocator_bitmap_t* allocator_bitmap = NULL;
 static pmm_allocator_stack_t* allocator_stack = NULL;
 
+extern char kernel_base_physical_address;
+extern char kernel_end_physical_address;
+
 static inline void sanitize_memory_map(void);
 static inline void* get_next_frame(void);
 static inline void* get_highest_address(void);
@@ -57,6 +61,9 @@ static inline size_t get_frame_index(void* base_address);
 
 static inline void sanitize_memory_map(void)
 {
+    /*
+     * Remove repeating and overlapping memory maps
+     */
     for ( size_t i = 0; i < map->entries_count; ++i )
     {
         pmm_map_entry_t* entry_i = &map->entries[i];
@@ -83,6 +90,9 @@ static inline void sanitize_memory_map(void)
         }
     }
 
+    /*
+     * Make sure frames are PMM_FRAME_SIZE (2MiB) aligned
+     */
     for ( size_t i = 0; i < map->entries_count; ++i )
     {
         pmm_map_entry_t* entry = &map->entries[i];
@@ -103,18 +113,38 @@ static inline void sanitize_memory_map(void)
 
 static inline void* get_next_frame(void)
 {
+    interval_t kernel_binary_addresses =
+    {
+        .start = (size_t) &kernel_base_physical_address,
+        .end = ((size_t) &kernel_end_physical_address) - 1
+    };
+
     for ( ; current_entry < map->entries_count; ++current_entry )
     {
         pmm_map_entry_t* entry = &map->entries[current_entry];
-        if ( entry->type == PMM_MAP_USABLE )
+        if ( entry->type != PMM_MAP_USABLE )
         {
-            if ( entry->length >= PMM_FRAME_SIZE )
+            continue;
+        }
+
+        for ( ; entry->length >= PMM_FRAME_SIZE; entry->base_address += PMM_FRAME_SIZE, entry->length -= PMM_FRAME_SIZE )
+        {
+            interval_t current_frame_addresses =
             {
-                qword frame_address = entry->base_address;
-                entry->base_address += PMM_FRAME_SIZE;
-                entry->length -= PMM_FRAME_SIZE;
-                return (void*) frame_address;
+                .start = entry->base_address,
+                .end = entry->base_address + PMM_FRAME_SIZE - 1
+            };
+
+            if ( interval_closed_is_intersecting(kernel_binary_addresses, current_frame_addresses) )
+            {
+                continue;
             }
+
+            entry->base_address += PMM_FRAME_SIZE;
+            entry->length -= PMM_FRAME_SIZE;
+
+            qword frame_address = entry->base_address;
+            return (void*) frame_address;
         }
     }
 
@@ -147,6 +177,10 @@ static inline size_t get_frame_index(void* base_address)
     if ( ((qword)base_address) & (PMM_FRAME_SIZE - 1) )
     {
         console_output_print_blue_screen("Unaligned physical frame at address: %p\n", base_address);
+        while (1)
+        {
+            __asm__("hlt");
+        }
         return 0; // didn't want to use __builtin_unreachable.
     }
 
@@ -167,6 +201,10 @@ void pmm_setup(void)
     if ( allocator_bitmap == NULL )
     {
         console_output_print_blue_screen("Failed to allocate memory for memory manager.\n");
+        while (1)
+        {
+            __asm__("hlt");
+        }
     }
     allocator_bitmap->frames_count = 0;
 
@@ -203,6 +241,10 @@ void pmm_setup(void)
             if ( frame_index > allocator_bitmap->frames_count )
             {
                 console_output_print_blue_screen("Frame index: %llu is greater exceeds existing frames\n", frame_index);
+                while (1)
+                {
+                    __asm__("hlt");
+                }
                 break;
             }
 
@@ -261,5 +303,9 @@ void pmm_frame_free(void* ptr)
     else
     {
         console_output_print_blue_screen("Trying to free a frame that is not allocated with index: %llu.\n", frame_index);
+        while (1)
+        {
+            __asm__("hlt");
+        }
     }
 }

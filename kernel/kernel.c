@@ -8,6 +8,7 @@
 #include <process_manager.h>
 #include <syscall_dispatcher.h>
 #include <pmm.h>
+#include <vmm.h>
 
 static void shell_launch_wrapper(void* _)
 {
@@ -29,14 +30,16 @@ static void kernel_internal(void* _)
 void kernel()
 {
     io_setup();
-
     console_output_report("entered 64-bit long mode.", CONSOLE_OUTPUT_SUCCESS);
 
     interrupts_setup();
+    console_output_report("finished settting up interrupts.", CONSOLE_OUTPUT_SUCCESS);
 
     pmm_setup();
-    dword* buggy_address = (dword*)(0x7FCFFF00);
-    *buggy_address = 0xdeadbeef;
+    console_output_report("finished settting up the physical memory allocator.", CONSOLE_OUTPUT_SUCCESS);
+
+    vmm_setup();
+    console_output_report("finished settting up the virtual memory allocator.", CONSOLE_OUTPUT_SUCCESS);
 
 
     syscall_dispatcher_launch_process(kernel_internal);

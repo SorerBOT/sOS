@@ -10,6 +10,6 @@ typedef struct
 {
     process_id_t pid;
     const void* rsp;
-} process_context_t;
+} process_control_block_t;
 
 #endif /* PROCESS_TYPES_H */

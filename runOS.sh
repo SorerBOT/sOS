@@ -32,6 +32,7 @@ make -f $MAKEFILE_KERNEL clean
 echo "Building..."
 make -f $MAKEFILE_STAGE_1 "$BIN_16_BIT_DIR/$STAGE_1.bin"
 make -f $MAKEFILE_STAGE_2 "$BIN_32_BIT_DIR/$STAGE_2.bin"
+make -f $MAKEFILE_STAGE_2 "$BIN_32_BIT_DIR/$STAGE_2.elf"
 make -f $MAKEFILE_KERNEL "$BIN_64_BIT_DIR/$KERNEL.bin"
 make -f $MAKEFILE_KERNEL "$BIN_64_BIT_DIR/$KERNEL.elf"
 

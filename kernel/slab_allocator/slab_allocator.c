@@ -2,16 +2,21 @@
 #include <pmm.h>
 #include <types.h>
 #include <console_output.h>
+#include <vmm.h>
 
 #define SLAB_ALLOCATOR_BITS_IN_QWORD (8 * sizeof(qword))
 
 void* slab_allocator_init(size_t entry_size)
 {
-    byte* frame = pmm_frame_alloc();
+    byte* frame = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pmm_frame_alloc());
 
     if ( frame == NULL )
     {
         console_output_print_blue_screen("Failed to allocate memory for slab allocator\n");
+        while (1)
+        {
+            __asm__("hlt");
+        }
     }
 
     byte* base_address = frame + 4 * KiB;
@@ -63,6 +68,10 @@ void* slab_allocator_allocate(void* _allocator)
     }
 
     console_output_print_blue_screen("slab allocator ran out of space\n");
+    while (1)
+    {
+        __asm__("hlt");
+    }
 
     return NULL;
 }
