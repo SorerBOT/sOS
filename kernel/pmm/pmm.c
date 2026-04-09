@@ -2,6 +2,7 @@
 #include <pmm.h>
 #include <console_output.h>
 #include <vmm.h>
+#include <interval.h>
 
 #define PMM_MAP_BASE VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(0x00000500)
 
@@ -112,6 +113,12 @@ static inline void sanitize_memory_map(void)
 
 static inline void* get_next_frame(void)
 {
+    interval_t kernel_binary_addresses =
+    {
+        .start = (size_t) &kernel_base_physical_address,
+        .end = ((size_t) &kernel_end_physical_address) - 1
+    };
+
     for ( ; current_entry < map->entries_count; ++current_entry )
     {
         pmm_map_entry_t* entry = &map->entries[current_entry];
@@ -120,17 +127,23 @@ static inline void* get_next_frame(void)
             continue;
         }
 
-        while ( entry->length >= PMM_FRAME_SIZE )
+        for ( ; entry->length >= PMM_FRAME_SIZE; entry->base_address += PMM_FRAME_SIZE, entry->length -= PMM_FRAME_SIZE )
         {
-            if ( kernel_base_physical_address >= entry->base_address && kernel_base_physical_address < entry->base_address + PMM_FRAME_SIZE )
+            interval_t current_frame_addresses =
             {
-                entry->base_address += PMM_FRAME_SIZE;
-                entry->length -= PMM_FRAME_SIZE;
+                .start = entry->base_address,
+                .end = entry->base_address + PMM_FRAME_SIZE - 1
+            };
+
+            if ( interval_closed_is_intersecting(kernel_binary_addresses, current_frame_addresses) )
+            {
                 continue;
             }
-            qword frame_address = entry->base_address;
+
             entry->base_address += PMM_FRAME_SIZE;
             entry->length -= PMM_FRAME_SIZE;
+
+            qword frame_address = entry->base_address;
             return (void*) frame_address;
         }
     }

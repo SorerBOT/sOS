@@ -9,11 +9,11 @@ typedef struct
     size_t end;
 } interval_t;
 
-static inline bool intervals_closed_is_intersecting(interval_t first, interval_t second)
+static inline bool interval_closed_is_intersecting(interval_t first, interval_t second)
 {
     return first.start <= second.end && second.start <= first.end;
 }
-static inline bool intervals_open_is_intersecting(interval_t first, interval_t second)
+static inline bool interval_open_is_intersecting(interval_t first, interval_t second)
 {
     return first.start < second.end && second.start < first.end;
 }
