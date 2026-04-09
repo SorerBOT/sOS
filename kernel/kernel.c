@@ -30,13 +30,16 @@ static void kernel_internal(void* _)
 void kernel()
 {
     io_setup();
-
     console_output_report("entered 64-bit long mode.", CONSOLE_OUTPUT_SUCCESS);
 
     interrupts_setup();
+    console_output_report("finished settting up interrupts.", CONSOLE_OUTPUT_SUCCESS);
 
     pmm_setup();
+    console_output_report("finished settting up the physical memory allocator.", CONSOLE_OUTPUT_SUCCESS);
+
     vmm_setup();
+    console_output_report("finished settting up the virtual memory allocator.", CONSOLE_OUTPUT_SUCCESS);
 
     dword* buggy_address = (dword*)(0x7FCFFF00);
     *buggy_address = 0xdeadbeef;
