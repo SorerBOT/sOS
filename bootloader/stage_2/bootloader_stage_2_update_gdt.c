@@ -2,9 +2,9 @@
 #include <libc_partials/include/types.h>
 #include <console_output.h>
 
-#define STRIP_FLAGS(limit_top_plus_flags) (limit_top_plus_flags & 0b1111)
-#define APPEND_FLAGS(stripped, flags) (stripped | flags)
-#define IS_EXECUTABLE(descriptor) ((descriptor->access_byte & 0b1000) != 0) // simply checking the executable bit in the access byte
+#define STRIP_FLAGS(limit_top_plus_flags) ((limit_top_plus_flags) & 0b1111)
+#define APPEND_FLAGS(stripped, flags) ((stripped) | (flags))
+#define IS_EXECUTABLE(descriptor) (((descriptor->access_byte) & 0b1000) != 0) // simply checking the executable bit in the access byte
 
 /*
  * 63         56 55  52 51      48 47        40 39          32
