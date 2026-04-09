@@ -41,9 +41,6 @@ void kernel()
     vmm_setup();
     console_output_report("finished settting up the virtual memory allocator.", CONSOLE_OUTPUT_SUCCESS);
 
-    dword* buggy_address = (dword*)(0x7FCFFF00);
-    *buggy_address = 0xdeadbeef;
-
 
     syscall_dispatcher_launch_process(kernel_internal);
 
