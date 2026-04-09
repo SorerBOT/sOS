@@ -5,8 +5,8 @@ extern void idt_load(idt_header_t* idt);
 static inline void idt_descriptor_init(idt_descriptor_t* descriptor, size_t interrupt_number);
 static inline void idt_header_init();
 
-idt_t idt;
-idt_header_t idt_header;
+static idt_t idt;
+static idt_header_t idt_header;
 
 static inline void idt_descriptor_init(idt_descriptor_t* descriptor, size_t interrupt_number)
 {
