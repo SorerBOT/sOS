@@ -1,11 +1,10 @@
 #include "include/idt.h"
 #include "include/pic.h"
 #include "include/isr.h"
-#include "vmm.h"
 
+#include <vmm.h>
 #include <types.h>
 #include <string.h>
-
 #include <interrupts.h>
 #include <process_manager.h>
 #include <process_types.h>
@@ -46,7 +45,7 @@ void interrupts_context_switch()
 
 void* interrupts_init_context(void* stack_frame, void* page_table, process_routine_t routine)
 {
-    isr_args_t* context = (isr_args_t*) (((byte*)stack_frame) - 5 * sizeof(isr_args_t) - 1);
+    isr_args_t* context = (isr_args_t*) (((byte*)stack_frame) - sizeof(isr_args_t));
    
     memset(context, 0, sizeof(*context));
 
