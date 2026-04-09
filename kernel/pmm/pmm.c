@@ -197,7 +197,7 @@ void pmm_setup(void)
     void* highest_address = get_highest_address();
     void* current_address = 0;
 
-    allocator_bitmap = get_next_frame();
+    allocator_bitmap = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(get_next_frame());
     if ( allocator_bitmap == NULL )
     {
         console_output_print_blue_screen("Failed to allocate memory for memory manager.\n");
