@@ -8,7 +8,7 @@
 #define VMM_ENTRIES_COUNT_IN_LEVEL 512
 
 /* I don't really like this. */
-#define VMM_KERNEL_PML4T_BASE 0x1000000
+#define VMM_KERNEL_PML4T_BASE (VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(0x1000000))
 #define VMM_PML4T_HIGHER_HALF_OFFSET 256
 #define VMM_IS_PRESENT(address) (((qword)address) & 0x1)
 #define VMM_FLAG_PRESENT                    (0b1ULL)
