@@ -1,3 +1,4 @@
+#include <console_output.h>
 #include <interrupts.h>
 #include <process_manager.h>
 #include <process_types.h>
@@ -18,13 +19,23 @@ process_id_t process_manager_launch_process(process_routine_t routine)
 {
     process_id_t new_process_idx = processes_count;
 
-    void* page_table = vmm_create_page_table();
+    void* page_table_kernel_map = vmm_create_page_table();
+
+    if ( page_table_kernel_map == NULL )
+    {
+        console_output_print_blue_screen("Failed to allocate page table");
+        while (1)
+        {
+            __asm__("hlt");
+        }
+    }
+
     byte* stack_physical_frame = pmm_frame_alloc();
-    vmm_page_bind_to_frame(page_table, stack_physical_frame);
+    vmm_page_bind_to_frame(page_table_kernel_map, stack_physical_frame);
 
     byte* stack_kernel_map = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(stack_physical_frame);
     void* stack_bottom = (stack_kernel_map + PMM_FRAME_SIZE - 1);
-    void* process_context = interrupts_init_context((void*)stack_bottom, page_table, routine);
+    void* process_context = interrupts_init_context(stack_bottom, page_table_kernel_map, routine);
 
     processes[new_process_idx] = (process_control_block_t)
     {
