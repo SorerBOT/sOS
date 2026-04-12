@@ -75,3 +75,9 @@ void* slab_allocator_allocate(void* _allocator)
 
     return NULL;
 }
+
+void slab_allocator_free(void* _allocator, void* address)
+{
+    slab_allocator_t* allocator = _allocator;
+    return;
+}

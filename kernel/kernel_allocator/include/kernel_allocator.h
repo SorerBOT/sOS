@@ -5,5 +5,6 @@
 
 void kernel_allocator_setup(void);
 void* kernel_allocator_allocate(size_t size);
+void kernel_allocator_free(void* address);
 
 #endif /* KERNEL_ALLOCATOR_H */

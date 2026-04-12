@@ -1,6 +1,7 @@
 #include <kernel_allocator.h>
 #include <slab_allocator.h>
 #include <math_extended.h>
+#include <pmm.h>
 
 #define KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2 3
 
@@ -27,4 +28,10 @@ void* kernel_allocator_allocate(size_t size)
     void* appropriate_allocator = slab_allocators[log2];
 
     return slab_allocator_allocate(appropriate_allocator);
+}
+
+void kernel_allocator_free(void* address)
+{
+    void* original_allocator = address - (PMM_FRAME_SIZE - 1);
+    slab_allocator_free(original_allocator, address);
 }
