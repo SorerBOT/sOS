@@ -18,6 +18,7 @@ This is a small single-user kernel which boots using a Legacy BIOS bootloader I 
    * The bootloader fetches the computer's memory map (using Legacy BIOS functions).
    * PMM - fully functional and very efficient Physical Memory Manager, including of course a Physical Memory Allocator (a stack + bitmap allocator, using 2MiB huge pages).
    * VMM - able to create and modify page tables, including a copy of the higher half of the kernel's page table and the kernel's binary.
+   * Kernel Allocator - employing several slab-allocators to allocate different powers of two. This setup is pretty amazing in terms of speed, and reduces the memory waste introduced when keeping allocation headers before small allocations, but introduces quite some fragmentation when the datastructures are big.
 
 
 ## OS Concepts I've learned, and some WHAT THE HECK line explanations
