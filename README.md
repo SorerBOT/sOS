@@ -11,7 +11,7 @@ This is a small single-user kernel which boots using a Legacy BIOS bootloader I 
     * ISRs for exceptions - written (at least for the most common exceptions)
     * PIC - re-programmed the PIC
     * IRQs handled: as of now only IRQ 1 is handled (keyboard IRQ)
-* Keyboard Driver - robust keyboard driver with two layers; one to handle hardware specific details like ps/2 scancodes, and another to handle a stream of keyboard events offering the client to receive the complete keyboard state, raw keyboard events and baked ones, with support for inserting custom keyboard layouts.
+* Keyboard Driver - robust keyboard driver with two layers; one to handle hardware specific details like PS/2 scancodes, and another to handle a stream of keyboard events offering the client to receive the complete keyboard state, raw keyboard events and baked ones, with support for inserting custom keyboard layouts.
 * A syscall interface; implemented a process_launch syscall.
 * Basic Context Switching - able to switch between two processes, including swapping out the page tables.
 * Memory management:
