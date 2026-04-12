@@ -3,6 +3,7 @@
 
 #include <types.h>
 
+void kernel_allocator_setup(void);
 void* kernel_allocator_allocate(size_t size);
 
 #endif /* KERNEL_ALLOCATOR_H */
