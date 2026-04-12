@@ -17,7 +17,14 @@ void kernel_allocator_setup(void)
 void* kernel_allocator_allocate(size_t size)
 {
     size_t log2 = math_extended_round_up_to_log_two(size);
+
+    /*
+     * I round up allocations smaller than 8 bytes to 8 bytes.
+     */
     log2 += (log2 < KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2) * (KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2 - log2);
 
 
+    void* appropriate_allocator = slab_allocators[log2];
+
+    return slab_allocator_allocate(appropriate_allocator);
 }
