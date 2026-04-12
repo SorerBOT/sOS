@@ -75,3 +75,16 @@ void* slab_allocator_allocate(void* _allocator)
 
     return NULL;
 }
+
+void slab_allocator_free(void* _allocator, void* address)
+{
+    slab_allocator_t* allocator = _allocator;
+
+    size_t entry_idx = (((byte*)address) - ((byte*)allocator->base_address)) / allocator->entry_size;
+
+    size_t bitmap_idx = entry_idx / SLAB_ALLOCATOR_BITS_IN_QWORD;
+
+    size_t entry_idx_within_bitmap = entry_idx & (SLAB_ALLOCATOR_BITS_IN_QWORD - 1);
+
+    allocator->bitmap[bitmap_idx] &= 0b0 << entry_idx_within_bitmap;
+}

@@ -6,11 +6,9 @@
 -ffreestanding
 -mno-red-zone
 -Ikernel/pmm/include
-<<<<<<< HEAD
 -Ikernel/vmm/include
-=======
 -Ikernel/slab_allocator/include
->>>>>>> main
+-Ikernel/kernel_allocator/include
 -Ikernel/process_manager/include
 -Ikernel/syscall_handler/include
 -Ilibc/include

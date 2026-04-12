@@ -10,6 +10,7 @@
 #include <pmm.h>
 #include <vmm.h>
 #include <gdt.h>
+#include <kernel_allocator.h>
 
 static void shell_launch_wrapper(void* _)
 {
@@ -44,6 +45,9 @@ void kernel()
 
     vmm_setup();
     console_output_report("finished settting up the virtual memory allocator.", CONSOLE_OUTPUT_SUCCESS);
+
+    kernel_allocator_setup();
+    console_output_report("finished settting up the kernel allocator.", CONSOLE_OUTPUT_SUCCESS);
 
 
     syscall_dispatcher_launch_process(kernel_internal);
