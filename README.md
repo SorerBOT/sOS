@@ -1,10 +1,9 @@
-WIP
 # sOS
-is a kernel and a legacy BIOS bootloader I wrote myself from scratch.
+is a 64-bit kernel and bootloader I wrote myself from scratch.
 ## Features
-* Bootloader which boots into 64-bit Long Mode.
-* VGA driver, including a custom printf function and scroll functionality.
-* Full printf spec (except floats, but including all the flags). Tested using Marco Paland testing suite which I adapted to use my own testing framework (cunit.h)
+* Bootloader - a custom Legacy BIOS bootloader.
+* VGA driver - including scrolling functionality.
+* `vsnprintf` - implemented the entire `vsnprintf` spec (except floats, but including all the flags). Tested using Marco Paland's testing suite which I refactored to use my own testing framework ([cunit.h](https://github.com/SorerBOT/cunit.h))
 * Interrupts - 
     * IDT - written
     * ISRs for exceptions - written (at least for the most common exceptions)
