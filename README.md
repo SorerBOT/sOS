@@ -17,3 +17,14 @@ sOS is a 64-bit kernel and bootloader I wrote myself from scratch.
    * PMM - fully functional and very efficient Physical Memory Manager, and Physical Memory Allocator (a stack + bitmap allocator, using 2MiB huge pages).
    * VMM - able to create and modify page tables, including a copy of the higher half of the kernel's page table and the kernel's source binary.
    * Kernel Allocator - an allocator which employs several slab-allocators to allocate different powers of two. This setup is pretty amazing in terms of speed, and reduces the memory waste introduced when keeping allocation headers before small allocations, but introduces quite some fragmentation when the allocations are big.
+
+## Building & Running
+Make sure you have the dependencies installed, then clone and run:
+```bash
+./runOS.sh
+```
+
+### Dependencies
+* `qemu`
+* `x86_64-elf` cross compiler
+* `nasm`
