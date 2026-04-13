@@ -2,7 +2,7 @@ WIP
 # sOS
 This is a small single-user kernel which boots using a Legacy BIOS bootloader I wrote myself. The general goal is to slowly turn this into a self-hosting OS which is optimised and tailored to my usecase: a single user machine, with only a few applications running at a time and much more RAM than required by those applications.
 
-## Where are we ATM?
+## Features
 * Bootloader which boots into 64-bit Long Mode.
 * VGA driver, including a custom printf function and scroll functionality.
 * Full printf spec (except floats, but including all the flags). Tested using Marco Paland testing suite which I adapted to use my own testing framework (cunit.h)
