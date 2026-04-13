@@ -1,4 +1,9 @@
 # sOS
+
+
+https://github.com/user-attachments/assets/af7378a8-ca2b-4ffc-9797-3c89804e7af6
+
+
 sOS is a 64-bit kernel and bootloader I wrote myself from scratch.
 ## Features
 * Bootloader - a custom Legacy BIOS bootloader.
