@@ -1,7 +1,6 @@
 WIP
 # sOS
-This is a small single-user kernel which boots using a Legacy BIOS bootloader I wrote myself. The general goal is to slowly turn this into a self-hosting OS which is optimised and tailored to my usecase: a single user machine, with only a few applications running at a time and much more RAM than required by those applications.
-
+is a kernel and a legacy BIOS bootloader I wrote myself from scratch.
 ## Features
 * Bootloader which boots into 64-bit Long Mode.
 * VGA driver, including a custom printf function and scroll functionality.
