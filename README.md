@@ -1,5 +1,5 @@
 # sOS
-is a 64-bit kernel and bootloader I wrote myself from scratch.
+sOS is a 64-bit kernel and bootloader I wrote myself from scratch.
 ## Features
 * Bootloader - a custom Legacy BIOS bootloader.
 * VGA driver - including scrolling functionality.
