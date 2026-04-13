@@ -5,11 +5,11 @@ is a 64-bit kernel and bootloader I wrote myself from scratch.
 * VGA driver - including scrolling functionality.
 * `vsnprintf` - implemented the entire `vsnprintf` spec (except floats, but including all the flags). Tested using Marco Paland's testing suite which I refactored to use my own testing framework ([cunit.h](https://github.com/SorerBOT/cunit.h))
 * Interrupts - 
-    * IDT - written
-    * ISRs for exceptions - written (at least for the most common exceptions)
-    * PIC - re-programmed the PIC
-    * IRQs handled: as of now only IRQ 1 is handled (keyboard IRQ)
-* Keyboard Driver - robust keyboard driver with two layers; one to handle hardware specific details like PS/2 scancodes, and another to handle a stream of keyboard events offering the client to receive the complete keyboard state, raw keyboard events and baked ones, with support for inserting custom keyboard layouts.
+    * IDT - completed.
+    * ISRs - implemented ISRs for the most common exceptions, the keyboard IRQ, and my syscall mechanism.
+    * PIC - re-programmed the PIC to remap IRQs.
+    * IRQs - implemented IRQ 1 (i.e. the keyboard IRQ).
+* Keyboard Driver - implemented a robust two layer keyboard driver; the first handles hardware specific details like PS/2 scancodes, and the second handles a stream of keyboard events offering the client the complete keyboard state, a raw stream of keyboard events and baked events I call `unit`s. The driver also supports inserting custom keyboard layouts.
 * A syscall interface; implemented a process_launch syscall.
 * Basic Context Switching - able to switch between two processes, including swapping out the page tables.
 * Memory management:
