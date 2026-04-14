@@ -18,6 +18,7 @@
 -Iarch/common/include
 -Idrivers/x86_64/include
 -Idrivers/input/include
+-Idrivers/disk/include
 -Idrivers/tty/include
 -Iapplications/include
 -Itests/libc/external
