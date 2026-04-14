@@ -50,6 +50,18 @@ typedef enum
     ATA_DRIVER_ERROR_BBK    = 1 << 7
 } ata_driver_error_t;
 
+typedef enum
+{
+    ATA_DRIVER_STATUS_ERR   = 1 << 0,
+    ATA_DRIVER_STATUS_IDX   = 1 << 1,
+    ATA_DRIVER_STATUS_CORR  = 1 << 2,
+    ATA_DRIVER_STATUS_DRQ   = 1 << 3,
+    ATA_DRIVER_STATUS_SRV   = 1 << 4,
+    ATA_DRIVER_STATUS_DF    = 1 << 5,
+    ATA_DRIVER_STATUS_RDY   = 1 << 6,
+    ATA_DRIVER_STATUS_BSY   = 1 << 7
+} ata_driver_status_t;
+
 
 void ata_driver_setup(void)
 {
