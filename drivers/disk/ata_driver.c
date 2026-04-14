@@ -40,16 +40,15 @@
 
 typedef enum
 {
-    ATA_DRIVER_ERROR_AMNF,
-    ATA_DRIVER_ERROR_TKZNF,
-    ATA_DRIVER_ERROR_ABRT,
-    ATA_DRIVER_ERROR_MCR,
-    ATA_DRIVER_ERROR_IDNF,
-    ATA_DRIVER_ERROR_MC,
-    ATA_DRIVER_ERROR_UNC,
-    ATA_DRIVER_ERROR_BBK
+    ATA_DRIVER_ERROR_AMNF   = 1 << 0,
+    ATA_DRIVER_ERROR_TKZNF  = 1 << 1,
+    ATA_DRIVER_ERROR_ABRT   = 1 << 2,
+    ATA_DRIVER_ERROR_MCR    = 1 << 3,
+    ATA_DRIVER_ERROR_IDNF   = 1 << 4,
+    ATA_DRIVER_ERROR_MC     = 1 << 5,
+    ATA_DRIVER_ERROR_UNC    = 1 << 6,
+    ATA_DRIVER_ERROR_BBK    = 1 << 7
 } ata_driver_error_t;
-
 
 
 void ata_driver_setup(void)
