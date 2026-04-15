@@ -16,8 +16,8 @@ typedef struct
 
 typedef struct
 {
-    dword entries_count;
-    pmm_map_entry_t entries[];
+    pmm_map_entry_t* entries;
+    word entries_count;
 } __attribute__((packed)) pmm_map_t;
 
 typedef enum

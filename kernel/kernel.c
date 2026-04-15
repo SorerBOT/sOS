@@ -49,7 +49,6 @@ void kernel()
     kernel_allocator_setup();
     console_output_report("finished settting up the kernel allocator.", CONSOLE_OUTPUT_SUCCESS);
 
-
     syscall_dispatcher_launch_process(kernel_internal);
 
     while (1)
