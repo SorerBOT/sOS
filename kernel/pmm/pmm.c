@@ -15,7 +15,7 @@ typedef struct
 typedef struct
 {
     pmm_map_entry_t* entries;
-    word entries_count;
+    size_t entries_count;
 } __attribute__((packed)) pmm_map_t;
 
 typedef enum
@@ -50,27 +50,27 @@ static pmm_allocator_stack_t* allocator_stack = NULL;
 extern char kernel_base_physical_address;
 extern char kernel_end_physical_address;
 
-static inline void sanitize_memory_map(pmm_map_t* map);
-static inline void* get_next_frame(pmm_map_t* map);
-static inline void* get_highest_address(pmm_map_t* map);
+static inline void sanitize_memory_map(pmm_map_t map);
+static inline void* get_next_frame(pmm_map_t map);
+static inline void* get_highest_address(pmm_map_t map);
 static inline size_t get_frame_index(void* base_address);
 
-static inline void sanitize_memory_map(pmm_map_t* map)
+static inline void sanitize_memory_map(pmm_map_t map)
 {
     /*
      * Remove repeating and overlapping memory maps
      */
-    for ( size_t i = 0; i < map->entries_count; ++i )
+    for ( size_t i = 0; i < map.entries_count; ++i )
     {
-        pmm_map_entry_t* entry_i = &map->entries[i];
-        for ( size_t j = 0; j < map->entries_count; ++j )
+        pmm_map_entry_t* entry_i = &map.entries[i];
+        for ( size_t j = 0; j < map.entries_count; ++j )
         {
             if ( i == j )
             {
                 continue;
             }
 
-            pmm_map_entry_t* entry_j = &map->entries[j];
+            pmm_map_entry_t* entry_j = &map.entries[j];
             if ( entry_i->base_address <= entry_j->base_address && entry_i->length >= entry_j->base_address )
             {
                 if ( entry_i->type >= entry_j->type  )
@@ -89,9 +89,9 @@ static inline void sanitize_memory_map(pmm_map_t* map)
     /*
      * Make sure frames are PMM_FRAME_SIZE (2MiB) aligned
      */
-    for ( size_t i = 0; i < map->entries_count; ++i )
+    for ( size_t i = 0; i < map.entries_count; ++i )
     {
-        pmm_map_entry_t* entry = &map->entries[i];
+        pmm_map_entry_t* entry = &map.entries[i];
 
         qword remainder = entry->base_address & (PMM_FRAME_SIZE - 1);
         if ( remainder > 0 )
@@ -107,7 +107,7 @@ static inline void sanitize_memory_map(pmm_map_t* map)
 }
 
 
-static inline void* get_next_frame(pmm_map_t* map)
+static inline void* get_next_frame(pmm_map_t map)
 {
     static size_t current_entry = 0;
 
@@ -117,9 +117,9 @@ static inline void* get_next_frame(pmm_map_t* map)
         .end = ((size_t) &kernel_end_physical_address) - 1
     };
 
-    for ( ; current_entry < map->entries_count; ++current_entry )
+    for ( ; current_entry < map.entries_count; ++current_entry )
     {
-        pmm_map_entry_t* entry = &map->entries[current_entry];
+        pmm_map_entry_t* entry = &map.entries[current_entry];
         if ( entry->type != PMM_MAP_USABLE )
         {
             continue;
@@ -149,18 +149,18 @@ static inline void* get_next_frame(pmm_map_t* map)
     return NULL;
 }
 
-static inline void* get_highest_address(pmm_map_t* map)
+static inline void* get_highest_address(pmm_map_t map)
 {
     qword highest_address = 0;
 
-    for ( size_t i = 0; i < map->entries_count; ++i )
+    for ( size_t i = 0; i < map.entries_count; ++i )
     {
-        if ( map->entries[i].type != PMM_MAP_USABLE )
+        if ( map.entries[i].type != PMM_MAP_USABLE )
         {
             continue;
         }
 
-        qword current_address = map->entries[i].base_address + map->entries[i].length;
+        qword current_address = map.entries[i].base_address + map.entries[i].length;
         if ( current_address > highest_address + 1 )
         {
             highest_address = current_address - 1;
@@ -196,12 +196,12 @@ void pmm_setup(qword memory_map_address, word memory_map_entries_count)
         .entries = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(memory_map_address)
     };
 
-    sanitize_memory_map(&map);
+    sanitize_memory_map(map);
 
-    void* highest_address = get_highest_address(&map);
+    void* highest_address = get_highest_address(map);
     void* current_address = 0;
 
-    allocator_bitmap = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(get_next_frame(&map));
+    allocator_bitmap = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(get_next_frame(map));
     if ( allocator_bitmap == NULL )
     {
         console_output_print_blue_screen("Failed to allocate memory for memory manager.\n");
@@ -227,7 +227,7 @@ void pmm_setup(qword memory_map_address, word memory_map_entries_count)
             break;
         }
 
-        void* current_frame_address = get_next_frame(&map);
+        void* current_frame_address = get_next_frame(map);
 
         if ( current_frame_address == NULL )
         {
@@ -256,10 +256,10 @@ void pmm_setup(qword memory_map_address, word memory_map_entries_count)
         }
     }
 
-    //console_output_printf("Memory Map:\nEntries count: %lu\n", map->entries_count);
-    //for ( uint32_t i = 0; i < map->entries_count; ++i )
+    //console_output_printf("Memory Map:\nEntries count: %lu\n", map.entries_count);
+    //for ( uint32_t i = 0; i < map.entries_count; ++i )
     //{
-    //    if ( map->entries[i].type != PMM_MAP_USABLE )
+    //    if ( map.entries[i].type != PMM_MAP_USABLE )
     //    {
     //        continue;
     //    }
@@ -268,10 +268,10 @@ void pmm_setup(qword memory_map_address, word memory_map_entries_count)
     //                          "     * Length: %llx\n"
     //                          "     * Type: %llx\n"
     //                          "     * Extended attributes: %llx\n",
-    //                          map->entries[i].base_address,
-    //                          map->entries[i].length,
-    //                          map->entries[i].type,
-    //                          map->entries[i].extended_attributes);
+    //                          map.entries[i].base_address,
+    //                          map.entries[i].length,
+    //                          map.entries[i].type,
+    //                          map.entries[i].extended_attributes);
 
     //}
 }
