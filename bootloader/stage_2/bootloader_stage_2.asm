@@ -25,6 +25,12 @@
 
 [BITS 16]
 
+struc boot_info_t
+    .memory_map:                resq 1
+    .memory_map_entries_count:  resw 1
+    .disk_id:                   resw 1
+endstruc
+
 global GDT_HEADER
 global BASE_PAGE_TABLE_ADDRESS
 
@@ -47,8 +53,14 @@ start:
     mov si, STAGE_1_COMPLETED_MSG
     call print_msg
 
+    mov di, boot_info_t_size
+    call bump_allocator_allocate
+    mov word [BOOT_INFO_STRUCT_BASE], ax
 
-    mov [BOOT_DRIVE], dl
+;   ax cannot be used in order to dereference a pointer due to an 8086/i286 restriction
+    mov si, word [BOOT_INFO_STRUCT_BASE]
+    mov word [si + boot_info_t.disk_id], 0 ; dl is only a single byte
+    mov byte [si + boot_info_t.disk_id], dl
 
     call detect_memory_map
     call load_kernel
@@ -62,11 +74,27 @@ start:
 
     jmp enable_and_jump_to_protected_mode
 
-memory_map_entries_count equ dword MEMORY_MAP_BASE
+
+; accepts the bump-allocation size via di
+bump_allocator_allocate:
+    mov ax, word [BUMP_ALLOCATOR_CURRENT_ADDRESS] 
+    add word [BUMP_ALLOCATOR_CURRENT_ADDRESS], di
+    ret
+
 detect_memory_map:
-    mov dword [memory_map_entries_count], 0
-    mov di, MEMORY_MAP_BASE + 4 ; ES must be 0. The address written to is: es:di
-    xor ebx, ebx                ; tells the BIOS to read from the start of the list
+    mov si, word [BOOT_INFO_STRUCT_BASE]
+    mov [si + boot_info_t.memory_map_entries_count], 0
+
+;   allocating memory for a memory map entry
+    mov di, MEMORY_MAP_ENTRY_SIZE
+    call bump_allocator_allocate
+    mov di, ax
+
+;   adding memory map to boot_info
+    mov [si + boot_info_t.memory_map], ax
+
+;   ES must be 0. The address written to is: es:di
+    xor ebx, ebx    ; tells the BIOS to read from the start of the list
 
 .detect_memory_map_iteration:
 ;   setup
@@ -87,8 +115,8 @@ detect_memory_map:
     int BIOS_INT_MEMORY_MAP
     jc detect_memory_map_finished
 
-    mov dword esi, [memory_map_entries_count]
-    test esi, esi
+    mov cx, [si + boot_info_t.memory_map_entries_count]
+    test cx, cx
     jz .check_errors_first_iteration
     jmp .check_errors_finished
 
@@ -97,22 +125,27 @@ detect_memory_map:
     jne detect_memory_map_failed
 
 .check_errors_finished:
-    inc dword [memory_map_entries_count]
+    inc [si + boot_info_t.memory_map_entries_count]
 
     test ebx, ebx
     jz detect_memory_map_finished
 
+;   print success to the screen making sure to retain SI
+    mov cx, si
     mov si, SUCCESS_READ_MEMORY_MAP_ENTRY_FINISHED_MSG
     call print_msg
+    mov si, cx
 
-    add di, MEMORY_MAP_ENTRY_SIZE
+
+;   allocate memory for the next entry
+    mov di, MEMORY_MAP_ENTRY_SIZE
+    call bump_allocator_allocate
+    mov di, ax
     jmp .detect_memory_map_iteration
 
-
-
 detect_memory_map_finished:
-    mov dword esi, [memory_map_entries_count]
-    test esi, esi
+    mov cx, [si + boot_info_t.memory_map_entries_count]
+    test cx, cx
     je detect_memory_map_failed_first_iteration
 
     mov si, SUCCESS_READ_MEMORY_MAP_FINISHED_MSG
@@ -139,9 +172,13 @@ detect_memory_map_failed:
 
     
 load_kernel:
+;   reading boot drive from BOOT_INFO_STRUCT
+    mov si, [BOOT_INFO_STRUCT_BASE]
+    mov dl, [si + boot_info_t.disk_id]
+
     mov si, DAP
     mov ah, BIOS_FUNC_DISK_READ
-    mov dl, [BOOT_DRIVE]
+
     int BIOS_INT_DISK   ; First BIOS call to store stage 2 (16KiB) at 0x7E00.
     jc fail_read_disk   ; CF==1 means that an error has occurred.
 
@@ -201,9 +238,10 @@ enable_and_jump_to_protected_mode:
 
 
 align 4                     ; Just to be safe, align on 4-byte boundary
-BOOT_DRIVE:
-    db 0
-
+BUMP_ALLOCATOR_CURRENT_ADDRESS:
+    dw 0x0500
+BOOT_INFO_STRUCT_BASE:
+    dw 0x0000
 DAP:
     db 0x10                 ; Packet Size, this tells the BIOS what version of DAP struct we're using
     db 0x00                 ; Padding byte. Needs to be reset to 0 if ran in a loop
@@ -382,7 +420,9 @@ SUCCESS_TOGGLE_LONG_MODE_PAGING_MSG:
 %define KERNEL_ORG 0XFFFFFFFF80010000
 long_mode_start:
     cli
+; getting the boot_info_t struct
+    movzx rdi, word [BOOT_INFO_STRUCT_BASE]
 
-; LETTING THE KERNEL TAKE CONTROL
+; letting the kernel take control
     mov rax, KERNEL_ORG
     jmp rax
