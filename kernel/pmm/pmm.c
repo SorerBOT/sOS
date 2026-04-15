@@ -4,8 +4,6 @@
 #include <vmm.h>
 #include <interval.h>
 
-#define PMM_MAP_BASE (VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(0x00000500))
-
 typedef struct
 {
     qword base_address;
@@ -46,20 +44,18 @@ typedef struct
     bool frames_is_allocated[];
 } __attribute__((packed)) pmm_allocator_bitmap_t;
 
-static pmm_map_t* map = (pmm_map_t*) PMM_MAP_BASE;
-static size_t current_entry = 0;
 static pmm_allocator_bitmap_t* allocator_bitmap = NULL;
 static pmm_allocator_stack_t* allocator_stack = NULL;
 
 extern char kernel_base_physical_address;
 extern char kernel_end_physical_address;
 
-static inline void sanitize_memory_map(void);
-static inline void* get_next_frame(void);
-static inline void* get_highest_address(void);
+static inline void sanitize_memory_map(pmm_map_t* map);
+static inline void* get_next_frame(pmm_map_t* map);
+static inline void* get_highest_address(pmm_map_t* map);
 static inline size_t get_frame_index(void* base_address);
 
-static inline void sanitize_memory_map(void)
+static inline void sanitize_memory_map(pmm_map_t* map)
 {
     /*
      * Remove repeating and overlapping memory maps
@@ -111,8 +107,10 @@ static inline void sanitize_memory_map(void)
 }
 
 
-static inline void* get_next_frame(void)
+static inline void* get_next_frame(pmm_map_t* map)
 {
+    static size_t current_entry = 0;
+
     interval_t kernel_binary_addresses =
     {
         .start = (size_t) &kernel_base_physical_address,
@@ -151,7 +149,7 @@ static inline void* get_next_frame(void)
     return NULL;
 }
 
-static inline void* get_highest_address(void)
+static inline void* get_highest_address(pmm_map_t* map)
 {
     qword highest_address = 0;
 
@@ -190,14 +188,20 @@ static inline size_t get_frame_index(void* base_address)
     }
 }
 
-void pmm_setup(void)
+void pmm_setup(qword memory_map_address, word memory_map_entries_count)
 {
-    sanitize_memory_map();
+    pmm_map_t map =
+    {
+        .entries_count = memory_map_entries_count,
+        .entries = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(memory_map_address)
+    };
 
-    void* highest_address = get_highest_address();
+    sanitize_memory_map(&map);
+
+    void* highest_address = get_highest_address(&map);
     void* current_address = 0;
 
-    allocator_bitmap = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(get_next_frame());
+    allocator_bitmap = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(get_next_frame(&map));
     if ( allocator_bitmap == NULL )
     {
         console_output_print_blue_screen("Failed to allocate memory for memory manager.\n");
@@ -223,7 +227,7 @@ void pmm_setup(void)
             break;
         }
 
-        void* current_frame_address = get_next_frame();
+        void* current_frame_address = get_next_frame(&map);
 
         if ( current_frame_address == NULL )
         {

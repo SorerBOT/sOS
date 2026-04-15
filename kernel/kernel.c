@@ -31,7 +31,7 @@ static void kernel_internal(void* _)
 
 typedef struct
 {
-    qword memory_map;
+    qword memory_map_address;
     word memory_map_entries_count;
     word disk_id;
 } boot_info_t;
@@ -47,7 +47,7 @@ void kernel(boot_info_t* boot_info)
     interrupts_setup();
     console_output_report("finished settting up interrupts.", CONSOLE_OUTPUT_SUCCESS);
 
-    pmm_setup();
+    pmm_setup(boot_info->memory_map_address, boot_info->memory_map_entries_count);
     console_output_report("finished settting up the physical memory allocator.", CONSOLE_OUTPUT_SUCCESS);
 
     vmm_setup();
