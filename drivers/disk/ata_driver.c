@@ -62,6 +62,12 @@ typedef enum
     ATA_DRIVER_STATUS_BSY   = 1 << 7
 } ata_driver_status_t;
 
+typedef enum
+{
+    ATA_DRIVER_DEVICE_CONTROL_ACTION_STOP_INTERRUPTS    = 1 << 1,
+    ATA_DRIVER_DEVICE_CONTROL_ACTION_SOFTWARE_RESET     = 1 << 2,
+    ATA_DRIVER_DEVICE_CONTROL_ACTION_HIGH_ORDER_BYTE    = 1 << 7,
+} ata_driver_device_control_action_t;
 
 void ata_driver_setup(void)
 {
