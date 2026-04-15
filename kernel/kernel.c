@@ -29,7 +29,14 @@ static void kernel_internal(void* _)
     }
 }
 
-void kernel()
+typedef struct
+{
+    qword memory_map;
+    word memory_map_entries_count;
+    word disk_id;
+} boot_info_t;
+
+void kernel(boot_info_t* boot_info)
 {
     io_setup();
     console_output_report("entered 64-bit long mode.", CONSOLE_OUTPUT_SUCCESS);

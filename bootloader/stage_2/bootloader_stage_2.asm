@@ -420,7 +420,9 @@ SUCCESS_TOGGLE_LONG_MODE_PAGING_MSG:
 %define KERNEL_ORG 0XFFFFFFFF80010000
 long_mode_start:
     cli
+; getting the boot_info_t struct
+    movzx rdi, word [BOOT_INFO_STRUCT_BASE]
 
-; LETTING THE KERNEL TAKE CONTROL
+; letting the kernel take control
     mov rax, KERNEL_ORG
     jmp rax
