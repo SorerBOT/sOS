@@ -25,6 +25,12 @@
 
 [BITS 16]
 
+struc boot_info_t
+    .memory_map:                resq
+    .memory_map_entries_count:  resw
+    .disk_id:                   resw
+endstruc
+
 global GDT_HEADER
 global BASE_PAGE_TABLE_ADDRESS
 
@@ -47,8 +53,10 @@ start:
     mov si, STAGE_1_COMPLETED_MSG
     call print_msg
 
-
-    mov [BOOT_DRIVE], dl
+    lea BOOT_INFO_STRUCT_BASE, BUMP_ALLOCATOR_CURRENT_ADDRESS
+    mov [BOOT_INFO_STRUCT_BASE + boot_info_t.memory_map], BOOT_INFO_STRUCT_BASE + boot_info_t_size
+    mov [BOOT_INFO_STRUCT_BASE + boot_info_t.memory_map_entries_count], dl
+    mov [BOOT_INFO_STRUCT_BASE + boot_info_t.disk_id], dl
 
     call detect_memory_map
     call load_kernel
@@ -61,6 +69,13 @@ start:
 
 
     jmp enable_and_jump_to_protected_mode
+
+
+; accepts the bump-allocation size via di
+bump_allocator_allocate:
+    mov ax, word [bump_allocator_current_address] 
+    add word [bump_allocator_current_address], di
+    ret
 
 memory_map_entries_count equ dword MEMORY_MAP_BASE
 detect_memory_map:
@@ -107,8 +122,6 @@ detect_memory_map:
 
     add di, MEMORY_MAP_ENTRY_SIZE
     jmp .detect_memory_map_iteration
-
-
 
 detect_memory_map_finished:
     mov dword esi, [memory_map_entries_count]
@@ -201,9 +214,10 @@ enable_and_jump_to_protected_mode:
 
 
 align 4                     ; Just to be safe, align on 4-byte boundary
-BOOT_DRIVE:
-    db 0
-
+BUMP_ALLOCATOR_CURRENT_ADDRESS:
+    dw 0x0500
+BOOT_INFO_STRUCT_BASE:
+    dw 0x0000
 DAP:
     db 0x10                 ; Packet Size, this tells the BIOS what version of DAP struct we're using
     db 0x00                 ; Padding byte. Needs to be reset to 0 if ran in a loop
