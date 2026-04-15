@@ -69,6 +69,13 @@ typedef enum
     ATA_DRIVER_DEVICE_CONTROL_ACTION_HIGH_ORDER_BYTE    = 1 << 7,
 } ata_driver_device_control_action_t;
 
+#define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_DRIVE_0_MASK  (1 << 0)
+#define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_DRIVE_1_MASK  (1 << 1)
+#define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_HEAD_MASK     (0xF << 2)
+#define ATA_DRIVER_DRIVE_ADDRESS_WRITE_GATE_MASK        (1 << 6)
+
+
+
 void ata_driver_setup(void)
 {
     console_output_printf("Preparing ata_driver\n");
