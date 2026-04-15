@@ -30,7 +30,14 @@ static void kernel_internal(void* _)
     }
 }
 
-void kernel()
+typedef struct
+{
+    qword memory_map_address;
+    word memory_map_entries_count;
+    word disk_id;
+} boot_info_t;
+
+void kernel(boot_info_t* boot_info)
 {
     io_setup();
     console_output_report("entered 64-bit long mode.", CONSOLE_OUTPUT_SUCCESS);
@@ -41,7 +48,7 @@ void kernel()
     interrupts_setup();
     console_output_report("finished settting up interrupts.", CONSOLE_OUTPUT_SUCCESS);
 
-    pmm_setup();
+    pmm_setup(boot_info->memory_map_address, boot_info->memory_map_entries_count);
     console_output_report("finished settting up the physical memory allocator.", CONSOLE_OUTPUT_SUCCESS);
 
     vmm_setup();
@@ -51,7 +58,6 @@ void kernel()
     console_output_report("finished settting up the kernel allocator.", CONSOLE_OUTPUT_SUCCESS);
 
     ata_driver_setup();
-
 
     syscall_dispatcher_launch_process(kernel_internal);
 
