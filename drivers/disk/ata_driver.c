@@ -38,9 +38,12 @@
 #define ATA_DRIVER_SECONDARY_CONTROL_PORT_DEVICE_CONTROL     ((ATA_DRIVER_SECONDARY_CONTROL_PORT_BASE) + 0)
 #define ATA_DRIVER_SECONDARY_CONTROL_PORT_DRIVE_ADDRESS      ((ATA_DRIVER_SECONDARY_CONTROL_PORT_BASE) + 1)
 
-#define ATA_DRIVER_DEVICE_REGISTER_BASE 0b10100000
-#define ATA_DRIVER_DEVICE_REGISTER_MASTER (ATA_DRIVER_DEVICE_REGISTER_BASE)
-#define ATA_DRIVER_DEVICE_REGISTER_SLAVE (ATA_DRIVER_DEVICE_REGISTER_BASE | (1 << 4))
+#define ATA_DRIVER_REGISTER_DEVICE_BASE 0b10100000
+#define ATA_DRIVER_REGISTER_DEVICE_MASTER (ATA_DRIVER_REGISTER_DEVICE_BASE)
+#define ATA_DRIVER_REGISTER_DEVICE_SLAVE (ATA_DRIVER_REGISTER_DEVICE_BASE | (1 << 4))
+
+#define ATA_DRIVER_REGISTER_DEVICE_CONTROL_NIEN (1 << 1)
+
 #define ATA_DRIVER_COMMAND_IDENTIFY 0xEC
 
 typedef enum
@@ -116,16 +119,16 @@ static inline void write_command_phase(word io_port_command, byte command)
 /*
  * ATA/ATAPI-6 SPEC REFERENCE; section 7.8: Device Control Register, nIEN bit
  */
-static inline void disable_interrupts(void)
+static inline void disable_interrupts(word control_port_device)
 {
-
+    cpu_io_write_byte(control_port_device, ATA_DRIVER_REGISTER_DEVICE_CONTROL_NIEN);
 }
 
 
 static inline void identify_drive(void)
 {
     check_status_phase();
-    select_device_phase(ATA_DRIVER_PRIMARY_IO_PORT_DEVICE, ATA_DRIVER_DEVICE_REGISTER_MASTER);
+    select_device_phase(ATA_DRIVER_PRIMARY_IO_PORT_DEVICE, ATA_DRIVER_REGISTER_DEVICE_MASTER);
     check_status_phase();
 
     /*
