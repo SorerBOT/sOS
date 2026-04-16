@@ -82,10 +82,19 @@ typedef enum
 #define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_HEAD_MASK     (0xF << 2)
 #define ATA_DRIVER_DRIVE_ADDRESS_WRITE_GATE_MASK        (1 << 6)
 
+static inline void HI1_check_status_phase(void);
+static inline void HPIOI1_check_status_phase(void);
+static inline void select_device_phase(word io_port_device, byte device);
+static inline void write_command_phase(word io_port_command, byte command);
+static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void);
+static inline void write_command_phase(word io_port_command, byte command);
+static inline void disable_interrupts(word control_port_device);
+static inline void identify_drive(void);
+
 /*
  * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI1: Check_Status State
  */
-static inline void check_status_phase(void)
+static inline void HI1_check_status_phase(void)
 {
     for ( ;; )
     {
@@ -97,6 +106,34 @@ static inline void check_status_phase(void)
         }
 
         return;
+    }
+}
+
+/*
+ * ATA/ATAPI-6 SPEC REFERENCE; section 9.5: PIO data-in command protocol, HPIOI1: Check_Status State
+ */
+static inline void HPIOI1_check_status_phase(void)
+{
+    ata_driver_status_t status = wait_400_ns_and_read_alternate_status();
+
+    if ( (status & ATA_DRIVER_STATUS_BSY) == 0 && status & ATA_DRIVER_STATUS_DRQ )
+    {
+        return;
+    }
+
+    while ( status & ATA_DRIVER_STATUS_BSY )
+    {
+        status = cpu_io_read_byte(ATA_DRIVER_PRIMARY_IO_PORT_STATUS);
+    }
+
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 9.5 PIO data-in command protocol, HPIOI1:HI0
+     * an error has occurred, I'll panic for now.
+     */
+
+    if ( status & ATA_DRIVER_STATUS_DRQ )
+    {
+        console_output_print_blue_screen("Disk Error: expected data after data-request and received none.\n");
     }
 }
 
@@ -124,12 +161,28 @@ static inline void disable_interrupts(word control_port_device)
     cpu_io_write_byte(control_port_device, ATA_DRIVER_REGISTER_DEVICE_CONTROL_NIEN);
 }
 
+/*
+ * OSDev trick for the 400ns delays mandated by the ATA/ATAPI-6 spec.
+ * Based on ATA/ATAPI-6 SPEC; section 7.3.4: Alternate Status Register, Effect
+ * it is better to use the alternate_status register because it does not clear
+ * interrupts (This driver won't use interrupts but a future one might
+ * and I rather prepare for that).
+ */
+static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void)
+{
+    for ( size_t i = 0; i < 14; ++i )
+    {
+        cpu_io_read_byte(ATA_DRIVER_PRIMARY_CONTROL_PORT_ALTERNATE_STATUS);
+    }
+
+    return cpu_io_read_byte(ATA_DRIVER_PRIMARY_CONTROL_PORT_ALTERNATE_STATUS);
+}
 
 static inline void identify_drive(void)
 {
-    check_status_phase();
+    HI1_check_status_phase();
     select_device_phase(ATA_DRIVER_PRIMARY_IO_PORT_DEVICE, ATA_DRIVER_REGISTER_DEVICE_MASTER);
-    check_status_phase();
+    HI1_check_status_phase();
 
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI3: Write_Parameters State
@@ -141,9 +194,19 @@ static inline void identify_drive(void)
     cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_HIGH, 0);
 
     write_command_phase(ATA_DRIVER_PRIMARY_IO_PORT_COMMAND, ATA_DRIVER_COMMAND_IDENTIFY);
+
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 9.5: PIO data-in command protocol, HPIOI1: Check_Status state
+     */
+    HPIOI1_check_status_phase();
+    
+
+
+
 }
 
 void ata_driver_setup(void)
 {
+    disable_interrupts(ATA_DRIVER_PRIMARY_CONTROL_PORT_DEVICE_CONTROL);
     identify_drive();
 }
