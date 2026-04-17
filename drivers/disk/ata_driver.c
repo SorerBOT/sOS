@@ -283,11 +283,7 @@ void ata_driver_setup(void)
     bool is_read_write_multiple_enabled = current_read_write_multiple & (1 << 8);
     if ( is_read_write_multiple_enabled )
     {
-        console_output_print_blue_screen("Disk Error: ata_driver does not support reading and writing in multiples yet.\n");
-        while (1)
-        {
-            __asm__ volatile("hlt");
-        }
+        byte sector_multiplier = current_read_write_multiple & 0xFF;
     }
 
 
