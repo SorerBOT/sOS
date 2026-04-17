@@ -1,6 +1,7 @@
 #include <ata_driver.h>
 #include <console_output.h>
 #include <cpu_io.h>
+#include <kernel_allocator.h>
 
 #define ATA_DRIVER_PRIMARY_IO_PORT_BASE 0x1F0
 #define ATA_DRIVER_PRIMARY_CONTROL_PORT_BASE 0x3F6
@@ -93,8 +94,9 @@ static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void);
 static inline void write_command_phase(word io_port_command, byte command);
 static inline void disable_interrupts(word control_port_device);
 static inline void identify_drive(void);
+static inline void validate_identify_drive_result(void);
 
-static word data_buffer[ATA_DRIVER_SECTOR_SIZE_IN_WORDS];
+static word* data_buffer = NULL;
 
 /*
  * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI1: Check_Status State
@@ -224,27 +226,23 @@ static inline void identify_drive(void)
      */
 }
 
-void ata_driver_setup(void)
+static inline void validate_identify_drive_result(void)
 {
-    disable_interrupts(ATA_DRIVER_PRIMARY_CONTROL_PORT_DEVICE_CONTROL);
-    identify_drive();
-
-
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 8.16: IDENTIFY DEVICE, Table 26
      * I could not really make sensible #defines out of those. I'd just have
      * to refer to the aforementioned table 26.
+     * I commented out a bunch of variables I defined but did not use YET so that
+     * I don't have to keep referring to the spec when I want to upgrade the driver.
      */
-    word max_read_write_multiple = data_buffer[47] & 0xFF;
+
+    //word max_read_write_multiple = data_buffer[47] & 0xFF;
     word capabilities = data_buffer[49];
     word field_validity = data_buffer[53];
     word current_read_write_multiple = data_buffer[59];
     dword max_user_sector_number = ((dword) data_buffer[61] << 16) | ((dword)data_buffer[60]);
     word pio_modes_supported = data_buffer[64];
     word integrity_word = data_buffer[255];
-
-
-
     word command_set_supported = data_buffer[83];
     word command_set_enabled = data_buffer[86];
     qword max_48_bit_user_lba_address = ( (qword)data_buffer[103] << 48 ) | ( (qword)data_buffer[102] << 32  ) | ( (qword)data_buffer[101] << 16 ) | ((qword)data_buffer[100]);
@@ -356,4 +354,22 @@ void ata_driver_setup(void)
     {
         console_output_report("Disk Error: identify device checksum is not supported.", CONSOLE_OUTPUT_FAILURE);
     }
+}
+
+void ata_driver_setup(void)
+{
+    data_buffer = kernel_allocator_allocate(ATA_DRIVER_SECTOR_SIZE_IN_WORDS * sizeof(word));
+
+    if ( data_buffer == NULL )
+    {
+        console_output_print_blue_screen("Disk Error: failed to allocate memory for data_buffer.\n");
+        while (1)
+        {
+            __asm__ volatile ("hlt");
+        }
+    }
+
+    disable_interrupts(ATA_DRIVER_PRIMARY_CONTROL_PORT_DEVICE_CONTROL);
+    identify_drive();
+    validate_identify_drive_result();
 }
