@@ -47,6 +47,7 @@
 #define ATA_DRIVER_COMMAND_IDENTIFY 0xEC
 
 #define ATA_DRIVER_SECTOR_SIZE_IN_WORDS 256
+#define ATA_DRIVER_SECTOR_SIZE_IN_BYTES ((ATA_DRIVER_SECTOR_SIZE_IN_WORDS) * 2)
 
 typedef enum
 {
@@ -236,6 +237,7 @@ void ata_driver_setup(void)
     word current_read_write_multiple = data_buffer[59];
     dword max_user_sector_number = ((dword) data_buffer[61] << 16) | ((dword)data_buffer[60]);
     word pio_modes_supported = data_buffer[64];
+    word integrity_word = data_buffer[255];
 
 
 
@@ -301,6 +303,38 @@ void ata_driver_setup(void)
     bool is_48_bit_lba_enabled = command_set_enabled & (1 << 10);
     if ( is_48_bit_lba_enabled == false )
     {
-        console_output_print_blue_screen("Disk Error: 48-bit LBA is not enabled\n");
+        console_output_print_blue_screen("Disk Error: 48-bit LBA is not enabled even though it is supported. This is not a valid state as mandated by the specs.\n");
+    }
+
+
+
+
+    byte signature = integrity_word & 0xFF;
+    if ( signature == 0xA5 )
+    {
+        byte check_sum = integrity_word >> 8;
+        byte sum = 0;
+
+        const byte* data_bytes = (byte*) data_buffer;
+        for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_BYTES; ++i )
+        {
+            sum += data_bytes[i];
+        }
+
+        byte sum_twos_complement = ~sum + 1;
+
+        if ( check_sum != sum_twos_complement )
+        {
+            console_output_print_blue_screen("Disk Error: calculated checksum does not match specified checksum.\n");
+        }
+
+        if ( check_sum != 0 )
+        {
+            console_output_print_blue_screen("Disk Error: specified checksum is not 0. The specs state it should be 0\n");
+        }
+    }
+    else
+    {
+        console_output_print_blue_screen("Disk Error: data integrity signature is wrong.\n");
     }
 }
