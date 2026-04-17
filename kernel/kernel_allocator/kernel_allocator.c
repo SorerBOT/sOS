@@ -32,6 +32,6 @@ void* kernel_allocator_allocate(size_t size)
 
 void kernel_allocator_free(void* address)
 {
-    void* original_allocator = address - (PMM_FRAME_SIZE - 1);
+    void* original_allocator = (void*)(((qword)address) & ~(PMM_FRAME_SIZE - 1));
     slab_allocator_free(original_allocator, address);
 }
