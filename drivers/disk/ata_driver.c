@@ -312,29 +312,20 @@ void ata_driver_setup(void)
     byte signature = integrity_word & 0xFF;
     if ( signature == 0xA5 )
     {
-        byte check_sum = integrity_word >> 8;
         byte sum = 0;
-
         const byte* data_bytes = (byte*) data_buffer;
         for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_BYTES; ++i )
         {
             sum += data_bytes[i];
         }
 
-        byte sum_twos_complement = ~sum + 1;
-
-        if ( check_sum != sum_twos_complement )
+        if ( sum != 0 )
         {
-            console_output_print_blue_screen("Disk Error: calculated checksum does not match specified checksum.\n");
-        }
-
-        if ( check_sum != 0 )
-        {
-            console_output_print_blue_screen("Disk Error: specified checksum is not 0. The specs state it should be 0\n");
+            console_output_print_blue_screen("Disk Error: failed checksum test.\n");
         }
     }
     else
     {
-        console_output_print_blue_screen("Disk Error: data integrity signature is wrong.\n");
+        console_output_report("Disk Error: identify device checksum is not supported.", CONSOLE_OUTPUT_FAILURE);
     }
 }
