@@ -91,7 +91,7 @@ static inline void HI1_check_status_phase(void);
 static inline void HPIOI1_check_status_phase(void);
 static inline void select_device_phase(word io_port_device, byte device);
 static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void);
-static inline void disable_interrupts(word control_port_device);
+static inline void disable_disk_interrupts(word control_port_device);
 static inline void identify_device(word* identify_device_buffer);
 static inline void validate_identify_device_result(word* identify_device_buffer);
 static inline void HI0_4_bus_idle_protocol_send_command(byte command, word features, word sector_count, qword lba);
@@ -156,7 +156,7 @@ static inline void select_device_phase(word io_port_device, byte device)
 /*
  * ATA/ATAPI-6 SPEC REFERENCE; section 7.8: Device Control Register, nIEN bit
  */
-static inline void disable_interrupts(word control_port_device)
+static inline void disable_disk_interrupts(word control_port_device)
 {
     cpu_io_write_byte(control_port_device, ATA_DRIVER_REGISTER_DEVICE_CONTROL_NIEN);
 }
@@ -378,7 +378,7 @@ void ata_driver_setup(void)
     HI1_check_status_phase();
     select_device_phase(ATA_DRIVER_PRIMARY_IO_PORT_DEVICE, ATA_DRIVER_REGISTER_DEVICE_MASTER);
 
-    disable_interrupts(ATA_DRIVER_PRIMARY_CONTROL_PORT_DEVICE_CONTROL);
+    disable_disk_interrupts(ATA_DRIVER_PRIMARY_CONTROL_PORT_DEVICE_CONTROL);
 
     identify_device(identify_device_buffer);
     validate_identify_device_result(identify_device_buffer);
