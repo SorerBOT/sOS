@@ -46,6 +46,8 @@
 
 #define ATA_DRIVER_COMMAND_IDENTIFY 0xEC
 
+#define ATA_DRIVER_SECTOR_SIZE_IN_WORDS 256
+
 typedef enum
 {
     ATA_DRIVER_ERROR_AMNF   = 1 << 0,
@@ -90,6 +92,8 @@ static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void);
 static inline void write_command_phase(word io_port_command, byte command);
 static inline void disable_interrupts(word control_port_device);
 static inline void identify_drive(void);
+
+static word data_buffer[ATA_DRIVER_SECTOR_SIZE_IN_WORDS];
 
 /*
  * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI1: Check_Status State
@@ -204,10 +208,9 @@ static inline void identify_drive(void)
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.5: PIO data-in command protocol, HPIOI2: Transfer_Data state
      * reading the data
      */
-    word data[256];
     for ( size_t i = 0; i < 256; ++i )
     {
-        data[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
+        data_buffer[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
     }
     
     /*
@@ -220,4 +223,45 @@ void ata_driver_setup(void)
 {
     disable_interrupts(ATA_DRIVER_PRIMARY_CONTROL_PORT_DEVICE_CONTROL);
     identify_drive();
+
+
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 8.16: IDENTIFY DEVICE, Table 26
+     * I could not really make sensible #defines out of those. I'd just have
+     * to refer to the aforementioned table 26.
+     */
+    word max_read_write_multiple = data_buffer[47] & 0xFF;
+    word capabilities = data_buffer[49];
+    word command_set_supported = data_buffer[83];
+    word command_set_enabled = data_buffer[86];
+    qword max_48_bit_user_lba_address = ( (qword)data_buffer[103] << 48 ) | ( (qword)data_buffer[102] << 32  ) | ( (qword)data_buffer[101] << 16 ) | ((qword)data_buffer[100]);
+    word current_read_write_multiple = data_buffer[59];
+
+
+
+
+    bool is_iordy_supported = capabilities & (1 << 11);
+    bool is_lba_supported   = capabilities & (1 << 9);
+    bool is_dma_supported   = capabilities & (1 << 8);
+
+    if ( is_iordy_supported == false )
+    {
+        console_output_print_blue_screen("Disk Error: IORDY is not supported.\n");
+    }
+
+    if ( is_lba_supported == false )
+    {
+        console_output_print_blue_screen("Disk Error: LBA is not supported\n");
+    }
+
+    console_output_report("Disk: DMA is not supported.\n", is_dma_supported ? CONSOLE_OUTPUT_SUCCESS : CONSOLE_OUTPUT_FAILURE);
+
+
+
+    bool is_read_write_multiple_enabled = current_read_write_multiple & (1 << 8);
+    if ( is_read_write_multiple_enabled )
+    {
+        console_output_print_blue_screen("Disk Error: ata_driver does not support reading and writing in multiples yet.\n");
+    }
+
 }
