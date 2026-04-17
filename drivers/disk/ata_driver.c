@@ -93,10 +93,8 @@ static inline void write_command_phase(word io_port_command, byte command);
 static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void);
 static inline void write_command_phase(word io_port_command, byte command);
 static inline void disable_interrupts(word control_port_device);
-static inline void identify_drive(void);
-static inline void validate_identify_drive_result(void);
-
-static word* data_buffer = NULL;
+static inline void identify_device(word* identify_device_buffer);
+static inline void validate_identify_device_result(word* identify_device_buffer);
 
 /*
  * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI1: Check_Status State
@@ -188,7 +186,7 @@ static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void)
     return cpu_io_read_byte(ATA_DRIVER_PRIMARY_CONTROL_PORT_ALTERNATE_STATUS);
 }
 
-static inline void identify_drive(void)
+static inline void identify_device(word* identify_device_buffer)
 {
     HI1_check_status_phase();
     select_device_phase(ATA_DRIVER_PRIMARY_IO_PORT_DEVICE, ATA_DRIVER_REGISTER_DEVICE_MASTER);
@@ -217,7 +215,7 @@ static inline void identify_drive(void)
      */
     for ( size_t i = 0; i < 256; ++i )
     {
-        data_buffer[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
+        identify_device_buffer[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
     }
     
     /*
@@ -226,7 +224,7 @@ static inline void identify_drive(void)
      */
 }
 
-static inline void validate_identify_drive_result(void)
+static inline void validate_identify_device_result(word* identify_device_buffer)
 {
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 8.16: IDENTIFY DEVICE, Table 26
@@ -236,16 +234,16 @@ static inline void validate_identify_drive_result(void)
      * I don't have to keep referring to the spec when I want to upgrade the driver.
      */
 
-    //word max_read_write_multiple = data_buffer[47] & 0xFF;
-    word capabilities = data_buffer[49];
-    word field_validity = data_buffer[53];
-    word current_read_write_multiple = data_buffer[59];
-    dword max_user_sector_number = ((dword) data_buffer[61] << 16) | ((dword)data_buffer[60]);
-    word pio_modes_supported = data_buffer[64];
-    word integrity_word = data_buffer[255];
-    word command_set_supported = data_buffer[83];
-    word command_set_enabled = data_buffer[86];
-    qword max_48_bit_user_lba_address = ( (qword)data_buffer[103] << 48 ) | ( (qword)data_buffer[102] << 32  ) | ( (qword)data_buffer[101] << 16 ) | ((qword)data_buffer[100]);
+    //word max_read_write_multiple = identify_device_buffer[47] & 0xFF;
+    word capabilities = identify_device_buffer[49];
+    word field_validity = identify_device_buffer[53];
+    word current_read_write_multiple = identify_device_buffer[59];
+    dword max_user_sector_number = ((dword) identify_device_buffer[61] << 16) | ((dword)identify_device_buffer[60]);
+    word pio_modes_supported = identify_device_buffer[64];
+    word integrity_word = identify_device_buffer[255];
+    word command_set_supported = identify_device_buffer[83];
+    word command_set_enabled = identify_device_buffer[86];
+    qword max_48_bit_user_lba_address = ( (qword)identify_device_buffer[103] << 48 ) | ( (qword)identify_device_buffer[102] << 32  ) | ( (qword)identify_device_buffer[101] << 16 ) | ((qword)identify_device_buffer[100]);
 
 
 
@@ -335,7 +333,7 @@ static inline void validate_identify_drive_result(void)
     if ( signature == 0xA5 )
     {
         byte sum = 0;
-        const byte* data_bytes = (byte*) data_buffer;
+        const byte* data_bytes = (byte*) identify_device_buffer;
         for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_BYTES; ++i )
         {
             sum += data_bytes[i];
@@ -358,11 +356,11 @@ static inline void validate_identify_drive_result(void)
 
 void ata_driver_setup(void)
 {
-    data_buffer = kernel_allocator_allocate(ATA_DRIVER_SECTOR_SIZE_IN_WORDS * sizeof(word));
+    word* identify_device_buffer = kernel_allocator_allocate(ATA_DRIVER_SECTOR_SIZE_IN_WORDS * sizeof(word));
 
-    if ( data_buffer == NULL )
+    if ( identify_device_buffer == NULL )
     {
-        console_output_print_blue_screen("Disk Error: failed to allocate memory for data_buffer.\n");
+        console_output_print_blue_screen("Disk Error: failed to allocate memory for identify_device_data.\n");
         while (1)
         {
             __asm__ volatile ("hlt");
@@ -370,6 +368,8 @@ void ata_driver_setup(void)
     }
 
     disable_interrupts(ATA_DRIVER_PRIMARY_CONTROL_PORT_DEVICE_CONTROL);
-    identify_drive();
-    validate_identify_drive_result();
+    identify_device(identify_device_buffer);
+    validate_identify_device_result(identify_device_buffer);
+
+    kernel_allocator_free(identify_device_buffer);
 }
