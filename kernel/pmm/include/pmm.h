@@ -4,6 +4,7 @@
 #include <types.h>
 
 #define PMM_FRAME_SIZE 0x200000
+#define PMM_GET_FRAME_ADDRESS(address) (void*)(((qword)(address)) & ~(PMM_FRAME_SIZE - 1))
 
 void pmm_setup(qword memory_map_address, word memory_map_entries_count);
 void* pmm_frame_alloc(void);
