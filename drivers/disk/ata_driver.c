@@ -232,11 +232,16 @@ void ata_driver_setup(void)
      */
     word max_read_write_multiple = data_buffer[47] & 0xFF;
     word capabilities = data_buffer[49];
+    word field_validity = data_buffer[53];
+    word current_read_write_multiple = data_buffer[59];
+    dword max_user_sector_number = ((dword) data_buffer[61] << 16) | ((dword)data_buffer[60]);
+    word pio_modes_supported = data_buffer[64];
+
+
+
     word command_set_supported = data_buffer[83];
     word command_set_enabled = data_buffer[86];
     qword max_48_bit_user_lba_address = ( (qword)data_buffer[103] << 48 ) | ( (qword)data_buffer[102] << 32  ) | ( (qword)data_buffer[101] << 16 ) | ((qword)data_buffer[100]);
-    word current_read_write_multiple = data_buffer[59];
-
 
 
 
@@ -254,7 +259,10 @@ void ata_driver_setup(void)
         console_output_print_blue_screen("Disk Error: LBA is not supported\n");
     }
 
-    console_output_report("Disk: DMA is not supported.\n", is_dma_supported ? CONSOLE_OUTPUT_SUCCESS : CONSOLE_OUTPUT_FAILURE);
+    if ( is_dma_supported == false )
+    {
+        console_output_report("Disk: DMA is not supported.\n", CONSOLE_OUTPUT_FAILURE);
+    }
 
 
 
@@ -264,4 +272,35 @@ void ata_driver_setup(void)
         console_output_print_blue_screen("Disk Error: ata_driver does not support reading and writing in multiples yet.\n");
     }
 
+
+
+    bool is_64_through_70_valid = field_validity & (1 << 1);
+    if ( is_64_through_70_valid == false )
+    {
+        console_output_report("Disk Error: cannot check pio modes support\n", CONSOLE_OUTPUT_FAILURE);
+    }
+    else
+    {
+        bool is_pio_3_supported = pio_modes_supported & (1 << 0);
+        bool is_pio_4_supported = pio_modes_supported & (1 << 1);
+
+        if ( is_pio_3_supported == false )
+        {
+            console_output_print_blue_screen("Disk Error: PIO 3 is not supported\n");
+        }
+    }
+
+
+
+    bool is_48_bit_lba_supported = command_set_supported & (1 << 10);
+    if ( is_48_bit_lba_supported == false )
+    {
+        console_output_print_blue_screen("Disk Error: 48-bit LBA is not supported\n");
+    }
+
+    bool is_48_bit_lba_enabled = command_set_enabled & (1 << 10);
+    if ( is_48_bit_lba_enabled == false )
+    {
+        console_output_print_blue_screen("Disk Error: 48-bit LBA is not enabled\n");
+    }
 }
