@@ -2,6 +2,7 @@
 #include <console_output.h>
 #include <cpu_io.h>
 #include <kernel_allocator.h>
+#include <disk_types.h>
 
 #define ATA_DRIVER_PRIMARY_IO_PORT_BASE 0x1F0
 #define ATA_DRIVER_PRIMARY_CONTROL_PORT_BASE 0x3F6
@@ -50,6 +51,11 @@
 #define ATA_DRIVER_SECTOR_SIZE_IN_WORDS 256
 #define ATA_DRIVER_SECTOR_SIZE_IN_BYTES ((ATA_DRIVER_SECTOR_SIZE_IN_WORDS) * 2)
 
+#define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_DRIVE_0_MASK  (1 << 0)
+#define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_DRIVE_1_MASK  (1 << 1)
+#define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_HEAD_MASK     (0xF << 2)
+#define ATA_DRIVER_DRIVE_ADDRESS_WRITE_GATE_MASK        (1 << 6)
+
 typedef enum
 {
     ATA_DRIVER_ERROR_AMNF   = 1 << 0,
@@ -81,20 +87,14 @@ typedef enum
     ATA_DRIVER_DEVICE_CONTROL_ACTION_HIGH_ORDER_BYTE    = 1 << 7,
 } ata_driver_device_control_action_t;
 
-#define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_DRIVE_0_MASK  (1 << 0)
-#define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_DRIVE_1_MASK  (1 << 1)
-#define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_HEAD_MASK     (0xF << 2)
-#define ATA_DRIVER_DRIVE_ADDRESS_WRITE_GATE_MASK        (1 << 6)
-
 static inline void HI1_check_status_phase(void);
 static inline void HPIOI1_check_status_phase(void);
 static inline void select_device_phase(word io_port_device, byte device);
-static inline void write_command_phase(word io_port_command, byte command);
 static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void);
-static inline void write_command_phase(word io_port_command, byte command);
 static inline void disable_interrupts(word control_port_device);
 static inline void identify_device(word* identify_device_buffer);
 static inline void validate_identify_device_result(word* identify_device_buffer);
+static inline void HI0_4_bus_idle_protocol_send_command(byte command, word features, word sector_count, qword lba);
 
 /*
  * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI1: Check_Status State
@@ -154,14 +154,6 @@ static inline void select_device_phase(word io_port_device, byte device)
 }
 
 /*
- * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI4: Write_Command State
- */
-static inline void write_command_phase(word io_port_command, byte command)
-{
-    cpu_io_write_byte(io_port_command, command);
-}
-
-/*
  * ATA/ATAPI-6 SPEC REFERENCE; section 7.8: Device Control Register, nIEN bit
  */
 static inline void disable_interrupts(word control_port_device)
@@ -186,22 +178,38 @@ static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void)
     return cpu_io_read_byte(ATA_DRIVER_PRIMARY_CONTROL_PORT_ALTERNATE_STATUS);
 }
 
-static inline void identify_device(word* identify_device_buffer)
+/*
+ * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol HI0-HI4
+ */
+static inline void HI0_4_bus_idle_protocol_send_command(byte command, word features, word sector_count, qword lba)
 {
-    HI1_check_status_phase();
-    select_device_phase(ATA_DRIVER_PRIMARY_IO_PORT_DEVICE, ATA_DRIVER_REGISTER_DEVICE_MASTER);
+    word lba_low = lba & 0xFF;
+    word lba_mid = (lba >> 16) & 0xFF;
+    word lba_high = (lba >> 32) & 0xFF;
+
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI1: Check_Status State
+     */
     HI1_check_status_phase();
 
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI3: Write_Parameters State
      */
-    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_FEATURES, 0);
-    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_SECTOR_COUNT, 0);
-    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_LOW, 0);
-    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_MID, 0);
-    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_HIGH, 0);
+    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_FEATURES, features);
+    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_SECTOR_COUNT, sector_count);
+    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_LOW, lba_low);
+    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_MID, lba_mid);
+    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_HIGH, lba_high);
 
-    write_command_phase(ATA_DRIVER_PRIMARY_IO_PORT_COMMAND, ATA_DRIVER_COMMAND_IDENTIFY);
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI4: Write_Command State
+     */
+    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_COMMAND, command);
+}
+
+static inline void identify_device(word* identify_device_buffer)
+{
+    HI0_4_bus_idle_protocol_send_command(ATA_DRIVER_COMMAND_IDENTIFY, 0, 0, 0);
 
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.5: PIO data-in command protocol, HPIOI1: Check_Status state
@@ -367,9 +375,18 @@ void ata_driver_setup(void)
         }
     }
 
+    HI1_check_status_phase();
+    select_device_phase(ATA_DRIVER_PRIMARY_IO_PORT_DEVICE, ATA_DRIVER_REGISTER_DEVICE_MASTER);
+
     disable_interrupts(ATA_DRIVER_PRIMARY_CONTROL_PORT_DEVICE_CONTROL);
+
     identify_device(identify_device_buffer);
     validate_identify_device_result(identify_device_buffer);
 
     kernel_allocator_free(identify_device_buffer);
+}
+
+void ata_driver_read_sector(size_t lba_address, disk_sector_t* dst)
+{
+
 }
