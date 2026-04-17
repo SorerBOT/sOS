@@ -138,6 +138,10 @@ static inline void HPIOI1_check_status_phase(void)
     if ( status & ATA_DRIVER_STATUS_DRQ )
     {
         console_output_print_blue_screen("Disk Error: expected data after data-request and received none.\n");
+        while (1)
+        {
+            __asm__ volatile("hlt");
+        }
     }
 }
 
@@ -254,11 +258,19 @@ void ata_driver_setup(void)
     if ( is_iordy_supported == false )
     {
         console_output_print_blue_screen("Disk Error: IORDY is not supported.\n");
+        while (1)
+        {
+            __asm__ volatile("hlt");
+        }
     }
 
     if ( is_lba_supported == false )
     {
         console_output_print_blue_screen("Disk Error: LBA is not supported\n");
+        while (1)
+        {
+            __asm__ volatile("hlt");
+        }
     }
 
     if ( is_dma_supported == false )
@@ -272,6 +284,10 @@ void ata_driver_setup(void)
     if ( is_read_write_multiple_enabled )
     {
         console_output_print_blue_screen("Disk Error: ata_driver does not support reading and writing in multiples yet.\n");
+        while (1)
+        {
+            __asm__ volatile("hlt");
+        }
     }
 
 
@@ -289,6 +305,10 @@ void ata_driver_setup(void)
         if ( is_pio_3_supported == false )
         {
             console_output_print_blue_screen("Disk Error: PIO 3 is not supported\n");
+            while (1)
+            {
+                __asm__ volatile("hlt");
+            }
         }
     }
 
@@ -298,12 +318,20 @@ void ata_driver_setup(void)
     if ( is_48_bit_lba_supported == false )
     {
         console_output_print_blue_screen("Disk Error: 48-bit LBA is not supported\n");
+        while (1)
+        {
+            __asm__ volatile("hlt");
+        }
     }
 
     bool is_48_bit_lba_enabled = command_set_enabled & (1 << 10);
     if ( is_48_bit_lba_enabled == false )
     {
         console_output_print_blue_screen("Disk Error: 48-bit LBA is not enabled even though it is supported. This is not a valid state as mandated by the specs.\n");
+        while (1)
+        {
+            __asm__ volatile("hlt");
+        }
     }
 
 
@@ -322,6 +350,10 @@ void ata_driver_setup(void)
         if ( sum != 0 )
         {
             console_output_print_blue_screen("Disk Error: failed checksum test.\n");
+            while (1)
+            {
+                __asm__ volatile("hlt");
+            }
         }
     }
     else
