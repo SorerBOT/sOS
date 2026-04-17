@@ -130,7 +130,6 @@ static inline void HPIOI1_check_status_phase(void)
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.5 PIO data-in command protocol, HPIOI1:HI0
      * an error has occurred, I'll panic for now.
      */
-
     if ( status & ATA_DRIVER_STATUS_DRQ )
     {
         console_output_print_blue_screen("Disk Error: expected data after data-request and received none.\n");
@@ -201,8 +200,20 @@ static inline void identify_drive(void)
     HPIOI1_check_status_phase();
     
 
-
-
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 9.5: PIO data-in command protocol, HPIOI2: Transfer_Data state
+     * reading the data
+     */
+    word data[256];
+    for ( size_t i = 0; i < 256; ++i )
+    {
+        data[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
+    }
+    
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 9.5: PIO data-in command protocol, HPIOI2: Transfer_Data state
+     * now moving into the HI0: Host_Idle state
+     */
 }
 
 void ata_driver_setup(void)
