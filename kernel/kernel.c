@@ -20,7 +20,12 @@ static void shell_launch_wrapper(void* _)
 
 static void kernel_internal(void* _)
 {
-    console_output_report("started up the kernel process.", CONSOLE_OUTPUT_SUCCESS);
+    console_output_report("started up the kernel process. setting up kernel environment", CONSOLE_OUTPUT_SUCCESS);
+
+    kernel_allocator_setup();
+    console_output_report("finished settting up the kernel allocator.", CONSOLE_OUTPUT_SUCCESS);
+
+    ata_driver_setup();
 
     syscall_dispatcher_launch_process(shell_launch_wrapper);
 
@@ -54,16 +59,6 @@ void kernel(boot_info_t* boot_info)
     vmm_setup();
     console_output_report("finished settting up the virtual memory allocator.", CONSOLE_OUTPUT_SUCCESS);
 
-    kernel_allocator_setup();
-    console_output_report("finished settting up the kernel allocator.", CONSOLE_OUTPUT_SUCCESS);
-
-    ata_driver_setup();
-
     syscall_dispatcher_launch_process(kernel_internal);
-
-    while (1)
-    {
-        __asm__ volatile("hlt");
-    }
 }
 

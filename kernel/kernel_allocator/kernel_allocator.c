@@ -1,3 +1,4 @@
+#include "console_output.h"
 #include <kernel_allocator.h>
 #include <slab_allocator.h>
 #include <math_extended.h>
@@ -23,7 +24,6 @@ void* kernel_allocator_allocate(size_t size)
      * I round up allocations smaller than 8 bytes to 8 bytes.
      */
     log2 += (log2 < KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2) * (KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2 - log2);
-
 
     void* appropriate_allocator = slab_allocators[log2];
 
