@@ -2,7 +2,6 @@
 #include <console_output.h>
 #include <cpu_io.h>
 #include <kernel_allocator.h>
-#include <disk_types.h>
 
 #define ATA_DRIVER_PRIMARY_IO_PORT_BASE 0x1F0
 #define ATA_DRIVER_PRIMARY_CONTROL_PORT_BASE 0x3F6
@@ -49,9 +48,6 @@
 #define ATA_DRIVER_COMMAND_IDENTIFY 0xEC
 #define ATA_DRIVER_COMMAND_READ_EXT 0x24
 
-#define ATA_DRIVER_SECTOR_SIZE_IN_WORDS 256
-#define ATA_DRIVER_SECTOR_SIZE_IN_BYTES ((ATA_DRIVER_SECTOR_SIZE_IN_WORDS) * 2)
-
 #define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_DRIVE_0_MASK  (1 << 0)
 #define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_DRIVE_1_MASK  (1 << 1)
 #define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_HEAD_MASK     (0xF << 2)
@@ -95,7 +91,7 @@ static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void);
 static inline void disable_disk_interrupts(word control_port_device);
 static inline void identify_device(word* identify_device_buffer);
 static inline void validate_identify_device_result(word* identify_device_buffer);
-static inline void HI0_4_bus_idle_protocol_send_command(byte command, word features, word sector_count, qword lba);
+static inline void HI0_4_bus_idle_protocol_send_command(byte command, word features, word sector_count, qword lba, byte device);
 
 /*
  * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI1: Check_Status State
@@ -136,7 +132,7 @@ static inline void HPIOI1_check_status_phase(void)
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.5 PIO data-in command protocol, HPIOI1:HI0
      * an error has occurred, I'll panic for now.
      */
-    if ( status & ATA_DRIVER_STATUS_DRQ )
+    if ( (status & ATA_DRIVER_STATUS_DRQ) == false )
     {
         console_output_print_blue_screen("Disk Error: expected data after data-request and received none.\n");
         while (1)
@@ -182,7 +178,7 @@ static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void)
 /*
  * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol HI0-HI4
  */
-static inline void HI0_4_bus_idle_protocol_send_command(byte command, word features, word sector_count, qword lba)
+static inline void HI0_4_bus_idle_protocol_send_command(byte command, word features, word sector_count, qword lba, byte device)
 {
     byte features_current = features & 0xFF;
     byte features_previous = (features >> 8) & 0xFF;
@@ -219,6 +215,7 @@ static inline void HI0_4_bus_idle_protocol_send_command(byte command, word featu
     cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_MID, lba_mid_current);
     cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_HIGH, lba_high_current);
 
+    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_DEVICE, device);
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI4: Write_Command State
      */
@@ -227,7 +224,7 @@ static inline void HI0_4_bus_idle_protocol_send_command(byte command, word featu
 
 static inline void identify_device(word* identify_device_buffer)
 {
-    HI0_4_bus_idle_protocol_send_command(ATA_DRIVER_COMMAND_IDENTIFY, 0, 0, 0);
+    HI0_4_bus_idle_protocol_send_command(ATA_DRIVER_COMMAND_IDENTIFY, 0, 0, 0, ATA_DRIVER_REGISTER_DEVICE_MASTER);
 
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.5: PIO data-in command protocol, HPIOI1: Check_Status state
@@ -239,7 +236,7 @@ static inline void identify_device(word* identify_device_buffer)
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.5: PIO data-in command protocol, HPIOI2: Transfer_Data state
      * reading the data
      */
-    for ( size_t i = 0; i < 256; ++i )
+    for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
     {
         identify_device_buffer[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
     }
@@ -404,7 +401,32 @@ void ata_driver_setup(void)
     kernel_allocator_free(identify_device_buffer);
 }
 
-void ata_driver_read_sector(size_t lba_address, disk_sector_t* dst)
+void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
 {
-    HI0_4_bus_idle_protocol_send_command(ATA_DRIVER_COMMAND_READ_EXT, 0, 0, 0);
+    if ( dst_size < ATA_DRIVER_SECTOR_SIZE_IN_BYTES )
+    {
+        console_output_print_blue_screen("Disk Error: provided buffer of size %llu is to small for sector of size %llu\n", dst_size, ATA_DRIVER_SECTOR_SIZE_IN_BYTES);
+        while (1)
+        {
+            __asm__ volatile ("hlt");
+        }
+    }
+
+    word* dst_word = (word*)dst;
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 8.36: READ SECTOR(S) EXT
+     */
+    byte device = ATA_DRIVER_REGISTER_DEVICE_MASTER | (1 << 6);
+    HI0_4_bus_idle_protocol_send_command(ATA_DRIVER_COMMAND_READ_EXT, 0, 1, lba_address, device);
+
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 9.5: PIO data-in command protocol
+     */
+    HPIOI1_check_status_phase();
+
+
+    for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+    {
+        dst[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
+    }
 }
