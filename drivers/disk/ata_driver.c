@@ -184,6 +184,12 @@ static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void)
  */
 static inline void HI0_4_bus_idle_protocol_send_command(byte command, word features, word sector_count, qword lba)
 {
+    byte features_current = features & 0xFF;
+    byte features_previous = (features >> 8) & 0xFF;
+
+    byte sector_count_current = sector_count & 0xFF;
+    byte sector_count_previous = (sector_count >> 8) & 0xFF;
+
     byte lba_low_current    = (lba >> 0) & 0xFF;
     byte lba_mid_current    = (lba >> 8) & 0xFF;
     byte lba_high_current   = (lba >> 16) & 0xFF;
@@ -191,6 +197,7 @@ static inline void HI0_4_bus_idle_protocol_send_command(byte command, word featu
     byte lba_low_previous   = (lba >> 24) & 0xFF;
     byte lba_mid_previous   = (lba >> 32) & 0xFF;
     byte lba_high_previous  = (lba >> 40) & 0xFF;
+
 
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI1: Check_Status State
@@ -200,13 +207,14 @@ static inline void HI0_4_bus_idle_protocol_send_command(byte command, word featu
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.3: Bus Idle Protocol, HI3: Write_Parameters State
      */
-    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_FEATURES, features);
-    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_SECTOR_COUNT, sector_count);
-
+    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_FEATURES, features_previous);
+    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_SECTOR_COUNT, sector_count_previous);
     cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_LOW, lba_low_previous);
     cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_MID, lba_mid_previous);
     cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_HIGH, lba_high_previous);
 
+    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_FEATURES, features_current);
+    cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_SECTOR_COUNT, sector_count_current);
     cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_LOW, lba_low_current);
     cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_MID, lba_mid_current);
     cpu_io_write_byte(ATA_DRIVER_PRIMARY_IO_PORT_LBA_HIGH, lba_high_current);
