@@ -427,6 +427,6 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
 
     for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
     {
-        dst[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
+        dst_word[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
     }
 }
