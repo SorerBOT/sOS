@@ -1,9 +1,18 @@
-#include "console_output.h"
+/*
+ * I currently use this shell not as a shell, but rather as a means to
+ * achieve some degree of interactivity for my current teting
+ * environment. I do not adhere to the tty/console_output separation
+ * because the kernel is far from ready to host a real shell yet.
+ */
+
+#include <console_output.h>
 #include <string.h>
 #include <tty.h>
 #include <shell.h>
 #include <types.h>
 #include <infinite_loop.h>
+#include <kernel_allocator.h>
+#include <ata_driver.h>
 
 #include <pmm.h>
 #include <vmm.h>
@@ -117,6 +126,29 @@ static inline void command_execute_internal(int argc, char** argv)
         }
         pmm_frame_free(VMM_TRANSLATE_KERNEL_MAP_TO_PHYSICAL(frame));
         tty_print("Successfully passed frame allocator test.\n");
+    }
+
+    if ( strcmp( argv[0], "dump_sector" ) == 0 )
+    {
+        size_t lba_address = 0;
+
+
+        byte* sector = kernel_allocator_allocate(ATA_DRIVER_SECTOR_SIZE_IN_BYTES);
+        if ( sector == NULL )
+        {
+            console_output_print_blue_screen("Failed to allocate memory\n");
+            while (1)
+            {
+                __asm__ volatile ("hlt");
+            }
+        }
+        ata_driver_read_sector(0, sector, ATA_DRIVER_SECTOR_SIZE_IN_BYTES);
+        word* sector_words = (word*) sector;
+        for ( size_t i = 0; i <  ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+        {
+            console_output_printf("%hx ", sector_words[i]);
+        }
+        console_output_printf("\n");
     }
 }
 
