@@ -1,3 +1,4 @@
+#include "console_output.h"
 #include <kernel_allocator.h>
 #include <slab_allocator.h>
 #include <math_extended.h>
@@ -24,7 +25,6 @@ void* kernel_allocator_allocate(size_t size)
      */
     log2 += (log2 < KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2) * (KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2 - log2);
 
-
     void* appropriate_allocator = slab_allocators[log2];
 
     return slab_allocator_allocate(appropriate_allocator);
@@ -32,6 +32,6 @@ void* kernel_allocator_allocate(size_t size)
 
 void kernel_allocator_free(void* address)
 {
-    void* original_allocator = address - (PMM_FRAME_SIZE - 1);
+    void* original_allocator = PMM_GET_FRAME_ADDRESS(address);
     slab_allocator_free(original_allocator, address);
 }
