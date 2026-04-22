@@ -47,6 +47,7 @@
 
 #define ATA_DRIVER_COMMAND_IDENTIFY 0xEC
 #define ATA_DRIVER_COMMAND_READ_EXT 0x24
+#define ATA_DRIVER_COMMAND_WRITE_EXT 0x34
 
 #define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_DRIVE_0_MASK  (1 << 0)
 #define ATA_DRIVER_DRIVE_ADDRESS_SELECTED_DRIVE_1_MASK  (1 << 1)
@@ -86,6 +87,7 @@ typedef enum
 
 static inline void HI1_check_status_phase(void);
 static inline void HPIOI1_check_status_phase(void);
+static inline void HPIOO0_check_status_phase(void);
 static inline void select_device_phase(word io_port_device, byte device);
 static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void);
 static inline void disable_disk_interrupts(word control_port_device);
@@ -140,6 +142,33 @@ static inline void HPIOI1_check_status_phase(void)
             __asm__ volatile("hlt");
         }
     }
+}
+
+/*
+ * ATA/ATAPI-6 SPEC REFERENCE; section 9.6: PIO data-out command protocol, HPIOO0: Check_Status State
+ */
+static inline void HPIOO0_check_status_phase(void)
+{
+    ata_driver_status_t status = wait_400_ns_and_read_alternate_status();
+    while ( status & ATA_DRIVER_STATUS_BSY )
+    {
+        status = cpu_io_read_byte(ATA_DRIVER_PRIMARY_IO_PORT_STATUS);
+    }
+
+    if ( (status & ATA_DRIVER_STATUS_DRQ) == 0 )
+    {
+        return;
+    }
+
+    if ( (status & ATA_DRIVER_STATUS_BSY) == 0 && (status & ATA_DRIVER_STATUS_DRQ) == 0 )
+    {
+        console_output_print_blue_screen("Disk Error: disk reports that data transfer is finished and yet it did not yet start.\n");
+        while (1)
+        {
+            __asm__ volatile("hlt");
+        }
+    }
+
 }
 
 /*
@@ -429,4 +458,18 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
     {
         dst_word[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
     }
+}
+
+void ata_driver_write_sector(size_t lba_address, byte* dst, size_t dst_size)
+{
+    word* dst_word = (word*) dst;
+
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 8.67: WRITE SECTOR(S) EXT
+     */
+    byte device = ATA_DRIVER_REGISTER_DEVICE_MASTER | (1 << 6);
+    HI0_4_bus_idle_protocol_send_command(ATA_DRIVER_COMMAND_WRITE_EXT, 0, 1, lba_address, device);
+
+
+
 }

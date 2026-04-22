@@ -8,5 +8,6 @@
 
 void ata_driver_setup(void);
 void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size);
+void ata_driver_write_sector(size_t lba_address, byte* dst, size_t dst_size);
 
 #endif /* ATA_DRIVER_H */
