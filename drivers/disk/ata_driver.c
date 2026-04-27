@@ -87,7 +87,8 @@ typedef enum
 
 static inline void HI1_check_status_phase(void);
 static inline void HPIOI1_check_status_phase(void);
-static inline void HPIOO0_check_status_phase(void);
+static inline void HPIOO0_check_status_from_HI4_phase(void);
+static inline void HPIOO0_check_status_from_HPIOO1_phase(void);
 static inline void select_device_phase(word io_port_device, byte device);
 static inline ata_driver_status_t wait_400_ns_and_read_alternate_status(void);
 static inline void disable_disk_interrupts(word control_port_device);
@@ -145,9 +146,9 @@ static inline void HPIOI1_check_status_phase(void)
 }
 
 /*
- * ATA/ATAPI-6 SPEC REFERENCE; section 9.6: PIO data-out command protocol, HPIOO0: Check_Status State
+ * ATA/ATAPI-6 SPEC REFERENCE; section 9.6: PIO data-out command protocol, HPIOO0: Check_Status from HI4
  */
-static inline void HPIOO0_check_status_phase(void)
+static inline void HPIOO0_check_status_from_HI4_phase(void)
 {
     ata_driver_status_t status = wait_400_ns_and_read_alternate_status();
     while ( status & ATA_DRIVER_STATUS_BSY )
@@ -157,18 +158,33 @@ static inline void HPIOO0_check_status_phase(void)
 
     if ( (status & ATA_DRIVER_STATUS_DRQ) == 0 )
     {
-        return;
-    }
-
-    if ( (status & ATA_DRIVER_STATUS_BSY) == 0 && (status & ATA_DRIVER_STATUS_DRQ) == 0 )
-    {
-        console_output_print_blue_screen("Disk Error: disk reports that data transfer is finished and yet it did not yet start.\n");
+        console_output_print_blue_screen("Disk Error: expected DRQ but disk reported none.\n");
         while (1)
         {
-            __asm__ volatile("hlt");
+            __asm__ volatile ("hlt");
         }
     }
+}
 
+/*
+ * ATA/ATAPI-6 SPEC REFERENCE; section 9.6: PIO data-out command protocol, HPIOO0: Check_Status from HPIOO1
+ */
+static inline void HPIOO0_check_status_from_HPIOO1_phase(void)
+{
+    ata_driver_status_t status = cpu_io_read_byte(ATA_DRIVER_PRIMARY_CONTROL_PORT_ALTERNATE_STATUS);
+    while ( status & ATA_DRIVER_STATUS_BSY )
+    {
+        status = cpu_io_read_byte(ATA_DRIVER_PRIMARY_IO_PORT_STATUS);
+    }
+
+    if ( status & ATA_DRIVER_STATUS_DRQ )
+    {
+        console_output_print_blue_screen("Disk Error: expected DRQ but disk reported none.\n");
+        while (1)
+        {
+            __asm__ volatile ("hlt");
+        }
+    }
 }
 
 /*
@@ -441,7 +457,6 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
         }
     }
 
-    word* dst_word = (word*)dst;
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 8.36: READ SECTOR(S) EXT
      */
@@ -454,6 +469,7 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
     HPIOI1_check_status_phase();
 
 
+    word* dst_word = (word*)dst;
     for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
     {
         dst_word[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
@@ -462,8 +478,6 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
 
 void ata_driver_write_sector(size_t lba_address, byte* dst, size_t dst_size)
 {
-    word* dst_word = (word*) dst;
-
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 8.67: WRITE SECTOR(S) EXT
      */
@@ -471,5 +485,24 @@ void ata_driver_write_sector(size_t lba_address, byte* dst, size_t dst_size)
     HI0_4_bus_idle_protocol_send_command(ATA_DRIVER_COMMAND_WRITE_EXT, 0, 1, lba_address, device);
 
 
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 9.6 PIO data-out command protocol, HPIOO0 from HI4
+     */
+    HPIOO0_check_status_from_HI4_phase();
 
+
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 9.6 PIO data-out command protocol, HPIOO1
+     */
+    word* dst_word = (word*) dst;
+    for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+    {
+        cpu_io_write_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA, dst_word[i]);
+    }
+
+
+    /*
+     * ATA/ATAPI-6 SPEC REFERENCE; section 9.6 PIO data-out command protocol, HPIOO0 from HPIOO1
+     */
+    HPIOO0_check_status_from_HPIOO1_phase();
 }

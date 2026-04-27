@@ -150,6 +150,30 @@ static inline void command_execute_internal(int argc, char** argv)
         }
         console_output_printf("\n");
     }
+
+    if ( strcmp( argv[0], "overwrite_sector" ) == 0 )
+    {
+        size_t lba_address = 0;
+
+
+        byte* sector = kernel_allocator_allocate(ATA_DRIVER_SECTOR_SIZE_IN_BYTES);
+        if ( sector == NULL )
+        {
+            console_output_print_blue_screen("Failed to allocate memory\n");
+            while (1)
+            {
+                __asm__ volatile ("hlt");
+            }
+        }
+
+        word* sector_words = (word*) sector;
+        for ( size_t i = 0; i <  ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+        {
+            sector_words[i] = 0x6942;
+        }
+        
+        ata_driver_write_sector(0, sector, ATA_DRIVER_SECTOR_SIZE_IN_BYTES);
+    }
 }
 
 static inline void command_execute(char* command)
