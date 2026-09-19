@@ -476,7 +476,7 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
     }
 }
 
-void ata_driver_write_sector(size_t lba_address, byte* dst, size_t dst_size)
+void ata_driver_write_sector(size_t lba_address, byte* src, size_t src_size)
 {
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 8.67: WRITE SECTOR(S) EXT
@@ -494,10 +494,10 @@ void ata_driver_write_sector(size_t lba_address, byte* dst, size_t dst_size)
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.6 PIO data-out command protocol, HPIOO1
      */
-    word* dst_word = (word*) dst;
+    word* src_word = (word*) src;
     for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
     {
-        cpu_io_write_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA, dst_word[i]);
+        cpu_io_write_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA, src_word[i]);
     }
 
 
