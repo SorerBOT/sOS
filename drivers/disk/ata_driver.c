@@ -281,7 +281,7 @@ static inline void identify_device(word* identify_device_buffer)
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.5: PIO data-in command protocol, HPIOI2: Transfer_Data state
      * reading the data
      */
-    for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+    for ( size_t i = 0; i < DISK_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
     {
         identify_device_buffer[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
     }
@@ -402,7 +402,7 @@ static inline void validate_identify_device_result(word* identify_device_buffer)
     {
         byte sum = 0;
         const byte* data_bytes = (byte*) identify_device_buffer;
-        for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_BYTES; ++i )
+        for ( size_t i = 0; i < DISK_DRIVER_SECTOR_SIZE_IN_BYTES; ++i )
         {
             sum += data_bytes[i];
         }
@@ -424,7 +424,7 @@ static inline void validate_identify_device_result(word* identify_device_buffer)
 
 void ata_driver_setup(void)
 {
-    word* identify_device_buffer = kernel_allocator_allocate(ATA_DRIVER_SECTOR_SIZE_IN_WORDS * sizeof(word));
+    word* identify_device_buffer = kernel_allocator_allocate(DISK_DRIVER_SECTOR_SIZE_IN_WORDS * sizeof(word));
 
     if ( identify_device_buffer == NULL )
     {
@@ -448,9 +448,9 @@ void ata_driver_setup(void)
 
 void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
 {
-    if ( dst_size < ATA_DRIVER_SECTOR_SIZE_IN_BYTES )
+    if ( dst_size < DISK_DRIVER_SECTOR_SIZE_IN_BYTES )
     {
-        console_output_print_blue_screen("Disk Error: provided buffer of size %llu is to small for sector of size %llu\n", dst_size, ATA_DRIVER_SECTOR_SIZE_IN_BYTES);
+        console_output_print_blue_screen("Disk Error: provided buffer of size %llu is to small for sector of size %llu\n", dst_size, DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
         while (1)
         {
             __asm__ volatile ("hlt");
@@ -470,7 +470,7 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
 
 
     word* dst_word = (word*)dst;
-    for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+    for ( size_t i = 0; i < DISK_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
     {
         dst_word[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
     }
@@ -495,7 +495,7 @@ void ata_driver_write_sector(size_t lba_address, byte* src, size_t src_size)
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.6 PIO data-out command protocol, HPIOO1
      */
     word* src_word = (word*) src;
-    for ( size_t i = 0; i < ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+    for ( size_t i = 0; i < DISK_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
     {
         cpu_io_write_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA, src_word[i]);
     }
