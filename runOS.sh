@@ -17,6 +17,7 @@ BOOTLOADER_SIZE_MAX=0x8400 # 32.5KiB + 512 bytes = 33 KiB
 KERNEL_DIR="kernel"
 KERNEL="$KERNEL_DIR/kernel"
 KERNEL_SIZE_MAX=0x96000 # 600KiB
+OS_SIZE_MAX=10737418240 # 10GiB
 
 MAKEFILE_STAGE_1="Makefile_bootloader_stage_1"
 MAKEFILE_STAGE_2="Makefile_bootloader_stage_2"
@@ -72,6 +73,9 @@ truncate -s $KERNEL_SIZE_MAX "$BIN_64_BIT_DIR/$KERNEL.bin"
 
 echo "Appending kernel to OS image..."
 cat "$BIN_64_BIT_DIR/$KERNEL.bin" >> "$BIN_DIR/$OS_IMG.bin"
+
+echo "Padding the OS binary..."
+truncate -s $OS_SIZE_MAX "$BIN_DIR/$OS_IMG.bin"
 
 echo "OS built successfully..."
 
