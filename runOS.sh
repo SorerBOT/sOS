@@ -17,7 +17,12 @@ BOOTLOADER_SIZE_MAX=0x8400 # 32.5KiB + 512 bytes = 33 KiB
 KERNEL_DIR="kernel"
 KERNEL="$KERNEL_DIR/kernel"
 KERNEL_SIZE_MAX=0x96000 # 600KiB
-OS_SIZE_MAX=10737418240 # 10GiB
+OS_SIZE_MAX=2097152 # 1024 * 4 * 512 = FILESYSTEM_FIRST_BLOCK_OFFSET (in bytes)
+
+MOCKS_DIR="mocks"
+FILESYSTEM="filesystem"
+FILESYSTEM_MOCK_DIR="$MOCKS_DIR/$FILESYSTEM"
+FILESYSTEM_SIZE_MAX=10737418240 # 10GiBs
 
 MAKEFILE_STAGE_1="Makefile_bootloader_stage_1"
 MAKEFILE_STAGE_2="Makefile_bootloader_stage_2"
@@ -76,6 +81,13 @@ cat "$BIN_64_BIT_DIR/$KERNEL.bin" >> "$BIN_DIR/$OS_IMG.bin"
 
 echo "Padding the OS binary..."
 truncate -s $OS_SIZE_MAX "$BIN_DIR/$OS_IMG.bin"
+
+echo "Creating filesystem..."
+truncate -s $FILESYSTEM_SIZE_MAX "$BIN_DIR/$FILESYSTEM"
+/opt/homebrew/opt/e2fsprogs/sbin/mke2fs -t ext2 -d $FILESYSTEM_MOCK_DIR "$BIN_DIR/$FILESYSTEM"
+
+echo "Appending filesystem to OS image..."
+cat "$BIN_DIR/$FILESYSTEM" >> "$BIN_DIR/$OS_IMG.bin"
 
 echo "OS built successfully..."
 
