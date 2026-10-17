@@ -33,3 +33,4 @@ Make sure you have the dependencies installed, then clone and run:
 * `qemu`
 * `x86_64-elf` cross compiler
 * `nasm`
+* `e2fsprogs` (building a mock filesystem)
