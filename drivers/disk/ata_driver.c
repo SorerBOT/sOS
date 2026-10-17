@@ -450,7 +450,7 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
 {
     if ( dst_size < DISK_DRIVER_SECTOR_SIZE_IN_BYTES )
     {
-        console_output_print_blue_screen("Disk Error: provided buffer of size %llu is to small for sector of size %llu\n", dst_size, DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
+        console_output_print_blue_screen("Disk Error: provided buffer of size %llu is too small for sector of size %llu\n", dst_size, DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
         while (1)
         {
             __asm__ volatile ("hlt");
