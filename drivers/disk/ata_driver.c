@@ -1,4 +1,5 @@
 #include <ata_driver.h>
+#include <disk_driver.h>
 #include <console_output.h>
 #include <cpu_io.h>
 #include <kernel_allocator.h>
@@ -84,6 +85,8 @@ typedef enum
     ATA_DRIVER_DEVICE_CONTROL_ACTION_SOFTWARE_RESET     = 1 << 2,
     ATA_DRIVER_DEVICE_CONTROL_ACTION_HIGH_ORDER_BYTE    = 1 << 7,
 } ata_driver_device_control_action_t;
+
+size_t sector_count;
 
 static inline void HI1_check_status_phase(void);
 static inline void HPIOI1_check_status_phase(void);
@@ -420,6 +423,9 @@ static inline void validate_identify_device_result(word* identify_device_buffer)
     {
         console_output_report("Disk Error: identify device checksum is not supported.", CONSOLE_OUTPUT_FAILURE);
     }
+
+
+    sector_count = max_user_sector_number;
 }
 
 void ata_driver_setup(void)
@@ -446,11 +452,25 @@ void ata_driver_setup(void)
     kernel_allocator_free(identify_device_buffer);
 }
 
+size_t ata_driver_get_sector_count(void)
+{
+    return sector_count;
+}
+
 void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
 {
+    if ( lba_address >= sector_count )
+    {
+        console_output_print_blue_screen("Disk Error: provided lba address of %llu is out of range for a disk with a sector count of %llu\n", lba_address, sector_count);
+        while (1)
+        {
+            __asm__ volatile ("hlt");
+        }
+    }
+
     if ( dst_size < DISK_DRIVER_SECTOR_SIZE_IN_BYTES )
     {
-        console_output_print_blue_screen("Disk Error: provided buffer of size %llu is too small for sector of size %llu\n", dst_size, DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
+        console_output_print_blue_screen("Disk Error: provided buffer of size %llu is too small for a sector of size %llu\n", dst_size, DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
         while (1)
         {
             __asm__ volatile ("hlt");
@@ -478,6 +498,15 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
 
 void ata_driver_write_sector(size_t lba_address, byte* src, size_t src_size)
 {
+    if ( lba_address >= sector_count )
+    {
+        console_output_print_blue_screen("Disk Error: provided lba address of %llu is out of range for a disk with a sector count of %llu\n", lba_address, sector_count);
+        while (1)
+        {
+            __asm__ volatile ("hlt");
+        }
+    }
+
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 8.67: WRITE SECTOR(S) EXT
      */

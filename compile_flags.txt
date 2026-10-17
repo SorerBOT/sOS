@@ -21,4 +21,5 @@
 -Idrivers/disk/include
 -Idrivers/tty/include
 -Iapplications/include
+-Ifilesystem/include
 -Itests/libc/external

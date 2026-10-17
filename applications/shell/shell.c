@@ -12,7 +12,7 @@
 #include <types.h>
 #include <infinite_loop.h>
 #include <kernel_allocator.h>
-#include <ata_driver.h>
+#include <disk_driver.h>
 
 #include <pmm.h>
 #include <vmm.h>
@@ -133,7 +133,7 @@ static inline void command_execute_internal(int argc, char** argv)
         size_t lba_address = 0;
 
 
-        byte* sector = kernel_allocator_allocate(ATA_DRIVER_SECTOR_SIZE_IN_BYTES);
+        byte* sector = kernel_allocator_allocate(DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
         if ( sector == NULL )
         {
             console_output_print_blue_screen("Failed to allocate memory\n");
@@ -142,9 +142,9 @@ static inline void command_execute_internal(int argc, char** argv)
                 __asm__ volatile ("hlt");
             }
         }
-        ata_driver_read_sector(0, sector, ATA_DRIVER_SECTOR_SIZE_IN_BYTES);
+        disk_driver_read_sector(0, sector, DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
         word* sector_words = (word*) sector;
-        for ( size_t i = 0; i <  ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+        for ( size_t i = 0; i <  DISK_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
         {
             console_output_printf("%hx ", sector_words[i]);
         }
@@ -156,7 +156,7 @@ static inline void command_execute_internal(int argc, char** argv)
         size_t lba_address = 0;
 
 
-        byte* sector = kernel_allocator_allocate(ATA_DRIVER_SECTOR_SIZE_IN_BYTES);
+        byte* sector = kernel_allocator_allocate(DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
         if ( sector == NULL )
         {
             console_output_print_blue_screen("Failed to allocate memory\n");
@@ -167,12 +167,12 @@ static inline void command_execute_internal(int argc, char** argv)
         }
 
         word* sector_words = (word*) sector;
-        for ( size_t i = 0; i <  ATA_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+        for ( size_t i = 0; i <  DISK_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
         {
             sector_words[i] = 0x6942;
         }
         
-        ata_driver_write_sector(0, sector, ATA_DRIVER_SECTOR_SIZE_IN_BYTES);
+        disk_driver_write_sector(0, sector, DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
     }
 }
 
