@@ -5,6 +5,7 @@
  * because the kernel is far from ready to host a real shell yet.
  */
 
+#include "filesystem.h"
 #include <console_output.h>
 #include <string.h>
 #include <tty.h>
@@ -13,6 +14,7 @@
 #include <infinite_loop.h>
 #include <kernel_allocator.h>
 #include <disk_driver.h>
+#include <disk_block_io.h>
 
 #include <pmm.h>
 #include <vmm.h>
@@ -173,6 +175,53 @@ static inline void command_execute_internal(int argc, char** argv)
         }
         
         disk_driver_write_sector(0, sector, DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
+    }
+
+    if ( strcmp( argv[0], "dump_block" ) == 0 )
+    {
+        size_t block_number = 0;
+        byte* block = kernel_allocator_allocate(FILESYSTEM_BLOCK_SIZE_IN_BYTES);
+        if ( block == NULL )
+        {
+            while (1)
+            {
+                console_output_print_blue_screen("Failed to allocate memory\n");
+                __asm__ volatile("hlt");
+            }
+        }
+
+        disk_block_io_read_block(block_number, block, FILESYSTEM_BLOCK_SIZE_IN_BYTES);
+        word* block_words = (word*) block;
+        for ( size_t i = 0; i <  (FILESYSTEM_BLOCK_SIZE_IN_WORDS / 2); ++i )
+        {
+            console_output_printf("%hx ", block_words[i]);
+        }
+        console_output_printf("\n");
+    }
+
+    if ( strcmp( argv[0], "overwrite_block" ) == 0 )
+    {
+        size_t block_number = 0;
+
+        byte* block = kernel_allocator_allocate(FILESYSTEM_BLOCK_SIZE_IN_BYTES);
+        if ( block == NULL )
+        {
+            console_output_print_blue_screen("Failed to allocate memory\n");
+            while (1)
+            {
+                __asm__ volatile("hlt");
+            }
+        }
+
+        word* block_words = (word*) block;
+
+        for ( size_t i = 0; i < FILESYSTEM_BLOCK_SIZE_IN_WORDS; ++i )
+        {
+            block_words[i] = 0x6942;
+        }
+        
+
+        disk_block_io_write_block(block_number, block, FILESYSTEM_BLOCK_SIZE_IN_BYTES);
     }
 }
 
