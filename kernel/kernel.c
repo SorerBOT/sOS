@@ -11,7 +11,8 @@
 #include <vmm.h>
 #include <gdt.h>
 #include <kernel_allocator.h>
-#include <ata_driver.h>
+#include <disk_driver.h>
+#include <filesystem.h>
 
 static void shell_launch_wrapper(void* _)
 {
@@ -25,7 +26,8 @@ static void kernel_internal(void* _)
     kernel_allocator_setup();
     console_output_report("finished settting up the kernel allocator.", CONSOLE_OUTPUT_SUCCESS);
 
-    ata_driver_setup();
+    disk_driver_setup();
+    filesystem_setup();
 
     syscall_dispatcher_launch_process(shell_launch_wrapper);
 
