@@ -57,6 +57,7 @@ typedef struct
 } __attribute__((packed)) ext2_super_block_t;
 
 static ext2_super_block_t super_block;
+static size_t block_groups_count;
 
 static inline void validate_super_block(const ext2_super_block_t* super_block);
 static inline void validate_boot_block(const byte boot_block[BOOT_BLOCK_SIZE_IN_BYTES]);
@@ -88,6 +89,29 @@ static inline void validate_super_block(const ext2_super_block_t* super_block)
             __asm__ volatile("hlt");
         }
     }
+
+    size_t block_size = 1024 << super_block->log_block_size;
+    if ( block_size != FILESYSTEM_BLOCK_SIZE_IN_BYTES )
+    {
+        console_output_print_blue_screen("Ext2 Error: block size of %zu is different from FILESYSTEM_BLOCK_SIZE_IN_BYTES = %zu.\n", block_size, FILESYSTEM_BLOCK_SIZE_IN_BYTES);
+        while ( 1 )
+        {
+            __asm__ volatile("hlt");
+        }
+    }
+
+    size_t block_groups_count_v1 = super_block->blocks_count / super_block->blocks_per_group_count;
+    size_t block_groups_count_v2 = super_block->inodes_count / super_block->inodes_per_group_count;
+
+    if ( block_groups_count_v1 != block_groups_count_v2 )
+    {
+        console_output_print_blue_screen("Ext2 Error: the two methods of inferring the number of block groups yielded different results.\n");
+        while ( 1 )
+        {
+            __asm__ volatile("hlt");
+        }
+    }
+
 }
 
 static inline void load_superblock(void)
@@ -101,6 +125,7 @@ static inline void load_superblock(void)
     validate_boot_block(boot_block);
 
     memcpy(&super_block, first_block + sizeof(boot_block), sizeof(super_block));
+    validate_super_block(&super_block);
 }
 
 
