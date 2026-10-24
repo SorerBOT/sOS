@@ -73,12 +73,17 @@ typedef struct
 
 static ext2_super_block_t super_block;
 static dword block_groups_count;
+static dword block_size;
 
 static inline void validate_super_block(const ext2_super_block_t* super_block);
 static inline void validate_boot_block(const byte boot_block[BOOT_BLOCK_SIZE_IN_BYTES]);
 static inline void load_superblock(void);
+static inline dword get_block_size(const ext2_super_block_t* super_block);
 static inline dword get_block_group_of_inode(dword inode_number, const ext2_super_block_t* super_block);
 static inline dword get_block_group_of_block(dword block_number, const ext2_super_block_t* super_block);
+static inline dword get_in_group_index_of_inode(dword inode_number, const ext2_super_block_t* super_block);
+static inline dword get_in_group_index_of_block(dword block_number, const ext2_super_block_t* super_block);
+static inline dword get_in_group_index_of_block_containing_inode(dword inode_number, const ext2_super_block_t* super_block);
 
 static inline void validate_boot_block(const byte boot_block[BOOT_BLOCK_SIZE_IN_BYTES])
 {
@@ -115,7 +120,7 @@ static inline void validate_super_block(const ext2_super_block_t* super_block)
         }
     }
 
-    dword block_size = 1024U << super_block->log_block_size;
+    dword block_size = get_block_size(super_block);
     if ( block_size != FILESYSTEM_BLOCK_SIZE_IN_BYTES )
     {
         console_output_print_blue_screen("Ext2 Error: block size of %zu is different from FILESYSTEM_BLOCK_SIZE_IN_BYTES = %zu.\n", block_size, FILESYSTEM_BLOCK_SIZE_IN_BYTES);
@@ -169,6 +174,12 @@ static inline void load_superblock(void)
     validate_super_block(&super_block);
 
     block_groups_count = super_block.blocks_count / super_block.blocks_per_group_count;
+    block_size = get_block_size(&super_block);
+}
+
+static inline dword get_block_size(const ext2_super_block_t* super_block)
+{
+    return 1024U << super_block->log_block_size;
 }
 
 static inline dword get_block_group_of_inode(dword inode_number, const ext2_super_block_t* super_block)
@@ -179,6 +190,22 @@ static inline dword get_block_group_of_inode(dword inode_number, const ext2_supe
 static inline dword get_block_group_of_block(dword block_number, const ext2_super_block_t* super_block)
 {
     return block_number / super_block->blocks_per_group_count;
+}
+
+static inline dword get_in_group_index_of_inode(dword inode_number, const ext2_super_block_t* super_block)
+{
+    return (inode_number - 1) % super_block->inodes_per_group_count;
+}
+
+static inline dword get_in_group_index_of_block(dword block_number, const ext2_super_block_t* super_block)
+{
+    return block_number % super_block->blocks_per_group_count;
+}
+
+static inline dword get_in_group_index_of_block_containing_inode(dword inode_number, const ext2_super_block_t* super_block)
+{
+    dword in_group_index_of_inode = get_in_group_index_of_inode(inode_number, super_block);
+    return (in_group_index_of_inode * super_block->size_of_inode) / FILESYSTEM_BLOCK_SIZE_IN_BYTES;
 }
 
 void ext2_setup(void)
