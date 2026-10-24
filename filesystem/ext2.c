@@ -6,7 +6,7 @@
 #include <string.h>
 
 #define BOOT_BLOCK_SIZE_IN_BYTES 1024
-#define SUPER_BLOCK_SIZE_IN_BYTES 1024
+#define SUPER_BLOCK_MAGIC_NUMBER 0xEF53
 
 typedef struct
 {
@@ -56,8 +56,9 @@ typedef struct
     byte _padding[820];
 } __attribute__((packed)) ext2_super_block_t;
 
-static byte super_block[SUPER_BLOCK_SIZE_IN_BYTES];
+static ext2_super_block_t super_block;
 
+static inline void validate_super_block(const ext2_super_block_t* super_block);
 static inline void validate_boot_block(const byte boot_block[BOOT_BLOCK_SIZE_IN_BYTES]);
 static inline void load_superblock(void);
 
@@ -68,11 +69,23 @@ static inline void validate_boot_block(const byte boot_block[BOOT_BLOCK_SIZE_IN_
     {
         if ( boot_block[i] != 0 )
         {
-            console_output_print_blue_screen("Filesystem Error: boot block contains non-zero opcodes.\n");
+            console_output_print_blue_screen("Ext2 Error: boot block contains non-zero opcodes.\n");
             while ( 1 )
             {
                 __asm__ volatile("hlt");
             }
+        }
+    }
+}
+
+static inline void validate_super_block(const ext2_super_block_t* super_block)
+{
+    if ( super_block->magic_number != SUPER_BLOCK_MAGIC_NUMBER )
+    {
+        console_output_print_blue_screen("Ext2 Error: super block contains the wrong magic number.\n");
+        while ( 1 )
+        {
+            __asm__ volatile("hlt");
         }
     }
 }
@@ -87,13 +100,12 @@ static inline void load_superblock(void)
     memcpy(boot_block, first_block, BOOT_BLOCK_SIZE_IN_BYTES);
     validate_boot_block(boot_block);
 
-
-    memcpy(super_block, first_block + sizeof(boot_block), sizeof(super_block));
+    memcpy(&super_block, first_block + sizeof(boot_block), sizeof(super_block));
 }
 
 
 void ext2_setup(void)
 {
     load_superblock();
-    console_output_printf("Super Block: %1024s\n", super_block);
+    console_output_report("Detected a valid ext2 filesystem.\n", CONSOLE_OUTPUT_SUCCESS);
 }
