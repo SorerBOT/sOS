@@ -113,6 +113,16 @@ static inline char* handle_unit(char* line_buffer, size_t buffer_size,
                         end_of_buffer, start_of_buffer);
             }
         }
+
+        if ( unit->data.action.key == KEYBOARD_KEYCODE_W )
+        {
+            keyboard_modifiers_state_t control_l_mask = KEYBOARD_MODIFIERS_CONTROL_L;
+
+            if ( unit->data.action.modifiers_state & control_l_mask )
+            {
+                return handle_action_backspace_word(line_buffer, buffer_size, unit, end_of_buffer, start_of_buffer);
+            }
+        }
     }
 
     return line_buffer;
