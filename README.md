@@ -23,6 +23,7 @@ sOS is a 64-bit kernel and bootloader I wrote myself from scratch.
    * VMM - able to create and modify page tables, including a copy of the higher half of the kernel's page table and the kernel's source binary.
    * Kernel Allocator - an allocator which employs several slab-allocators to allocate different powers of two. This setup is pretty amazing in terms of speed, and reduces the memory waste introduced when keeping allocation headers before small allocations, but introduces quite some fragmentation when the allocations are big.
 * Disk Driver - implemented a basic PIO based ata disk driver. ATM only the bare minimum (initialisation + reading a sector) is implemented, however I am currently working towards extending the driver.
+* Disk Block Layer - implemented an intermediary layer of disk blocks, each comprising of a few contiguous disk sectors which allows controlling the disk's "frame" granularity.
 ## Building & Running
 Make sure you have the dependencies installed, then clone and run:
 ```bash
