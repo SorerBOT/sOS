@@ -468,9 +468,14 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
         }
     }
 
-    if ( dst_size < DISK_DRIVER_SECTOR_SIZE_IN_BYTES )
+    if ( dst_size == 0 )
     {
-        console_output_print_blue_screen("Disk Error: provided buffer of size %llu is too small for a sector of size %llu\n", dst_size, DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
+        return;
+    }
+
+    if ( dst == NULL )
+    {
+        console_output_print_blue_screen("Disk Error: provided dst buffer is NULL\n");
         while (1)
         {
             __asm__ volatile ("hlt");
@@ -489,10 +494,31 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
     HPIOI1_check_status_phase();
 
 
+    size_t bytes_to_read = (dst_size < DISK_DRIVER_SECTOR_SIZE_IN_BYTES)
+        ? dst_size
+        : DISK_DRIVER_SECTOR_SIZE_IN_BYTES;
+
     word* dst_word = (word*)dst;
-    for ( size_t i = 0; i < DISK_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+    size_t words_to_read = bytes_to_read / 2; // rounded down intentionally
+    bool words_to_read_has_remainder = bytes_to_read & 0b1;
+
+    size_t i = 0;
+    for ( ; i < words_to_read; ++i )
     {
         dst_word[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
+    }
+
+
+    if ( words_to_read_has_remainder )
+    {
+        byte last_byte = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA) & 0x00FF;
+        dst[bytes_to_read - 1] = last_byte;
+        ++i;
+    }
+
+    for ( ; i < DISK_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+    {
+        cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
     }
 }
 
@@ -510,6 +536,19 @@ void ata_driver_write_sector(size_t lba_address, byte* src, size_t src_size)
     if ( src_size < DISK_DRIVER_SECTOR_SIZE_IN_BYTES )
     {
         console_output_print_blue_screen("Disk Error: provided buffer of size %llu is too small for a sector of size %llu\n", src_size, DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
+        while (1)
+        {
+            __asm__ volatile ("hlt");
+        }
+    }
+    if ( src_size == 0 )
+    {
+        return;
+    }
+
+    if ( src == NULL )
+    {
+        console_output_print_blue_screen("Disk Error: provided dst buffer is NULL\n");
         while (1)
         {
             __asm__ volatile ("hlt");
