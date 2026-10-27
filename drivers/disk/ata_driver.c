@@ -507,6 +507,15 @@ void ata_driver_write_sector(size_t lba_address, byte* src, size_t src_size)
         }
     }
 
+    if ( src_size < DISK_DRIVER_SECTOR_SIZE_IN_BYTES )
+    {
+        console_output_print_blue_screen("Disk Error: provided buffer of size %llu is too small for a sector of size %llu\n", src_size, DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
+        while (1)
+        {
+            __asm__ volatile ("hlt");
+        }
+    }
+
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 8.67: WRITE SECTOR(S) EXT
      */
