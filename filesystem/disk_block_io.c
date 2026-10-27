@@ -23,20 +23,31 @@ void disk_block_io_read_block(size_t block_number, byte* dst, size_t dst_size)
         }
     }
 
-    if ( dst_size < FILESYSTEM_BLOCK_SIZE_IN_BYTES )
+    if ( dst_size == 0 )
     {
-        console_output_print_blue_screen("Disk Block IO Error: provided buffer of size %llu is too small for a block of size %llu\n", dst_size, FILESYSTEM_BLOCK_SIZE_IN_BYTES);
+        return;
+    }
+
+    if ( dst == NULL )
+    {
+        console_output_print_blue_screen("Disk Block IO Error: provided dst buffer is NULL\n");
         while ( 1 )
         {
             __asm__ volatile("hlt");
         }
     }
 
+    size_t bytes_to_read = ( dst_size < FILESYSTEM_BLOCK_SIZE_IN_BYTES )
+        ? dst_size
+        : FILESYSTEM_BLOCK_SIZE_IN_BYTES;
+
     size_t first_sector_lba_address = DISK_BLOCK_IO_BLOCK_TO_FIRST_SECTOR(block_number);
-    for ( size_t sectors_read = 0; sectors_read < FILESYSTEM_BLOCK_SIZE_IN_SECTORS; ++sectors_read )
+    for (
+            size_t sectors_read = 0, bytes_read = 0;
+            bytes_read < bytes_to_read;
+            ++sectors_read, bytes_read += DISK_DRIVER_SECTOR_SIZE_IN_BYTES )
     {
-        size_t offset = sectors_read * DISK_DRIVER_SECTOR_SIZE_IN_BYTES;
-        disk_driver_read_sector(first_sector_lba_address + sectors_read, dst + offset, dst_size - offset);
+        disk_driver_read_sector(first_sector_lba_address + sectors_read, dst + bytes_read, bytes_to_read - bytes_read);
     }
 }
 
