@@ -90,3 +90,27 @@ void disk_block_io_write_block(size_t block_number, byte* src, size_t src_size)
         disk_driver_write_sector(first_sector_lba_address + sectors_read, src + bytes_written, bytes_to_write - bytes_written);
     }
 }
+
+void disk_block_io_read_blocks_from(size_t base_block, byte* dst, size_t dst_size)
+{
+    for (
+            size_t blocks_read, bytes_read = 0;
+            bytes_read < dst_size;
+            ++blocks_read, bytes_read += FILESYSTEM_BLOCK_SIZE_IN_BYTES
+            )
+    {
+        disk_block_io_read_block(base_block + blocks_read, dst + bytes_read, dst_size - bytes_read); 
+    }
+}
+
+void disk_block_io_write_blocks_from(size_t base_block, byte* src, size_t src_size)
+{
+    for (
+            size_t blocks_written = 0, bytes_written = 0;
+            bytes_written < src_size;
+            ++blocks_written, bytes_written += FILESYSTEM_BLOCK_SIZE_IN_BYTES
+            )
+    {
+        disk_block_io_write_block(base_block + blocks_written, src + bytes_written, src_size - bytes_written);
+    }
+}
