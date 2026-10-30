@@ -6,7 +6,9 @@
 
 #define SLAB_ALLOCATOR_BITS_IN_QWORD (8 * sizeof(qword))
 
-void* slab_allocator_init(size_t entry_size)
+static slab_allocator_t slab_allocator_for_allocating_slab_allocators;
+
+static inline void slab_allocator_init_internal(size_t entry_size, slab_allocator_t* allocator)
 {
     byte* frame = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pmm_frame_alloc());
 
@@ -19,15 +21,12 @@ void* slab_allocator_init(size_t entry_size)
         }
     }
 
-    byte* base_address = frame + 4 * KiB;
+    size_t capacity = (2 * MiB) / entry_size;
 
-    size_t capacity = (2 * MiB - 4 * KiB) / entry_size;
-
-    slab_allocator_t* allocator = (slab_allocator_t*) frame;
     *allocator = (slab_allocator_t)
     {
         .next = NULL,
-        .base_address = base_address,
+        .base_address = frame,
         .entry_size = entry_size,
         .capacity = capacity,
         .items_count = 0
@@ -37,6 +36,26 @@ void* slab_allocator_init(size_t entry_size)
     {
         allocator->bitmap[i] = 0;
     }
+}
+
+void* slab_allocator_init(size_t entry_size)
+{
+    if ( entry_size <= 16 )
+    {
+        console_output_print_blue_screen("Slab Allocator Error: cannot create a slab allocator with entry size lesser than 16, as it causes the bitmap to be at least 4KiB in size which makes my life difficult.\n");
+        while ( 1 )
+        {
+            __asm__ volatile("hlt");
+        }
+    }
+
+    if ( slab_allocator_for_allocating_slab_allocators.base_address == NULL )
+    {
+        slab_allocator_init_internal(4 * KiB, &slab_allocator_for_allocating_slab_allocators);
+    }
+
+    slab_allocator_t* allocator = slab_allocator_allocate(&slab_allocator_for_allocating_slab_allocators);
+    slab_allocator_init_internal(entry_size, allocator);
 
     return allocator;
 }
