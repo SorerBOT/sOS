@@ -323,7 +323,10 @@ void ext2_setup(void)
 {
     load_filesystem_metadata(&filesystem_metadata);
     console_output_report("Detected a valid ext2 filesystem.\n", CONSOLE_OUTPUT_SUCCESS);
+}
 
+void ext2_print_directory_contents(void)
+{
     dword root_directory_inode_number = 2;
     dword block_group_of_root_directory_inode = get_block_group_of_inode(root_directory_inode_number, &filesystem_metadata);
     const ext2_block_group_descriptor_t* block_group_descriptor = &filesystem_metadata.block_group_descriptors[block_group_of_root_directory_inode];
@@ -390,4 +393,7 @@ void ext2_setup(void)
         entry = (const ext2_directory_entry_t*)(((byte*) entry) + entry->size);
     }
     console_output_printf("-------------------------------------------------------------\n");
+
+    kernel_allocator_free(block_group_inode_table);
+    kernel_allocator_free(directory_entries);
 }

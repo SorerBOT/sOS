@@ -7,6 +7,6 @@
 #define EXT2_BLOCK_SIZE_IN_BYTES ((EXT2_BLOCK_SIZE_IN_WORDS) * 2)
 
 void ext2_setup(void);
-
+void ext2_print_directory_contents(void);
 
 #endif /* EXT2_H */
