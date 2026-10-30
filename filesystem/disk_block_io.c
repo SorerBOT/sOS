@@ -94,7 +94,7 @@ void disk_block_io_write_block(size_t block_number, byte* src, size_t src_size)
 void disk_block_io_read_blocks_from(size_t base_block, byte* dst, size_t dst_size)
 {
     for (
-            size_t blocks_read, bytes_read = 0;
+            size_t blocks_read = 0, bytes_read = 0;
             bytes_read < dst_size;
             ++blocks_read, bytes_read += FILESYSTEM_BLOCK_SIZE_IN_BYTES
             )
