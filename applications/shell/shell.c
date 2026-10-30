@@ -5,7 +5,8 @@
  * because the kernel is far from ready to host a real shell yet.
  */
 
-#include "filesystem.h"
+#include <ext2.h>
+#include <filesystem.h>
 #include <console_output.h>
 #include <string.h>
 #include <tty.h>
@@ -222,6 +223,11 @@ static inline void command_execute_internal(int argc, char** argv)
         
 
         disk_block_io_write_block(block_number, block, FILESYSTEM_BLOCK_SIZE_IN_BYTES);
+    }
+
+    if ( strcmp( argv[0], "ls" ) == 0 )
+    {
+        ext2_print_directory_contents();
     }
 }
 
