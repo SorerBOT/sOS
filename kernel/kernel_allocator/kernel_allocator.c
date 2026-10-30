@@ -4,7 +4,7 @@
 #include <math_extended.h>
 #include <pmm.h>
 
-#define KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2 3
+#define KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2 5
 #define KERNEL_ALLOCATOR_MAX_ALLOCATION_SIZE_LOG_2 20
 
 // to make things simple, slab_allocators[i] = the allocation for 2 << i (instead of zero indexing)
@@ -23,7 +23,7 @@ void* kernel_allocator_allocate(size_t size)
     size_t log2 = math_extended_round_up_to_log_two(size);
 
     /*
-     * I round up allocations smaller than 8 bytes to 8 bytes.
+     * I round up allocations smaller than 2 << KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2 bytes to 2 << KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2.
      */
     log2 += (log2 < KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2) * (KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2 - log2);
 
