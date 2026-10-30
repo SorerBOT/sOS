@@ -4,6 +4,7 @@
 #include <filesystem.h>
 #include <disk_block_io.h>
 #include <string.h>
+#include <kernel_allocator.h>
 
 #define BOOT_BLOCK_SIZE_IN_BYTES 1024
 #define SUPER_BLOCK_MAGIC_NUMBER 0xEF53
@@ -122,18 +123,19 @@ typedef struct
 typedef struct
 {
     dword inode_number;
-    word entry_size;
-    byte least_significant_bits_of_name_length;
-    byte type_indicator_or_most_significant_bits_of_name_length;
+    word size;
+    byte name_length;
+    byte file_type;
     char name[];
 } __attribute__((packed)) ext2_directory_entry_t;
 
 typedef struct
 {
-    ext2_super_block_t super_block;
+    ext2_block_group_descriptor_t* block_group_descriptors;
+    dword block_group_inode_table_size;
     dword block_groups_count;
     dword block_size;
-    ext2_block_group_descriptor_t* block_group_descriptors;
+    ext2_super_block_t super_block;
 } ext2_filesystem_metadata_t;
 
 static ext2_filesystem_metadata_t filesystem_metadata;
@@ -193,6 +195,17 @@ static inline void validate_super_block(const ext2_super_block_t* super_block)
         }
     }
 
+    // APPARENTLY THIS IS OK, AS INODE SIZE VARIES
+    // dword inode_size = super_block->size_of_inode;
+    // if ( inode_size != sizeof(ext2_inode_t) )
+    // {
+    //     console_output_print_blue_screen("Ext2 Error: inode size of %zu is different from sizeof(ext2_inode_t) = %zu.\n", inode_size, sizeof(ext2_inode_t));
+    //     while ( 1 )
+    //     {
+    //         __asm__ volatile("hlt");
+    //     }
+    // }
+
     dword block_groups_count_v1 = 1 + ((super_block->blocks_count - 1) / super_block->blocks_per_group_count);
     dword block_groups_count_v2 = super_block->inodes_count / super_block->inodes_per_group_count;
     if ( block_groups_count_v1 != block_groups_count_v2 )
@@ -235,17 +248,43 @@ static inline void load_filesystem_metadata(ext2_filesystem_metadata_t* filesyst
     memcpy(boot_block, first_block, BOOT_BLOCK_SIZE_IN_BYTES);
     validate_boot_block(boot_block);
 
+    ext2_super_block_t super_block;
+    dword block_groups_count;
+    dword block_size;
+    dword block_group_inode_table_size;
+    ext2_block_group_descriptor_t* block_group_descriptors;
+
     /*
      * Loading Super Block
      */
-    memcpy(&filesystem_metadata->super_block, first_block + sizeof(boot_block), sizeof(filesystem_metadata->super_block));
-    validate_super_block(&filesystem_metadata->super_block);
+    memcpy(&super_block, first_block + sizeof(boot_block), sizeof(super_block));
+    validate_super_block(&super_block);
 
     /*
      * Loading General Metadata
      */
-    filesystem_metadata->block_groups_count = filesystem_metadata->super_block.inodes_count / filesystem_metadata->super_block.inodes_per_group_count;
-    filesystem_metadata->block_size = get_block_size_from_super_block(&filesystem_metadata->super_block);
+    block_groups_count = super_block.inodes_count / super_block.inodes_per_group_count;
+    block_size = get_block_size_from_super_block(&super_block);
+    block_group_inode_table_size = super_block.inodes_per_group_count * super_block.size_of_inode;
+    block_group_descriptors = kernel_allocator_allocate(block_groups_count * sizeof(*block_group_descriptors));
+    if ( block_group_descriptors == NULL )
+    {
+        console_output_print_blue_screen("Ext2 Error: failed to allocate memory.\n");
+        while ( 1 )
+        {
+            __asm__ volatile("hlt");
+        }
+    }
+    disk_block_io_read_blocks_from(1, (byte*) block_group_descriptors, block_groups_count * sizeof(*block_group_descriptors));
+
+    *filesystem_metadata = (ext2_filesystem_metadata_t)
+    {
+        .super_block = super_block,
+        .block_groups_count = block_groups_count,
+        .block_size = block_size,
+        .block_group_inode_table_size = block_group_inode_table_size,
+        .block_group_descriptors = block_group_descriptors
+    };
 }
 
 static inline dword get_block_size_from_super_block(const ext2_super_block_t* super_block)
@@ -285,7 +324,70 @@ void ext2_setup(void)
     load_filesystem_metadata(&filesystem_metadata);
     console_output_report("Detected a valid ext2 filesystem.\n", CONSOLE_OUTPUT_SUCCESS);
 
-
     dword root_directory_inode_number = 2;
     dword block_group_of_root_directory_inode = get_block_group_of_inode(root_directory_inode_number, &filesystem_metadata);
+    const ext2_block_group_descriptor_t* block_group_descriptor = &filesystem_metadata.block_group_descriptors[block_group_of_root_directory_inode];
+    dword in_group_inode_index = get_in_group_index_of_inode(root_directory_inode_number, &filesystem_metadata);
+    console_output_printf("In Group inode index: %zu\n", in_group_inode_index); // prints as 1 as expected
+
+    dword block_group_inode_table_base_block = block_group_descriptor->block_address_of_inode_table;
+    ext2_inode_t* block_group_inode_table = kernel_allocator_allocate(filesystem_metadata.block_group_inode_table_size);
+    if ( block_group_inode_table == NULL )
+    {
+        console_output_print_blue_screen("Ext2 Error: failed to allocate memory.\n");
+        while ( 1 )
+        {
+            __asm__ volatile("hlt");
+        }
+    }
+
+    disk_block_io_read_blocks_from(
+            block_group_inode_table_base_block,
+            (byte*) block_group_inode_table,
+            filesystem_metadata.block_group_inode_table_size);
+  
+    ext2_inode_t* inode_entry = (ext2_inode_t*)(
+            ((byte*) block_group_inode_table) + (filesystem_metadata.super_block.size_of_inode * in_group_inode_index)
+            );
+
+    console_output_printf("Type and permissions: %zu\n", inode_entry->type_and_permissions); // prints 0
+
+
+    dword first_data_block_of_inode = inode_entry->direct_block_numbers[0];
+    console_output_printf("First Datablock of inode: %zu\n", first_data_block_of_inode); // prints 0 for some reason
+    ext2_directory_entry_t* directory_entries = kernel_allocator_allocate(FILESYSTEM_BLOCK_SIZE_IN_BYTES);
+    if ( directory_entries == NULL )
+    {
+        console_output_print_blue_screen("Ext2 Error: failed to allocate memory.\n");
+        while ( 1 )
+        {
+            __asm__ volatile("hlt");
+        }
+    }
+
+    disk_block_io_read_block(first_data_block_of_inode, (byte*) directory_entries, FILESYSTEM_BLOCK_SIZE_IN_BYTES);
+
+    for ( const ext2_directory_entry_t* entry = &directory_entries[0]; (byte*)entry < ((byte*)directory_entries) + FILESYSTEM_BLOCK_SIZE_IN_BYTES; )
+    {
+        console_output_printf("-------------------------------------------------------------\n");
+        if ( entry->size == 0 )
+        {
+            console_output_printf("entry size is 0\n");
+            break;
+        }
+
+        if ( entry->inode_number != 0 && entry->name_length > 0 )
+        {
+            console_output_printf("inode number: %zu\n", entry->inode_number);
+            console_output_printf("name: ");
+            for ( size_t i = 0; i < entry->name_length; ++i )
+            {
+                console_output_printf("%c", entry->name[i]);
+            }
+            console_output_printf("\n");
+        }
+
+        entry = (const ext2_directory_entry_t*)(((byte*) entry) + entry->size);
+    }
+    console_output_printf("-------------------------------------------------------------\n");
 }
