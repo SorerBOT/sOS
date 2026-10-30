@@ -17,5 +17,6 @@ typedef struct _slab_allocator_t
 void* slab_allocator_init(size_t entry_size);
 void* slab_allocator_allocate(void* _allocator);
 void slab_allocator_free(void* _allocator, void* address);
+bool slab_allocator_is_own_address(void* _allocator, void* address);
 
 #endif /* SLAB_ALLOCATOR_H */

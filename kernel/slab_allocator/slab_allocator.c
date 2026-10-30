@@ -122,7 +122,25 @@ void* slab_allocator_allocate(void* _allocator)
 
 void slab_allocator_free(void* _allocator, void* address)
 {
+    if ( slab_allocator_is_own_address(_allocator, address) == false )
+    {
+        console_output_print_blue_screen("Slab Allocator Error: address %p was not allocated by this slab allocator.\n", address);
+        while ( 1 )
+        {
+            __asm__ volatile("hlt");
+        }
+    }
+
     slab_allocator_t* allocator = _allocator;
+
+    if ( (((byte*)address) - ((byte*)allocator->base_address)) % allocator->entry_size != 0 )
+    {
+        console_output_print_blue_screen("Slab Allocator Error: address %p is in the middle of an allocation.\n", address);
+        while ( 1 )
+        {
+            __asm__ volatile("hlt");
+        }
+    }
 
     size_t entry_idx = (((byte*)address) - ((byte*)allocator->base_address)) / allocator->entry_size;
 
@@ -131,4 +149,13 @@ void slab_allocator_free(void* _allocator, void* address)
     size_t entry_idx_within_bitmap = entry_idx & (SLAB_ALLOCATOR_BITS_IN_QWORD - 1);
 
     allocator->bitmap[bitmap_idx] &= ~(0b1ULL << entry_idx_within_bitmap);
+}
+
+bool slab_allocator_is_own_address(void* _allocator, void* address)
+{
+    slab_allocator_t* allocator = _allocator;
+    return (
+        allocator->base_address <= address &&
+        address < (allocator->base_address + allocator->capacity * allocator->entry_size)
+    );
 }

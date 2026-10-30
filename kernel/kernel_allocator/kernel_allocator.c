@@ -43,6 +43,16 @@ void* kernel_allocator_allocate(size_t size)
 
 void kernel_allocator_free(void* address)
 {
-    void* original_allocator = PMM_GET_FRAME_ADDRESS(address);
-    slab_allocator_free(original_allocator, address);
+    for ( size_t i = KERNEL_ALLOCATR_MIN_ALLOCATION_SIZE_LOG_2; i <= KERNEL_ALLOCATOR_MAX_ALLOCATION_SIZE_LOG_2; ++i )
+    {
+        if ( slab_allocator_is_own_address(slab_allocators[i], address) )
+        {
+            return slab_allocator_free(slab_allocators[i], address);
+        }
+    }
+    console_output_print_blue_screen("Kernel Allocator Error: address %p was not allocated by the kernel allocator.\n", address);
+    while ( 1 )
+    {
+        __asm__ volatile("hlt");
+    }
 }
