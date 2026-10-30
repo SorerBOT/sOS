@@ -1,3 +1,4 @@
+#include "types.h"
 #include <ata_driver.h>
 #include <disk_driver.h>
 #include <console_output.h>
@@ -468,14 +469,26 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
         }
     }
 
-    if ( dst_size < DISK_DRIVER_SECTOR_SIZE_IN_BYTES )
+    if ( dst_size == 0 )
     {
-        console_output_print_blue_screen("Disk Error: provided buffer of size %llu is too small for a sector of size %llu\n", dst_size, DISK_DRIVER_SECTOR_SIZE_IN_BYTES);
+        return;
+    }
+
+    if ( dst == NULL )
+    {
+        console_output_print_blue_screen("Disk Error: provided dst buffer is NULL\n");
         while (1)
         {
             __asm__ volatile ("hlt");
         }
     }
+
+    size_t bytes_to_read = (dst_size < DISK_DRIVER_SECTOR_SIZE_IN_BYTES)
+        ? dst_size
+        : DISK_DRIVER_SECTOR_SIZE_IN_BYTES;
+    size_t words_to_read = bytes_to_read / 2; // rounded down intentionally
+    bool words_to_read_has_remainder = bytes_to_read & 0b1;
+    word* dst_word = (word*)dst;
 
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 8.36: READ SECTOR(S) EXT
@@ -488,11 +501,23 @@ void ata_driver_read_sector(size_t lba_address, byte* dst, size_t dst_size)
      */
     HPIOI1_check_status_phase();
 
-
-    word* dst_word = (word*)dst;
-    for ( size_t i = 0; i < DISK_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+    size_t i = 0;
+    for ( ; i < words_to_read; ++i )
     {
         dst_word[i] = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
+    }
+
+
+    if ( words_to_read_has_remainder )
+    {
+        byte last_byte = cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA) & 0x00FF;
+        dst[bytes_to_read - 1] = last_byte;
+        ++i;
+    }
+
+    for ( ; i < DISK_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+    {
+        cpu_io_read_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA);
     }
 }
 
@@ -505,6 +530,33 @@ void ata_driver_write_sector(size_t lba_address, byte* src, size_t src_size)
         {
             __asm__ volatile ("hlt");
         }
+    }
+
+    if ( src_size == 0 )
+    {
+        return;
+    }
+
+    if ( src == NULL )
+    {
+        console_output_print_blue_screen("Disk Error: provided dst buffer is NULL\n");
+        while (1)
+        {
+            __asm__ volatile ("hlt");
+        }
+    }
+
+    size_t bytes_to_write = ( src_size < DISK_DRIVER_SECTOR_SIZE_IN_BYTES )
+        ? src_size
+        : DISK_DRIVER_SECTOR_SIZE_IN_BYTES;
+    size_t words_to_write = bytes_to_write / 2;
+    bool words_to_write_has_remainder = bytes_to_write & 0b1;
+    word* src_word = (word*) src;
+
+    word current_sector_content_word[DISK_DRIVER_SECTOR_SIZE_IN_WORDS];
+    if ( bytes_to_write < DISK_DRIVER_SECTOR_SIZE_IN_BYTES )
+    {
+        ata_driver_read_sector(lba_address, (byte*) current_sector_content_word, sizeof(current_sector_content_word));
     }
 
     /*
@@ -523,12 +575,27 @@ void ata_driver_write_sector(size_t lba_address, byte* src, size_t src_size)
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.6 PIO data-out command protocol, HPIOO1
      */
-    word* src_word = (word*) src;
-    for ( size_t i = 0; i < DISK_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+    size_t i = 0;
+    for ( ; i < words_to_write; ++i )
     {
         cpu_io_write_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA, src_word[i]);
     }
 
+    /*
+     * A remainder implies we're not reading a complete sector, and thus its safe to assume the existence of an additional byte
+     */
+    if ( words_to_write_has_remainder )
+    {
+        byte last_byte = src[bytes_to_write - 1];
+        word last_byte_with_following_byte = (current_sector_content_word[words_to_write] & 0xFF00) | last_byte;
+        cpu_io_write_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA, last_byte_with_following_byte);
+        ++i;
+    }
+
+    for ( ; i < DISK_DRIVER_SECTOR_SIZE_IN_WORDS; ++i )
+    {
+        cpu_io_write_word(ATA_DRIVER_PRIMARY_IO_PORT_DATA, current_sector_content_word[i]);
+    }
 
     /*
      * ATA/ATAPI-6 SPEC REFERENCE; section 9.6 PIO data-out command protocol, HPIOO0 from HPIOO1
