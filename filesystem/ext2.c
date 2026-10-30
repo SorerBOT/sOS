@@ -337,7 +337,7 @@ void ext2_print_directory_contents(void)
     ext2_inode_t* block_group_inode_table = kernel_allocator_allocate(filesystem_metadata.block_group_inode_table_size);
     if ( block_group_inode_table == NULL )
     {
-        console_output_print_blue_screen("Ext2 Error: failed to allocate memory.\n");
+        console_output_print_blue_screen("Ext2 Error: failed to allocate memory for block group inode table.\n");
         while ( 1 )
         {
             __asm__ volatile("hlt");
@@ -361,7 +361,7 @@ void ext2_print_directory_contents(void)
     ext2_directory_entry_t* directory_entries = kernel_allocator_allocate(FILESYSTEM_BLOCK_SIZE_IN_BYTES);
     if ( directory_entries == NULL )
     {
-        console_output_print_blue_screen("Ext2 Error: failed to allocate memory.\n");
+        console_output_print_blue_screen("Ext2 Error: failed to allocate memory for directory entries.\n");
         while ( 1 )
         {
             __asm__ volatile("hlt");
