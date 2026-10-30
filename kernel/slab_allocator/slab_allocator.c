@@ -6,7 +6,7 @@
 
 #define SLAB_ALLOCATOR_BITS_IN_QWORD (8 * sizeof(qword))
 
-static slab_allocator_t slab_allocator_for_allocating_slab_allocators;
+static slab_allocator_t* slab_allocator_for_allocating_slab_allocators = NULL;
 
 static inline void slab_allocator_init_internal(size_t entry_size, slab_allocator_t* allocator)
 {
@@ -17,11 +17,20 @@ static inline void slab_allocator_init_internal(size_t entry_size, slab_allocato
         console_output_print_blue_screen("Failed to allocate memory for slab allocator\n");
         while (1)
         {
-            __asm__("hlt");
+            __asm__ volatile("hlt");
         }
     }
 
     size_t capacity = (2 * MiB) / entry_size;
+
+    if ( capacity == 0 )
+    {
+        console_output_print_blue_screen("Slab Allocator Error: cannot initialise a slab allocator with capacity = 0\n");
+        while (1)
+        {
+            __asm__ volatile("hlt");
+        }
+    }
 
     *allocator = (slab_allocator_t)
     {
@@ -49,13 +58,34 @@ void* slab_allocator_init(size_t entry_size)
         }
     }
 
-    if ( slab_allocator_for_allocating_slab_allocators.base_address == NULL )
+    if ( slab_allocator_for_allocating_slab_allocators == NULL )
     {
-        slab_allocator_init_internal(4 * KiB, &slab_allocator_for_allocating_slab_allocators);
+        slab_allocator_for_allocating_slab_allocators = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pmm_frame_alloc());
+        slab_allocator_init_internal(sizeof(slab_allocator_t) + 32 * KiB, slab_allocator_for_allocating_slab_allocators);
+        if (
+                slab_allocator_for_allocating_slab_allocators->base_address == NULL  ||
+                slab_allocator_for_allocating_slab_allocators->capacity == 0         ||
+                slab_allocator_for_allocating_slab_allocators->items_count > 0
+                )
+        {
+            console_output_print_blue_screen("Slab Allocator Error: failed to initialise the slab_allocator_for_allocating_slab_allocators.\n");
+            while ( 1 )
+            {
+                __asm__ volatile("hlt");
+            }
+        }
     }
 
-    slab_allocator_t* allocator = slab_allocator_allocate(&slab_allocator_for_allocating_slab_allocators);
+    slab_allocator_t* allocator = slab_allocator_allocate(slab_allocator_for_allocating_slab_allocators);
     slab_allocator_init_internal(entry_size, allocator);
+    if ( allocator->capacity == 0 )
+    {
+        console_output_print_blue_screen("Slab Allocator Error: failed to initialise allocator.\n");
+        while ( 1 )
+        {
+            __asm__ volatile("hlt");
+        }
+    }
 
     return allocator;
 }
@@ -63,9 +93,10 @@ void* slab_allocator_init(size_t entry_size)
 void* slab_allocator_allocate(void* _allocator)
 {
     slab_allocator_t* allocator = _allocator;
-
-    for ( size_t i = 0; i < allocator->capacity / SLAB_ALLOCATOR_BITS_IN_QWORD; ++i )
+    size_t x = 5;
+    for ( size_t i = 0; i < ((allocator->capacity + SLAB_ALLOCATOR_BITS_IN_QWORD - 1) / SLAB_ALLOCATOR_BITS_IN_QWORD); ++i )
     {
+        x = 8;
         qword bitmap_i = allocator->bitmap[i];
         for ( size_t j = 0; j < SLAB_ALLOCATOR_BITS_IN_QWORD; ++j, bitmap_i >>= 1 )
         {
@@ -81,15 +112,9 @@ void* slab_allocator_allocate(void* _allocator)
                 break;
             }
 
-            allocator->bitmap[i] |= 0b1 << j;
-            return (byte*)allocator->base_address + allocator->entry_size * entry_idx;
+            allocator->bitmap[i] |= 0b1ULL << j;
+            return ((byte*)allocator->base_address) + (allocator->entry_size * entry_idx);
         }
-    }
-
-    console_output_print_blue_screen("slab allocator ran out of space\n");
-    while (1)
-    {
-        __asm__("hlt");
     }
 
     return NULL;
@@ -105,5 +130,5 @@ void slab_allocator_free(void* _allocator, void* address)
 
     size_t entry_idx_within_bitmap = entry_idx & (SLAB_ALLOCATOR_BITS_IN_QWORD - 1);
 
-    allocator->bitmap[bitmap_idx] &= 0b0 << entry_idx_within_bitmap;
+    allocator->bitmap[bitmap_idx] &= ~(0b1ULL << entry_idx_within_bitmap);
 }
