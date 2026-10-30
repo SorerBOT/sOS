@@ -24,7 +24,7 @@ qword math_extended_round_up_to_log_two(qword x)
     --x;
 
     math_extended_right_smear(x);
-    return math_extended_popcount(x);
+    return math_extended_popcount(x) - 1;
 }
 
 qword math_extended_right_smear(qword x)
