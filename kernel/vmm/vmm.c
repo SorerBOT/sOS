@@ -161,3 +161,26 @@ void vmm_page_free(void* _pml4t)
         __asm__("hlt");
     }
 }
+
+void* vmm_allocate_kernel_page(void)
+{
+    void* frame = pmm_frame_alloc();
+
+    if ( frame == NULL )
+    {
+        console_output_print_blue_screen("VMM Error: failed to allocate physical frame\n");
+        while ( 1 )
+        {
+            __asm__ volatile("hlt");
+        }
+    }
+
+    return VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(frame);
+}
+
+void vmm_free_kernel_page(void* page)
+{
+    void* frame = VMM_TRANSLATE_KERNEL_MAP_TO_PHYSICAL(page);
+
+    pmm_frame_free(frame);
+}
