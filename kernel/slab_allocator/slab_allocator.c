@@ -10,9 +10,9 @@ static slab_allocator_t* slab_allocator_for_allocating_slab_allocators = NULL;
 
 static inline void slab_allocator_init_internal(size_t entry_size, slab_allocator_t* allocator)
 {
-    byte* frame = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pmm_frame_alloc());
+    byte* page = vmm_allocate_kernel_page();
 
-    if ( frame == NULL )
+    if ( page == NULL )
     {
         console_output_print_blue_screen("Failed to allocate memory for slab allocator\n");
         while (1)
@@ -35,7 +35,7 @@ static inline void slab_allocator_init_internal(size_t entry_size, slab_allocato
     *allocator = (slab_allocator_t)
     {
         .next = NULL,
-        .base_address = frame,
+        .base_address = page,
         .entry_size = entry_size,
         .capacity = capacity,
         .items_count = 0
@@ -60,7 +60,7 @@ void* slab_allocator_init(size_t entry_size)
 
     if ( slab_allocator_for_allocating_slab_allocators == NULL )
     {
-        slab_allocator_for_allocating_slab_allocators = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pmm_frame_alloc());
+        slab_allocator_for_allocating_slab_allocators = vmm_allocate_kernel_page();
         slab_allocator_init_internal(sizeof(slab_allocator_t) + 32 * KiB, slab_allocator_for_allocating_slab_allocators);
         if (
                 slab_allocator_for_allocating_slab_allocators->base_address == NULL  ||
