@@ -4,7 +4,6 @@
 #include <slab_allocator.h>
 #include <console_output.h>
 
-#define VMM_PAGE_SIZE PMM_FRAME_SIZE
 #define VMM_ENTRIES_COUNT_IN_LEVEL 512
 
 /* I don't really like this. */

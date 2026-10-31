@@ -4,6 +4,7 @@
 #include <types.h>
 #include <pmm.h>
 
+#define VMM_PAGE_SIZE PMM_FRAME_SIZE
 #define VMM_KERNEL_MAP_VIRTUAL_OFFSET 0xFFFF800000000000
 #define VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(physical_address) ((void*)(((byte*)(physical_address)) + VMM_KERNEL_MAP_VIRTUAL_OFFSET))
 #define VMM_TRANSLATE_KERNEL_MAP_TO_PHYSICAL(kernel_map_address) ((void*)(((byte*)(kernel_map_address)) - VMM_KERNEL_MAP_VIRTUAL_OFFSET))
