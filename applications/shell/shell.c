@@ -94,41 +94,42 @@ static inline void command_execute_internal(int argc, char** argv)
         return;
     }
 
-    if ( strcmp( argv[0], "alloc_frame" ) == 0 )
+    if ( strcmp( argv[0], "alloc_page" ) == 0 )
     {
-        dword* frame = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pmm_frame_alloc());
-        if ( frame == NULL )
+        dword* page = vmm_allocate_kernel_page();
+
+        if ( page == NULL )
         {
             tty_print("Unexpected error: failed to allocate memory.\n");
             return;
         }
 
-        console_output_printf("frame address: %p\n", frame);
+        console_output_printf("page address: %p\n", page);
 
-        for ( size_t i = 0; i < (2 * 1024 * 1024 / sizeof(frame[0])); ++i )
+        for ( size_t i = 0; i < (2 * 1024 * 1024 / sizeof(page[0])); ++i )
         {
-            frame[i] = 0xcafebabe;
+            page[i] = 0xcafebabe;
         }
 
-        pmm_frame_free(VMM_TRANSLATE_KERNEL_MAP_TO_PHYSICAL(frame));
+        vmm_free_kernel_page(page);
 
-        frame = VMM_TRANSLATE_PHYSICAL_TO_KERNEL_MAP(pmm_frame_alloc());
-        if ( frame == NULL )
+        page = vmm_allocate_kernel_page();
+        if ( page == NULL )
         {
             tty_print("Unexpected error: failed to allocate memory.\n");
             return;
         }
 
-        for ( size_t i = 0; i < (2 * 1024 * 1024 / sizeof(frame[0])); ++i )
+        for ( size_t i = 0; i < (2 * 1024 * 1024 / sizeof(page[0])); ++i )
         {
-            if ( frame[i] != 0xcafebabe )
+            if ( page[i] != 0xcafebabe )
             {
-                tty_print("Unexpected error: restored frame does not contain 0xcafebabe.\n");
+                tty_print("Unexpected error: restored page does not contain 0xcafebabe.\n");
                 return;
             }
         }
-        pmm_frame_free(VMM_TRANSLATE_KERNEL_MAP_TO_PHYSICAL(frame));
-        tty_print("Successfully passed frame allocator test.\n");
+        vmm_free_kernel_page(page);
+        tty_print("Successfully passed page allocator test.\n");
     }
 
     if ( strcmp( argv[0], "dump_sector" ) == 0 )
